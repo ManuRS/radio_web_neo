@@ -269,6 +269,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .preset.dragging { background: transparent; border-color: transparent; box-shadow: none; }   /* al arrastrar, el botón se va con el cursor y en su sitio queda solo el hueco, sin borde */
 .preset.dragging > * { visibility: hidden; }
 .preset.drop-target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.dnd-card { position: fixed; z-index: 60; left: 0; top: 0; margin: 0; border-radius: 12px; pointer-events: none; opacity: .92; border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 12px 28px rgba(0, 0, 0, .55); }   /* copia que sigue al dedo al arrastrar en el móvil */
 .ctxmenu { display: flex; flex-direction: column; max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px); overflow: hidden; position: fixed; z-index: 60; min-width: 190px; padding: 5px; border: 1px solid #303a47; border-radius: 10px; background: #1a2029; box-shadow: 0 10px 30px #000a; }
 .ctxmenu, .ctxmenu * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }   /* el menú no deja seleccionar texto: con la pulsación larga del móvil saltaba la selección de Android */
 .ctxmenu input { -webkit-user-select: text; user-select: text; }   /* salvo los campos de texto, que se siguen pudiendo editar */

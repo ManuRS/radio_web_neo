@@ -111,7 +111,90 @@ let dragId = null;
 let dropOn = null;
 const clearDrop = () => { if (dropOn) dropOn.classList.remove('drop-target'); dropOn = null; };
 
+// Arrastre táctil (el nativo de HTML5 no funciona con el dedo): pulsación larga abre el menú y, si el dedo se mueve a partir de ahí, el menú se cierra y la cadena se arrastra
+// (una copia sigue al dedo, la casilla de debajo se marca y, cerca de los bordes, la pantalla se desplaza). Al soltar, se coloca con el mismo editHooks.move que el ratón.
+const SLOP_PX = 8;           // lo que puede moverse el dedo en la pulsación larga sin que cuente como desplazamiento
+const EDGE_PX = 56;          // franja junto al borde del área que se desplaza donde se activa el desplazamiento automático
+const btnStation = new WeakMap();   // botón de la rejilla → su cadena
+let pressing = false;        // hay un dedo sobre una cadena
+let holding = false;         // la pulsación larga ya abrió el menú: el navegador no debe desplazar ni seleccionar
+let tdrag = null;            // arrastre táctil en curso: { b, st, ghost, ox, oy, x, y, pid, tick }
+let ignoreClickUntil = 0;
+// Con el dedo puesto, el navegador no debe desplazar la página ni seleccionar texto (touchmove tiene que poder cancelarse: de ahí passive: false)
+document.addEventListener('touchmove', e => { if (holding || tdrag) e.preventDefault(); }, { passive: false });
+document.addEventListener('selectstart', e => { if (pressing && !(e.target.closest && e.target.closest('input, textarea'))) e.preventDefault(); });
+// El clic que puede llegar al soltar tras arrastrar no debe sintonizar la cadena que quede debajo
+presetsBox.addEventListener('click', e => { if (Date.now() < ignoreClickUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
+
+// Zona que se desplaza con la rejilla: la columna interna (pantallas altas) o la página entera
+function scrollArea() {
+  const s = presetsBox.closest('.scroller');
+  if (s && s.scrollHeight > s.clientHeight + 1 && getComputedStyle(s).overflowY !== 'visible') {
+    const r = s.getBoundingClientRect();
+    return { top: Math.max(0, r.top), bottom: Math.min(window.innerHeight, r.bottom), by: dy => { s.scrollTop += dy; } };
+  }
+  return { top: 0, bottom: window.innerHeight, by: dy => window.scrollBy(0, dy) };
+}
+function moveGhost() {
+  const d = tdrag;
+  d.ghost.style.transform = 'translate(' + Math.round(d.x - d.ox) + 'px,' + Math.round(d.y - d.oy) + 'px)';
+}
+// Marca la casilla que hay bajo el dedo (la copia no estorba: pointer-events: none)
+function markDrop() {
+  const d = tdrag;
+  const el = document.elementFromPoint(d.x, d.y);
+  const b = el && el.closest ? el.closest('.preset') : null;
+  const t = b && b !== d.b && btnStation.has(b) ? b : null;
+  if (t === dropOn) return;
+  clearDrop();
+  if (t) { dropOn = t; t.classList.add('drop-target'); }
+}
+function dragTick() {
+  const d = tdrag;
+  if (!d) return;
+  const a = scrollArea();
+  let dy = 0;
+  if (d.y < a.top + EDGE_PX) dy = -Math.ceil((1 - Math.max(0, d.y - a.top) / EDGE_PX) * 14);
+  else if (d.y > a.bottom - EDGE_PX) dy = Math.ceil((1 - Math.max(0, a.bottom - d.y) / EDGE_PX) * 14);
+  if (dy) { a.by(dy); markDrop(); }
+}
+function onTouchDragMove(e) { if (tdrag && e.pointerId === tdrag.pid) { tdrag.x = e.clientX; tdrag.y = e.clientY; moveGhost(); markDrop(); } }
+function onTouchDragEnd(e) { if (tdrag && e.pointerId === tdrag.pid) endTouchDrag(e.type === 'pointerup'); }
+function beginTouchDrag(b, st, e) {
+  closeMenu();
+  const r = b.getBoundingClientRect();
+  const ghost = b.cloneNode(true);
+  ghost.className = 'preset dnd-card';
+  ghost.style.width = r.width + 'px';
+  ghost.style.height = r.height + 'px';
+  document.body.appendChild(ghost);
+  b.classList.add('dragging');
+  tdrag = { b, st, ghost, ox: e.clientX - r.left, oy: e.clientY - r.top, x: e.clientX, y: e.clientY, pid: e.pointerId, tick: setInterval(dragTick, 16) };
+  moveGhost();
+  markDrop();
+  document.addEventListener('pointermove', onTouchDragMove);
+  document.addEventListener('pointerup', onTouchDragEnd);
+  document.addEventListener('pointercancel', onTouchDragEnd);
+}
+function endTouchDrag(drop) {
+  const d = tdrag;
+  if (!d) return;
+  tdrag = null;
+  clearInterval(d.tick);
+  document.removeEventListener('pointermove', onTouchDragMove);
+  document.removeEventListener('pointerup', onTouchDragEnd);
+  document.removeEventListener('pointercancel', onTouchDragEnd);
+  const target = drop && dropOn ? btnStation.get(dropOn) : null;
+  d.ghost.remove();
+  d.b.classList.remove('dragging');
+  clearDrop();
+  pressing = holding = false;
+  ignoreClickUntil = Date.now() + 400;
+  if (target && target !== d.st && editHooks.move) editHooks.move(d.st.id, target.id);
+}
+
 function bindEdit(b, st) {
+  btnStation.set(b, st);
   b.draggable = true;
   b.addEventListener('dragstart', e => {
     dragId = st.id;
@@ -139,12 +222,14 @@ function bindEdit(b, st) {
   b.addEventListener('contextmenu', e => {
     e.preventDefault();
     if (!touch) { openMenu(e.clientX, e.clientY, st); return; }   // ratón: clic derecho normal
-    long = true;
+    if (tdrag) return;   // ya se está arrastrando: no se vuelve a abrir el menú
+    long = holding = true;
     openMenuOnce(e.clientX, e.clientY, st);
   });
 
   // Pulsación larga en pantallas táctiles: no se deja al navegador (selecciona el texto y saca "copiar/pegar", y en iOS ni siquiera avisa con contextmenu):
-  // un temporizador propio abre el menú, y el clic que llega al soltar el dedo se descarta para que no sintonice la cadena
+  // un temporizador propio abre el menú, y el clic que llega al soltar el dedo se descarta para que no sintonice la cadena.
+  // Si después el dedo se mueve, empieza el arrastre (se cierra el menú); si se mueve antes de la pulsación larga, es un desplazamiento normal
   let timer = 0, sx = 0, sy = 0;
   const cancel = () => { clearTimeout(timer); timer = 0; };
   b.addEventListener('pointerdown', e => {
@@ -153,11 +238,16 @@ function bindEdit(b, st) {
     touch = e.pointerType !== 'mouse';
     if (!touch) { b.draggable = true; return; }
     b.draggable = false;   // el arrastre nativo del navegador táctil se confundiría con la pulsación larga
+    pressing = true;
     sx = e.clientX; sy = e.clientY;
-    timer = setTimeout(() => { timer = 0; long = true; openMenuOnce(sx, sy, st); if (navigator.vibrate) { try { navigator.vibrate(12); } catch (_) {} } }, LONG_PRESS_MS);
+    timer = setTimeout(() => { timer = 0; long = holding = true; openMenuOnce(sx, sy, st); if (navigator.vibrate) { try { navigator.vibrate(12); } catch (_) {} } }, LONG_PRESS_MS);
   });
-  b.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) cancel(); });
-  ['pointerup', 'pointercancel'].forEach(t => b.addEventListener(t, cancel));
+  b.addEventListener('pointermove', e => {
+    if (!touch || tdrag || Math.hypot(e.clientX - sx, e.clientY - sy) <= SLOP_PX) return;
+    if (timer) cancel();   // el dedo se mueve antes de la pulsación larga: desplazamiento normal
+    else if (long) beginTouchDrag(b, st, e);
+  });
+  ['pointerup', 'pointercancel'].forEach(t => b.addEventListener(t, () => { cancel(); if (!tdrag) pressing = holding = false; }));
   b.addEventListener('click', e => {
     if (long) { long = false; e.preventDefault(); e.stopImmediatePropagation(); }
   }, true);
