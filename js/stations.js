@@ -286,6 +286,8 @@ function placeMenu(m, x, y) {
 // run(valores) devuelve (promesa) el texto del error, o nada si todo fue bien (y el menú se cierra). Mientras tanto, los campos se bloquean.
 function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }) {
   menuForm = true;
+  // En pantallas táctiles el formulario se coloca arriba del todo: al salir el teclado, en cualquier otro sitio quedaría tapado
+  if (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) y = 6;
   m.replaceChildren(head);
   const form = document.createElement('form');
   form.className = 'ctxform';
