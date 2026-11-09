@@ -61,7 +61,8 @@ export class Deck {
     this.variant = variant % station.urls.length;
     this.hooks = hooks;               // { attach(deck), detach(deck) }: los pone audio.js (nodos de Web Audio)
     this.giveUp = opts.giveUp || Infinity;
-    this.cors = corsAllowed(station) && !opts.direct;   // con CORS el <audio> puede pasar por Web Audio
+    this.direct = !!opts.direct;
+    this.cors = corsAllowed(station) && !this.direct;   // con CORS el <audio> puede pasar por Web Audio
     this.state = 'idle';              // idle | loading | playing | failed | closed
     this.held = false;                // pausa retenida (el <audio> sigue, pero sin sonar)
     this.fadeV = 0;                   // nivel de fundido al que se ha mandado (audio.js)
@@ -244,7 +245,8 @@ export class Deck {
     if (el !== this.el || this.state === 'closed' || this.closing) return;
     const code = el.error ? el.error.code : 0;
     // la primera carga con CORS ha fallado: se prueba sin él (si funciona, la emisora no tiene CORS)
-    if (this.cors && !this.everPlayed && !this.triedDirect && this.kind !== 'hls') {
+    // (con la red caída no se prueba: el fallo no dice nada del CORS)
+    if (this.cors && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
       this.triedDirect = true;
       this.cors = false;
       log(this.station.name + ': falla con CORS, se prueba en modo degradado');
@@ -253,6 +255,14 @@ export class Deck {
       return;
     }
     this.retrySoon('error ' + (code || (fatal ? 'fatal' : '')));
+  }
+
+  // Una emisora solo se da por "sin CORS" si funciona a la primera en modo directo justo después de fallar con CORS. Si el modo directo también falla (o hay que esperar y reintentar),
+  // el fallo pudo ser de la red y no del CORS: se vuelve a probar con CORS, para no dejar degradada para siempre una emisora que sí lo admite
+  retryWithCors() {
+    if (!this.triedDirect || this.everPlayed) return;
+    this.triedDirect = false;
+    this.cors = corsAllowed(this.station) && !this.direct;
   }
 
   fail(why) {
@@ -282,7 +292,7 @@ export class Deck {
     if (this.state !== 'loading') this.state = 'loading';
     if (this.on.retry) this.on.retry(this);
     clearTimeout(this.retryTimer);
-    this.retryTimer = setTimeout(() => { if (this.state !== 'closed' && !this.held) { this.build(); this.start(); } }, wait * 1000);
+    this.retryTimer = setTimeout(() => { if (this.state !== 'closed' && !this.held) { this.retryWithCors(); this.build(); this.start(); } }, wait * 1000);
   }
 
   // Al volver la red o la página a primer plano: si la emisora está esperando un reintento, parada o sin datos, se reconecta ya (sin esperar a la pausa del reintento
@@ -296,6 +306,7 @@ export class Deck {
     clearTimeout(this.retryTimer);
     this.fails = 0;
     this.interrupted = false;
+    this.retryWithCors();
     this.build();
     this.start();
     return true;
