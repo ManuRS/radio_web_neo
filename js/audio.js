@@ -426,11 +426,21 @@ async function restartOutput(why) {
   }
 }
 
+// Reconecta ya las emisoras que estén esperando un reintento, paradas o sin datos (no toca las que suenan bien)
+function recoverAllIfStalled(reason) {
+  for (const d of decks) d.recoverIfStalled(reason);
+}
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   if (S.audioCtx && S.audioCtx.state !== 'running') S.audioCtx.resume().catch(() => {});
   for (const d of decks) if (d.interrupted) d.resumeInterrupted();
+  recoverAllIfStalled('página de nuevo en primer plano');
 });
+// "online" solo dice que hay red, no que haya internet: adelanta el reintento, pero no sustituye a los periódicos. Con "offline" no hay que hacer nada: retrySoon ya no gasta intentos sin red
+window.addEventListener('online', () => recoverAllIfStalled('vuelve la red'));
+// Página restaurada desde la caché de ida y vuelta del navegador
+window.addEventListener('pageshow', e => { if (e.persisted) recoverAllIfStalled('página restaurada'); });
 
 setInterval(() => {
   for (const d of decks) d.watch();

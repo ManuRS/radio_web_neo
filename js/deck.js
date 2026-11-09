@@ -67,6 +67,7 @@ export class Deck {
     this.fadeV = 0;                   // nivel de fundido al que se ha mandado (audio.js)
     this.wa = false;                  // conectado a Web Audio (lo pone audio.js)
     this.fails = 0;                   // fallos seguidos
+    this.hadTrouble = false;          // hay un fallo sin resolver (reintento pendiente): al volver la red se reconecta ya
     this.everPlayed = false;
     this.triedDirect = false;
     this.quality = '';
@@ -221,6 +222,7 @@ export class Deck {
     if (S.audioCtx && S.audioCtx.state === 'suspended') S.audioCtx.resume().catch(() => {});
     const first = this.state !== 'playing';
     this.state = 'playing';
+    this.hadTrouble = false;
     this.lastTime = el.currentTime;
     this.stuckS = 0;
     this.playedSince = Date.now();
@@ -263,19 +265,40 @@ export class Deck {
   // Reconexión con espera creciente; tras varios fallos seguidos se prueba otra variante de la emisora
   retrySoon(why) {
     if (this.state === 'closed' || this.held) return;
-    this.fails++;
-    if (this.fails >= this.giveUp) { this.fail(why + ', se renuncia'); return; }
-    if (this.fails % VARIANT_AFTER_FAILS === 0 && this.station.urls.length > 1) {
-      this.variant = (this.variant + 1) % this.station.urls.length;
-      log(this.station.name + ': se prueba la emisora ' + this.station.urls[this.variant].label);
-      if (this.on.quality) this.on.quality(this);
+    this.hadTrouble = true;
+    // Sin red no se gastan intentos (ni se cambia de emisora por un corte de cobertura): se espera con la pausa más larga y, al volver la red, recoverIfStalled reconecta al instante
+    const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!offline) {
+      this.fails++;
+      if (this.fails >= this.giveUp) { this.fail(why + ', se renuncia'); return; }
+      if (this.fails % VARIANT_AFTER_FAILS === 0 && this.station.urls.length > 1) {
+        this.variant = (this.variant + 1) % this.station.urls.length;
+        log(this.station.name + ': se prueba la emisora ' + this.station.urls[this.variant].label);
+        if (this.on.quality) this.on.quality(this);
+      }
     }
-    const wait = RETRY_S[Math.min(this.fails - 1, RETRY_S.length - 1)];
-    log(this.station.name + ': ' + why + '. Se reintenta en ' + wait + ' s');
+    const wait = offline ? RETRY_S[RETRY_S.length - 1] : RETRY_S[Math.min(this.fails - 1, RETRY_S.length - 1)];
+    log(this.station.name + ': ' + why + (offline ? '. Sin red: se espera a que vuelva' : '. Se reintenta en ' + wait + ' s'));
     if (this.state !== 'loading') this.state = 'loading';
     if (this.on.retry) this.on.retry(this);
     clearTimeout(this.retryTimer);
     this.retryTimer = setTimeout(() => { if (this.state !== 'closed' && !this.held) { this.build(); this.start(); } }, wait * 1000);
+  }
+
+  // Al volver la red o la página a primer plano: si la emisora está esperando un reintento, parada o sin datos, se reconecta ya (sin esperar a la pausa del reintento
+  // y empezando de cero la cuenta de fallos). Si suena bien, no se toca. (Mismo patrón que recoverIfStalled / reconnectNow de Radio Web Fast)
+  recoverIfStalled(reason) {
+    if (this.state === 'closed' || this.state === 'failed' || this.held || !this.el) return false;
+    const waiting = this.state === 'loading' && this.hadTrouble;
+    const noData = this.state === 'playing' && ((this.el.paused && !this.interrupted) || this.el.readyState < 3);   // 3 = HAVE_FUTURE_DATA
+    if (!waiting && !noData) return false;
+    log(this.station.name + ': reconexión inmediata (' + reason + ')');
+    clearTimeout(this.retryTimer);
+    this.fails = 0;
+    this.interrupted = false;
+    this.build();
+    this.start();
+    return true;
   }
 
   // Vigilante (una vez por segundo): si el reloj del audio no avanza, se reconecta; si hay demasiado búfer acumulado, se salta al directo
