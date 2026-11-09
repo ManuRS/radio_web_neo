@@ -1,0 +1,150 @@
+// ============================
+// == VISUALIZADOR DE BARRAS ==
+// ============================
+// Dibuja barras que se mueven con el sonido. Se alimenta de un AnalyserNode (ver attach) y no conoce nada más de la aplicación.
+// Con una emisora que no pasa por Web Audio (modo degradado, ver setSynthetic) no hay nada que analizar: las barras se mueven con un movimiento
+// orgánico sintético, como en Radio Web Fast.
+
+// Colores por defecto de las barras (el verde de siempre); con setAccent se sustituyen por los del color de énfasis
+const DEF_TOP = '#58dfa3';
+const DEF_BOTTOM = '#2f9e74';
+const HEX6 = /^#[0-9a-f]{6}$/i;
+const ACCENT_FADE_MS = 600;
+// Mezcla dos "#rrggbb" (k = 0 el primero, k = 1 el segundo)
+export const mix = (a, b, k) => '#' + [1, 3, 5].map(i => {
+  const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16);
+  return Math.round(x + (y - x) * k).toString(16).padStart(2, '0');
+}).join('');
+// Oscurece un "#rrggbb" multiplicando sus canales (la base de las barras es el mismo color, más oscuro)
+export const shade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(hex.slice(i, i + 2), 16) * k).toString(16).padStart(2, '0')).join('');
+
+export function createVisualizer(canvas, isPaused) {
+  const ctx2d = canvas.getContext('2d');
+  const BARS = 36;
+  const barLevels = new Array(BARS).fill(0);
+  let audioCtx = null, analyser = null, freqData = null, binRanges = null;
+  let running = false, looping = false;
+  let colTop = DEF_TOP, colBottom = DEF_BOTTOM, fadeId = 0, first = true;
+  let synth = false, tSyn = 0, lastT = 0;
+  const synPhase = Array.from({ length: BARS }, () => Math.random() * 6.283), synSpeed = Array.from({ length: BARS }, () => 1.2 + Math.random() * 2.6);
+
+  // Niveles sintéticos: cada barra oscila a su ritmo (más fuerte en graves) y un pulso lento mueve los graves
+  function organic(dt) {
+    tSyn += dt;
+    const beat = Math.pow(Math.max(0, Math.sin(tSyn * 2.1)), 4);
+    for (let i = 0; i < BARS; i++) {
+      const f = i / (BARS - 1);
+      const n = 0.25 * (Math.sin(tSyn * synSpeed[i] + synPhase[i]) + Math.sin(tSyn * synSpeed[i] * 0.37 + synPhase[i] * 1.7)) + 0.5;
+      const target = Math.min(1, (0.75 - 0.45 * f) * (0.25 + 0.75 * n) + (i < 8 ? 0.25 * beat * (1 - f * 3) : 0));
+      barLevels[i] = target > barLevels[i] ? target : Math.max(target, barLevels[i] - 0.035);
+    }
+  }
+
+  // reparte los "bins" de la FFT en BARS franjas de frecuencia (escala logarítmica)
+  function computeBinRanges() {
+    const nyq = audioCtx.sampleRate / 2, bins = analyser.frequencyBinCount;
+    const fmin = 45, fmax = 15000; // rango útil de la señal
+    binRanges = [];
+    for (let i = 0; i < BARS; i++) {
+      const f0 = fmin * Math.pow(fmax / fmin, i / BARS);
+      const f1 = fmin * Math.pow(fmax / fmin, (i + 1) / BARS);
+      const b0 = Math.floor(f0 / nyq * bins);
+      let b1 = Math.ceil(f1 / nyq * bins);
+      if (b1 <= b0) b1 = b0 + 1;
+      binRanges.push([b0, Math.min(b1, bins)]);
+    }
+  }
+  // El degradado solo se recrea si cambia el alto o el color
+  let grad = null, gradH = 0;
+  function draw() {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h) return;
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+    }
+    ctx2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx2d.clearRect(0, 0, w, h);
+    if (!grad || gradH !== h) {
+      grad = ctx2d.createLinearGradient(0, h, 0, 0);
+      grad.addColorStop(0, colBottom);
+      grad.addColorStop(1, colTop);
+      gradH = h;
+    }
+    const gap = 3, bw = (w - gap * (BARS - 1)) / BARS;
+    // dos pasadas (barras con sonido y barras en reposo), cada una con un único trazo
+    [true, false].forEach(active => {
+      ctx2d.fillStyle = active ? grad : '#2a3441';
+      ctx2d.beginPath();
+      for (let i = 0; i < BARS; i++) {
+        const lvl = barLevels[i];
+        if ((lvl > 0.01) !== active) continue;
+        const bh = Math.max(3, lvl * h);
+        const x = i * (bw + gap), y = h - bh;
+        if (ctx2d.roundRect) ctx2d.roundRect(x, y, bw, bh, Math.min(2, bw / 2));
+        else ctx2d.rect(x, y, bw, bh);
+      }
+      ctx2d.fill();
+    });
+  }
+  function frame(now) {
+    const dt = lastT ? Math.min(0.05, (now - lastT) / 1000) : 0.016;
+    lastT = now || 0;
+    const live = !synth && analyser && audioCtx && audioCtx.state === 'running' && !isPaused() && binRanges;
+    if (synth && !isPaused()) {
+      organic(dt);
+    } else if (live) {
+      analyser.getByteFrequencyData(freqData);
+      for (let i = 0; i < BARS; i++) {
+        const [b0, b1] = binRanges[i];
+        let sum = 0;
+        for (let b = b0; b < b1; b++) sum += freqData[b];
+        const v = (sum / (b1 - b0)) / 255;
+        const target = Math.min(1, v * (0.9 + 0.7 * i / (BARS - 1))); // compensa la caída natural de agudos
+        barLevels[i] = target > barLevels[i] ? target : Math.max(target, barLevels[i] - 0.035);
+      }
+    } else {
+      for (let i = 0; i < BARS; i++) barLevels[i] = Math.max(0, barLevels[i] - 0.05);
+    }
+    draw();
+    if (running || barLevels.some(l => l > 0.01)) requestAnimationFrame(frame);
+    else looping = false;
+  }
+  return {
+    // conecta el analizador (cuando se crea el grafo de audio)
+    attach(ac, an) {
+      audioCtx = ac; analyser = an;
+      freqData = new Uint8Array(an.frequencyBinCount);
+      computeBinRanges();
+    },
+    // color de énfasis ("#rrggbb"); vacío o no válido = el verde por defecto
+    // Cambia el color de las barras con una transición suave (misma duración que la de --accent en el CSS)
+    setAccent(hex) {
+      const top = typeof hex === 'string' && HEX6.test(hex) ? hex : DEF_TOP;
+      const from = colTop, t0 = first ? -ACCENT_FADE_MS : performance.now();   // el primer color (el de los ajustes al cargar) se pone sin transición
+      first = false;
+      cancelAnimationFrame(fadeId);
+      const step = now => {
+        const k = Math.max(0, Math.min(1, (now - t0) / ACCENT_FADE_MS));   // el sello de rAF puede ser algo anterior a t0
+        colTop = mix(from, top, k);
+        colBottom = shade(colTop, 0.7);
+        grad = null;
+        if (!looping) draw();
+        if (k < 1) fadeId = requestAnimationFrame(step);
+      };
+      fadeId = requestAnimationFrame(step);
+    },
+    // true = la emisora no pasa por Web Audio: barras sintéticas en vez de las del analizador
+    setSynthetic(on) { synth = !!on; },
+    get synthetic() { return synth; },
+    // empieza a animar (al conectar) / deja que las barras bajen y se paren (al desconectar)
+    start() { running = true; if (!looping) { looping = true; requestAnimationFrame(frame); } },
+    stop() { running = false; },
+    draw,
+    get looping() { return looping; },
+    levels: barLevels,                       // nivel actual de cada barra (0 a 1), para otras vistas como el modo presentación
+    get analyser() { return analyser; },     // analizador del audio (para vistas que usan la forma de onda)
+    get accent() { return colTop; },         // color actual de las barras ("#rrggbb", con la transición ya aplicada)
+  };
+}

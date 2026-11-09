@@ -1,0 +1,28 @@
+# Cabeceras para Cloudflare Pages
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+
+# el service worker debe revisarse siempre para que las actualizaciones lleguen
+/sw.js
+  Cache-Control: no-cache
+
+# los ajustes por defecto (URL de los streams) cambian con el tiempo: siempre se revisan
+/stations.json
+  Cache-Control: no-cache
+
+# el catálogo interno (las mismas cadenas, para la búsqueda) también se revisa siempre
+/catalogo.json
+  Cache-Control: no-cache
+
+# hls.js (copia local): si lo actualizas, cambia también el nombre del archivo
+/vendor/*
+  Cache-Control: public, max-age=604800
+
+# los sonidos casi nunca cambian (si cambias uno, sube SOUNDS_VERSION en js/sounds.js para que se vuelva a descargar)
+/sounds/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# la imagen de la notificación casi nunca cambia (si la cambias, sube SOUNDS_VERSION en js/sounds.js)
+/img/*
+  Cache-Control: public, max-age=31536000, immutable

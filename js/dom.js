@@ -1,0 +1,67 @@
+// =========
+// == DOM ==
+// =========
+// Referencias a los elementos de la página (se obtienen una sola vez).
+
+export const toggle = document.getElementById('toggle');
+export const stop = document.getElementById('stop');
+export const statusBox = document.getElementById('statusBox');
+export const dot = document.getElementById('dot');
+export const logBox = document.getElementById('log');
+export const volume = document.getElementById('volume');
+export const volValue = document.getElementById('volValue');
+export const psValue = document.getElementById('psValue');
+export const presetsBox = document.getElementById('presets');   // contenedor de los grupos de emisoras
+export const newsBox = document.getElementById('news');
+export const copyBtn = document.getElementById('copyLog');
+export const vizCanvas = document.getElementById('vizCanvas');
+export const vizBox = document.getElementById('viz');
+export const eqLabel = document.getElementById('eqLabel');
+export const presOpen = document.getElementById('presOpen');
+export const presExpand = document.getElementById('presExpand');
+export const presEl = document.getElementById('pres');
+export const presCanvas = document.getElementById('presCanvas');
+export const presPs = document.getElementById('presPs');
+export const presPsText = document.getElementById('presPsText');
+export const presQual = document.getElementById('presQual');
+export const presClock = document.getElementById('presClock');
+export const presCtl = document.getElementById('presCtl');
+export const presPlay = document.getElementById('presPlay');
+export const presNews = document.getElementById('presNews');
+export const presNewsSw = document.getElementById('presNewsSw');
+export const presVol = document.getElementById('presVol');
+export const presVolValue = document.getElementById('presVolValue');
+export const presNewsVol = document.getElementById('presNewsVol');
+export const presNewsVolValue = document.getElementById('presNewsVolValue');
+export const presStrip = document.getElementById('presStrip');
+export const presMode = document.getElementById('presMode');
+export const presClose = document.getElementById('presClose');
+export const clockEl = document.getElementById('clock');
+export const newsToggle = document.getElementById('newsToggle');
+export const newsVolume = document.getElementById('newsVolume');
+export const newsVolValue = document.getElementById('newsVolValue');
+export const settingsDlg = document.getElementById('settings');
+export const delayInput = document.getElementById('delayInput');
+export const autoDelay = document.getElementById('autoDelay');
+export const outSelect = document.getElementById('outSelect');
+export const normSwitch = document.getElementById('normSwitch');
+export const customBtn = document.getElementById('customBtn');
+export const customInput = document.getElementById('customInput');
+export const colorSwitch = document.getElementById('colorSwitch');
+export const cfgText = document.getElementById('cfgText');
+export const cfgMsg = document.getElementById('cfgMsg');
+export const cfgFileInput = document.getElementById('cfgFileInput');
+export const settingsClose = document.getElementById('settingsClose');
+export const settingsTabs = document.querySelectorAll('#settings .tabs button');
+export const tabGeneral = document.getElementById('tabGeneral');
+export const tabConfig = document.getElementById('tabConfig');
+export const tabLog = document.getElementById('tabLog');
+export const cfgSave = document.getElementById('cfgSave');
+export const cfgFile = document.getElementById('cfgFile');
+export const cfgClearSounds = document.getElementById('cfgClearSounds');
+export const cfgClear = document.getElementById('cfgClear');
+export const tabStations = document.getElementById('tabStations');
+export const stForm = document.getElementById('stForm');
+export const stMsg = document.getElementById('stMsg');
+export const stAdd = document.getElementById('stAdd');
+export const toastEl = document.getElementById('toast');

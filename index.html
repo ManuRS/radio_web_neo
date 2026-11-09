@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Radio Web Neo</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#11151b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Radio Neo">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="no-config">
+<main>
+  <!-- ================================= -->
+  <!-- == CABECERA, SUBTÍTULO Y RELOJ == -->
+  <!-- ================================= -->
+  <header>
+    <h1 id="title">Radio Web Neo</h1>
+    <div class="status" id="statusBox" role="button" tabindex="0" aria-label="Ajustes y registro" title="Desconectado"><span class="dot" id="dot"></span><span id="clock">--:--:--</span></div>
+  </header>
+  <p class="subtitle">Tu radio en cualquier parte: rápida, ligera y privada</p>
+  <h3 id="especial"></h3>
+  <!-- ============= -->
+  <!-- == BOTONES == -->
+  <!-- ============= -->
+  <div class="buttons">
+    <button id="toggle">▶ Reproducir</button>
+    <button id="stop" disabled>■ Detener</button>
+  </div>
+
+  <!-- ================================================================================= -->
+  <!-- == ZONA CON SCROLL: VOLÚMENES, EMISORA, VISUALIZADOR, BOLETINES Y EMISORAS == -->
+  <!-- ================================================================================= -->
+  <div class="scroller">
+  <div class="panel vols">
+    <div class="volume">
+      <label for="volume">Volumen</label>
+      <input id="volume" type="range" min="0.001" max="1.0" step="any" value="1.0">
+      <span id="volValue">100%</span>
+    </div>
+    <div class="volume">
+      <label for="newsVolume">Noticias</label>
+      <input id="newsVolume" type="range" min="0.001" max="1.0" step="any" value="1.0">
+      <span id="newsVolValue">100%</span>
+    </div>
+  </div>
+
+  <div class="now">
+    <div class="ps idle" id="psValue">—</div>
+  </div>
+
+  <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas><span id="eqLabel" class="eq-label" aria-hidden="true"></span>
+    <button id="presOpen" class="pres-open" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
+    <button id="presExpand" class="pres-open pres-expand" type="button" aria-label="Ampliar" title="Ampliar"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/></svg></button>
+  </div>
+
+  <!-- ===================================================== -->
+  <!-- == BUSCADOR DE EMISORAS (LISTAS DE TDTCHANNELS) == -->
+  <!-- ===================================================== -->
+  <section class="panel search" id="tdtPanel">
+    <input id="tdtQuery" type="search" placeholder="Buscar emisoras…" aria-label="Buscar emisoras en las listas de TDTChannels" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    <button id="tdtGo" class="badge" type="button" aria-label="Buscar" title="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  </section>
+
+  <section class="panel news" id="news">
+    <div class="badge" aria-hidden="true">📰</div>
+    <div class="info"><b>Modo boletines</b></div>
+    <label class="switch" title="Activar modo boletines">
+      <input type="checkbox" id="newsToggle" aria-label="Activar modo boletines">
+      <span class="track"></span>
+    </label>
+  </section>
+
+  <!-- ================================================ -->
+  <!-- == EMISORAS (GENERALISTAS Y MUSICALES) == -->
+  <!-- ================================================ -->
+  <div class="presets" id="presets"></div>
+  </div>
+
+</main>
+
+  <!-- ============================================= -->
+  <!-- == MODO PRESENTACIÓN (BOTÓN DE LAS BARRAS) == -->
+  <!-- ============================================= -->
+  <div class="pres" id="pres" data-mode="0" hidden>
+    <canvas id="presCanvas" aria-hidden="true"></canvas>
+    <div class="pres-info">
+      <div class="pres-ps" id="presPs"><span id="presPsText">—</span></div>
+      <div class="pres-qual"><span id="presQual"></span></div>
+      <div class="pres-clock" id="presClock">--:--:--</div>
+    </div>
+    <div class="pres-mode" id="presMode" aria-hidden="true"></div>
+    <div class="pres-panel pres-ctl" id="presCtl">
+      <div class="pc-row">
+        <button id="presPlay" class="pc-play" type="button" aria-label="Reproducir"></button>
+        <span class="pc-news">Boletines</span>
+        <label class="switch" id="presNewsSw"><input type="checkbox" id="presNews" aria-label="Modo boletines"><span class="track"></span></label>
+      </div>
+      <div class="pc-row"><label for="presVol">Volumen</label><input id="presVol" type="range" min="0.001" max="1.0" step="any" value="1.0"><span id="presVolValue">100%</span></div>
+      <div class="pc-row"><label for="presNewsVol">Noticias</label><input id="presNewsVol" type="range" min="0.001" max="1.0" step="any" value="1.0"><span id="presNewsVolValue">100%</span></div>
+    </div>
+    <div class="pres-panel pres-strip" id="presStrip"></div>
+    <button id="presClose" class="pres-close" type="button" aria-label="Salir de la presentación">✕</button>
+  </div>
+
+  <!-- ========================================================== -->
+  <!-- == VENTANA DE AJUSTES Y REGISTRO (PULSA EL PUNTO Y LA HORA) == -->
+  <!-- ========================================================== -->
+  <dialog id="settings" class="settings">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b>Ajustes</b>
+        <button id="settingsClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="tabs" role="tablist">
+        <button type="button" role="tab" data-tab="general" class="active" aria-selected="true">General</button>
+        <button type="button" role="tab" data-tab="stations" aria-selected="false">Cadena</button>
+        <button type="button" role="tab" data-tab="config" aria-selected="false">Configuración</button>
+        <button type="button" role="tab" data-tab="log" aria-selected="false">Registro</button>
+      </div>
+      <div class="tab" id="tabGeneral">
+        <div class="group">
+          <div class="clockrow">
+            <label for="autoDelay">Autodetectar retraso local</label>
+            <label class="switch">
+              <input type="checkbox" id="autoDelay">
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="clockrow">
+            <label for="delayInput">Retraso reloj local</label>
+            <input id="delayInput" type="text" inputmode="text" maxlength="5" autocomplete="off" spellcheck="false" placeholder="0" title="Segundos de retraso del reloj local. Usa -n si va adelantado">
+            <span>segundos</span>
+          </div>
+        </div>
+        <div class="group">
+          <div class="clockrow">
+            <label for="outSelect">Salida de audio</label>
+            <select id="outSelect">
+              <option value="webaudio">Web Audio</option>
+              <option value="nativa">Nativa</option>
+            </select>
+          </div>
+          <div class="clockrow">
+            <label for="normSwitch">Normalizar volumen</label>
+            <label class="switch">
+              <input type="checkbox" id="normSwitch">
+              <span class="track"></span>
+            </label>
+          </div>
+        </div>
+        <div class="group">
+          <div class="clockrow">
+            <label for="colorSwitch">Color personalizado por la cadena</label>
+            <label class="switch">
+              <input type="checkbox" id="colorSwitch">
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="clockrow">
+            <span>Script de personalización</span>
+            <button id="customBtn" type="button">Cargar</button>
+            <input id="customInput" type="file" accept=".js,text/javascript,application/javascript,text/plain" hidden>
+          </div>
+        </div>
+      </div>
+      <div class="tab" id="tabStations" hidden>
+        <form class="stform" id="stForm" autocomplete="off" novalidate>
+          <b class="sttitle">Añadir nueva cadena personalizada</b>
+          <label>Nombre<input id="stName" type="text" maxlength="40" placeholder="Cadena SER"></label>
+          <label>Nombre corto<input id="stShort" type="text" maxlength="14" placeholder="SER"></label>
+          <label>Tipo<select id="stType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
+          <label>Color<span class="stcolor"><input id="stColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="stColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
+          <label class="wide">Enlace del stream<input id="stUrl" type="url" placeholder="https://…/stream.mp3" spellcheck="false"></label>
+        </form>
+        <div id="stMsg" class="cfgmsg" role="status"></div>
+        <div class="dlg-actions"><button id="stAdd" class="primary" type="button">Añadir</button></div>
+        <div class="dlg-links ghost" aria-hidden="true"><button class="link" type="button" tabindex="-1">.</button></div>
+      </div>
+      <div class="tab" id="tabConfig" hidden>
+        <textarea id="cfgText" aria-label="Configuración" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+        <div id="cfgMsg" class="cfgmsg" role="status"></div>
+        <div class="dlg-actions">
+          <button id="cfgFile" type="button">Cargar</button>
+          <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
+          <button id="cfgSave" class="primary" type="button">Guardar</button>
+        </div>
+        <div class="dlg-links">
+          <button id="cfgClearSounds" class="link" type="button">Vaciar caché de sonidos</button>
+          <button id="cfgClear" class="link" type="button">Borrar ajustes</button>
+        </div>
+      </div>
+      <div class="tab" id="tabLog" hidden>
+        <textarea id="log" readonly spellcheck="false">Listo</textarea>
+        <div class="dlg-actions">
+          <button id="copyLog" type="button">Copiar</button>
+        </div>
+        <div class="dlg-links ghost" aria-hidden="true"><button class="link" type="button" tabindex="-1">.</button></div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- ======================================================== -->
+  <!-- == VENTANA DEL IMPORTADOR (RESULTADOS DE LA BÚSQUEDA) == -->
+  <!-- ======================================================== -->
+  <dialog id="tdtDlg" class="settings tdt">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b>Buscar emisoras</b>
+        <button id="tdtClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <input id="tdtQ" class="tdtq" type="search" placeholder="Nombre de la emisora" aria-label="Nombre de la emisora" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <div id="tdtStatus" class="tdtstatus" role="status"></div>
+      <div id="tdtList" class="tdtlist"></div>
+      <div id="tdtInfo" class="tdtinfo"></div>
+      <div id="tdtAct" class="tdtact" hidden>
+        <div id="tdtSel" class="tdtsel"></div>
+        <div class="seg" role="group" aria-label="Destino">
+          <button id="tdtModeOld" class="on" type="button">En una cadena existente</button>
+          <button id="tdtModeNew" type="button">En una cadena nueva</button>
+        </div>
+        <div class="stform tdtform" id="tdtForm">
+          <label id="tdtOldRow">Cadena<select id="tdtChain"></select></label>
+          <div class="tdtnew stform" id="tdtNewRow" hidden>
+            <label>Nombre de la cadena<input id="tdtNName" type="text" maxlength="40" placeholder="Cadena SER"></label>
+            <label>Nombre corto<input id="tdtNShort" type="text" maxlength="14" placeholder="SER"></label>
+            <label>Tipo<select id="tdtNType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
+            <label>Color<span class="stcolor"><input id="tdtNColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="tdtNColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
+          </div>
+          <label id="tdtLabelRow">Nombre de la emisora<input id="tdtLabel" type="text" maxlength="24" placeholder="SER Málaga"></label>
+        </div>
+        <div id="tdtMsg" class="cfgmsg" role="status"></div>
+        <div class="dlg-actions"><button id="tdtAdd" class="primary" type="button">Añadir</button></div>
+      </div>
+      <div class="dlg-links" hidden>   <!-- botón oculto de momento; la carga por archivo sigue funcionando en importer.js -->
+        <button id="tdtFileBtn" class="link" type="button">Cargar radio.json / tv.json desde archivo…</button>
+        <input id="tdtFile" type="file" accept=".json,application/json,text/plain" multiple hidden>
+      </div>
+    </div>
+  </dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+// Pinta enseguida el color de énfasis guardado (evita ver el verde un instante antes de que cargue la aplicación)
+try {
+  var raw = localStorage.getItem('rn_cfg');
+  if (raw) document.body.classList.remove('no-config');   // hay ajustes guardados: los paneles se muestran sin parpadeo
+  var c = JSON.parse(raw || '{}');
+  if (/^#[0-9a-f]{6}$/i.test(c.accent)) document.documentElement.style.setProperty('--accent', c.accent);
+} catch (e) {}
+</script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

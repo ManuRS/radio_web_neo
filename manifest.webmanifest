@@ -1,0 +1,50 @@
+{
+  "name": "Radio Neo",
+  "short_name": "Radio Neo",
+  "description": "Reproductor de radio con las emisiones oficiales en directo.",
+
+  "categories": [
+    "radio",
+    "news",
+    "music",
+    "utilities"
+  ],
+
+  "start_url": "./",
+  "scope": "./",
+
+  "display": "standalone",
+  "orientation": "portrait",
+
+  "background_color": "#11151b",
+  "theme_color": "#11151b",
+
+  "lang": "es",
+
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
