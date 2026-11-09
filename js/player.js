@@ -54,6 +54,8 @@ export function setMain(d) {
 // Guarda el deck de las noticias, ya conectado, para entrar en cuanto llegue la hora
 export function setNewsDeck(d) { newsDeck = d; }
 
+const COARSE = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;   // pantalla táctil
+
 // =================================
 // == ESTADO EN PANTALLA Y NOTIFICACIÓN ==
 // =================================
@@ -63,6 +65,7 @@ export function syncUi() {
   S.degraded = !!d && !d.wa;
   S.quality = d ? d.quality : '';
   viz.setSynthetic(S.degraded);
+  viz.setSmooth(COARSE && !!d && d.kind !== 'hls');   // las barras de HLS ya van fluidas: el suavizado es para móviles y el resto de formatos
   refreshEq();
   refreshStations();
   updateButtons(S.session !== 'off', S.newsOn && !S.prevStation);   // durante unas noticias sin música debajo se puede pulsar Reproducir

@@ -277,17 +277,18 @@ function pickVariant(st, vi) {
   if (S.current === st && S.variant === vi) return;   // ya suena
   selectStation(st, vi);
 }
-function placeMenu(m, x, y) {
+function placeMenu(m, x, y, center = false) {
   const r = m.getBoundingClientRect();
-  m.style.left = Math.max(6, Math.min(x, window.innerWidth - r.width - 6)) + 'px';
+  m.style.left = Math.max(6, center ? (window.innerWidth - r.width) / 2 : Math.min(x, window.innerWidth - r.width - 6)) + 'px';
   m.style.top = Math.max(6, Math.min(y, window.innerHeight - r.height - 6)) + 'px';
 }
 // Formulario dentro del menú (sustituye a las opciones). fields: [{ type, placeholder, label (texto pequeño encima, opcional), value, max, aria }];
 // run(valores) devuelve (promesa) el texto del error, o nada si todo fue bien (y el menú se cierra). Mientras tanto, los campos se bloquean.
 function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }) {
   menuForm = true;
-  // En pantallas táctiles el formulario se coloca arriba del todo: al salir el teclado, en cualquier otro sitio quedaría tapado
-  if (typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches) y = 6;
+  // En pantallas táctiles el formulario se coloca arriba y centrado: al salir el teclado, en cualquier otro sitio quedaría tapado
+  const touchUi = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+  if (touchUi) y = 16;
   m.replaceChildren(head);
   const form = document.createElement('form');
   form.className = 'ctxform';
@@ -330,11 +331,11 @@ function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }
     if (menuEl !== m) return;   // el menú se cerró mientras tanto
     busy = false; lock(false); go.textContent = button;
     err.textContent = msg; err.hidden = false;
-    placeMenu(m, x, y);
+    placeMenu(m, x, y, touchUi);
     inputs[0].input.focus({ preventScroll: true });
   });
   m.appendChild(form);
-  placeMenu(m, x, y);
+  placeMenu(m, x, y, touchUi);
   inputs[0].input.focus({ preventScroll: true });
   inputs[0].input.select();
 }

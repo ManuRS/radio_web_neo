@@ -15,6 +15,11 @@ export const TDT_URLS = {
   radio: 'https://www.tdtchannels.com/lists/radio.json',
   tv: 'https://www.tdtchannels.com/lists/tv.json',
 };
+// Respaldo: el catálogo en Markdown del repositorio de TDTChannels en GitHub (mismos datos), que se puede leer desde cualquier web
+export const TDT_MD_URLS = {
+  radio: 'https://raw.githubusercontent.com/LaQuay/TDTChannels/master/RADIO.md',
+  tv: 'https://raw.githubusercontent.com/LaQuay/TDTChannels/master/TELEVISION.md',
+};
 export const TDT_CACHE = 'rn-tdt';
 export const TDT_MAX_AGE_MS = 7 * 24 * 3600 * 1000;   // una semana
 const FORMATS = { radio: ['aac', 'mp3', 'm3u8', 'stream'], tv: ['m3u8'] };
@@ -73,14 +78,47 @@ async function store(kind, data) {
   } catch (_) {}
 }
 
-async function download(kind) {
+async function fetchWith(url, as) {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(TDT_URLS[kind], { cache: 'no-store', signal: ctl.signal });
+    const res = await fetch(url, { cache: 'no-store', signal: ctl.signal });
     if (!res.ok) throw new Error('HTTP ' + res.status);
-    return { t: Date.now(), items: trimList(await res.json(), kind) };
+    return as === 'text' ? await res.text() : await res.json();
   } finally { clearTimeout(timer); }
+}
+
+// Del Markdown (TELEVISION.md / RADIO.md) a la misma estructura que el JSON, para pasar por trimList.
+// Cada ámbito es un título (## o ###) y cada canal una fila de tabla:
+//   | Canal | [m3u8 # GEO # HD](url) - [youtube](url) | [web](url) | [logo](url) | EPG | GEO,EMB |
+export function parseMarkdown(md) {
+  const ambits = [];
+  let cur = null;
+  const LINK = /\[([a-z0-9]+)((?: # [^\]]*?)?)\]\((.*?)\)(?= - \[|$)/g;
+  String(md).split('\n').forEach(raw => {
+    const line = raw.replace(/\r$/, '');
+    const h = /^(#{2,3}) (.+)$/.exec(line);
+    if (h) { cur = { name: h[2].trim(), channels: [] }; ambits.push(cur); return; }
+    if (!cur || !line.startsWith('| ') || line.startsWith('| -') || /^\| (Canal|Emisoras) \|/.test(line)) return;
+    const cells = (line.endsWith(' |') ? line.slice(2, -2) : line.slice(2)).split(' | ').map(c => c.trim());
+    if (cells.length < 6) return;
+    const [name, opts, , , , info] = cells;
+    const options = [];
+    if (opts !== '-') for (const m of opts.matchAll(LINK)) options.push({ format: m[1], url: m[3] });
+    cur.channels.push({ name, options, extra_info: info === '-' ? [] : info.split(',') });
+  });
+  return { countries: [{ name: 'TDTChannels', ambits: ambits.filter(a => a.channels.length) }] };
+}
+
+// Primero el JSON de tdtchannels.com; si no se puede leer (su servidor no siempre deja que otra web lo pida), el Markdown de su GitHub
+async function download(kind) {
+  let items;
+  try { items = trimList(await fetchWith(TDT_URLS[kind], 'json'), kind); }
+  catch (err) {
+    try { items = trimList(parseMarkdown(await fetchWith(TDT_MD_URLS[kind], 'text')), kind); } catch (_) { throw err; }
+    if (!items.length) throw err;
+  }
+  return { t: Date.now(), items };
 }
 
 // Guarda una lista cargada a mano (archivo) como si se hubiera descargado

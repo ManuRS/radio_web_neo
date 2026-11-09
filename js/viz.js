@@ -10,6 +10,7 @@ const DEF_TOP = '#58dfa3';
 const DEF_BOTTOM = '#2f9e74';
 const HEX6 = /^#[0-9a-f]{6}$/i;
 const ACCENT_FADE_MS = 600;
+const SMOOTH_TAU = 0.07;   // segundos que tarda una barra en acercarse al nivel nuevo cuando el suavizado está activo
 // Mezcla dos "#rrggbb" (k = 0 el primero, k = 1 el segundo)
 export const mix = (a, b, k) => '#' + [1, 3, 5].map(i => {
   const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16);
@@ -25,7 +26,7 @@ export function createVisualizer(canvas, isPaused) {
   let audioCtx = null, analyser = null, freqData = null, binRanges = null;
   let running = false, looping = false;
   let colTop = DEF_TOP, colBottom = DEF_BOTTOM, fadeId = 0, first = true;
-  let synth = false, tSyn = 0, lastT = 0;
+  let synth = false, smooth = false, tSyn = 0, lastT = 0;
   const synPhase = Array.from({ length: BARS }, () => Math.random() * 6.283), synSpeed = Array.from({ length: BARS }, () => 1.2 + Math.random() * 2.6);
 
   // Niveles sintéticos: cada barra oscila a su ritmo (más fuerte en graves) y un pulso lento mueve los graves
@@ -96,13 +97,15 @@ export function createVisualizer(canvas, isPaused) {
       organic(dt);
     } else if (live) {
       analyser.getByteFrequencyData(freqData);
+      const rise = 1 - Math.exp(-dt / SMOOTH_TAU);
       for (let i = 0; i < BARS; i++) {
         const [b0, b1] = binRanges[i];
         let sum = 0;
         for (let b = b0; b < b1; b++) sum += freqData[b];
         const v = (sum / (b1 - b0)) / 255;
         const target = Math.min(1, v * (0.9 + 0.7 * i / (BARS - 1))); // compensa la caída natural de agudos
-        barLevels[i] = target > barLevels[i] ? target : Math.max(target, barLevels[i] - 0.035);
+        // suavizado: la subida se acerca al nivel nuevo en vez de saltar a él (el analizador se actualiza a golpes cuando el móvil procesa el audio por bloques grandes)
+        barLevels[i] = target > barLevels[i] ? (smooth ? barLevels[i] + (target - barLevels[i]) * rise : target) : Math.max(target, barLevels[i] - 0.035);
       }
     } else {
       for (let i = 0; i < BARS; i++) barLevels[i] = Math.max(0, barLevels[i] - 0.05);
@@ -138,6 +141,8 @@ export function createVisualizer(canvas, isPaused) {
     // true = la emisora no pasa por Web Audio: barras sintéticas en vez de las del analizador
     setSynthetic(on) { synth = !!on; },
     get synthetic() { return synth; },
+    // true = suaviza la subida de las barras reales (móviles con emisoras que no son HLS)
+    setSmooth(on) { smooth = !!on; },
     // empieza a animar (al conectar) / deja que las barras bajen y se paren (al desconectar)
     start() { running = true; if (!looping) { looping = true; requestAnimationFrame(frame); } },
     stop() { running = false; },
