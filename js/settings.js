@@ -110,7 +110,9 @@ export function validateConfig(text) {
       const url = typeof o.url === 'string' ? o.url.trim() : '';
       if (!/^https?:\/\/\S+$/i.test(url)) { errors.push('"' + where + '.urls[' + j + ']": la URL debe empezar por http:// o https://'); return; }
       const kind = o.kind === 'hls' || o.kind === 'aac' || o.kind === 'mp3' ? o.kind : kindOfUrl(url);
-      urls.push({ url, kind, label: typeof o.label === 'string' && o.label.trim() ? o.label.trim().slice(0, 24) : kind.toUpperCase() });   // el nombre de la variante es libre ("SER Málaga"); por defecto, el formato. La calidad no se guarda: se lee en directo
+      const item = { url, kind, label: typeof o.label === 'string' && o.label.trim() ? o.label.trim().slice(0, 24) : kind.toUpperCase() };
+      if (o.cors === false) item.cors = false;   // esa emisora no admite CORS (modo degradado), aunque las demás de la cadena sí
+      urls.push(item);   // el nombre de la variante es libre ("SER Málaga"); por defecto, el formato. La calidad no se guarda: se lee en directo
     });
     if (!urls.length) { errors.push('"' + where + '": hace falta al menos una URL'); return; }
     ids.add(id);
@@ -482,7 +484,7 @@ function urlProblem(url) {
   return '';
 }
 // Variante (URL) tal como se guarda en el JSON, a partir de lo que dijo la comprobación (sin calidad: se lee en directo al sonar). El nombre es opcional; sin él, el formato
-const variantOf = (url, p, name = '') => ({ label: name.trim().slice(0, 24) || p.kind.toUpperCase(), url, kind: p.kind });
+const variantOf = (url, p, name = '') => ({ label: name.trim().slice(0, 24) || p.kind.toUpperCase(), url, kind: p.kind, ...(p.cors ? {} : { cors: false }) });
 
 // Crea una cadena nueva con una emisora (enlace comprobado). opts: { name, short, group, color, url, label }. Devuelve el texto del error, o '' si se creó
 // (también la usa el importador de TDTChannels). El mensaje de éxito lo muestra showCfgMsg (en la pestaña, o como aviso si la ventana está cerrada)
@@ -501,7 +503,6 @@ export async function createChain(opts) {
   if (short) st.short = short;
   st.group = opts.group === 'musical' ? 'musical' : 'general';
   st.urls = [variantOf(url, p, opts.label || '')];
-  if (!p.cors) st.cors = false;   // sin CORS desde el principio (modo degradado, sin ecualizador)
   const color = (opts.color || '').trim();
   if (color) st.color = color;
   expandGroup(st.group);   // la rejilla de su tipo se despliega para que se vea el botón nuevo
@@ -517,7 +518,7 @@ export async function createChain(opts) {
     });
   } finally { silent = false; }
   if (!ok) return lastMsg || 'No se pudo guardar';
-  showCfgMsg(['Cadena añadida: ' + name + (st.cors === false ? ' (sin CORS: sonará sin ecualizador ni visualizador real)' : '')], false);
+  showCfgMsg(['Cadena añadida: ' + name + (p.cors ? '' : ' (sin CORS: sonará sin ecualizador ni visualizador real)')], false);
   return '';
 }
 
@@ -572,7 +573,7 @@ editHooks.addVariant = async (id, rawUrl, rawName) => {
     });
   } finally { silent = false; }
   if (!ok) return lastMsg || 'No se pudo guardar';
-  showCfgMsg(['Emisora añadida a ' + st.name + ': ' + v.label + (p.cors ? '' : ' (sin CORS: si falla con ecualizador, pasará sola a modo degradado)')], false);
+  showCfgMsg(['Emisora añadida a ' + st.name + ': ' + v.label + (p.cors ? '' : ' (sin CORS: esa emisora sonará sin ecualizador ni visualizador real)')], false);
   return '';
 };
 

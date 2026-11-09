@@ -44,8 +44,16 @@ export const soundName = src => src.split('?')[0].split('/').pop().replace(/\.[a
 
 // Instante del "golpe final" de un sonido: la última vez que su nivel está a menos de dbBelowPeak dB de su máximo
 // (después viene la cola que se va apagando). Se usa con "hit": "auto" en los ajustes.
+const hitCache = new WeakMap();   // el modo boletines lo pregunta cada segundo por cada franja: se calcula una vez por sonido
 export function finalHit(buf, dbBelowPeak) {
   if (!buf || !buf.getChannelData) return buf ? buf.duration : 0;
+  const hit = hitCache.get(buf);
+  if (hit && hit.db === dbBelowPeak) return hit.t;
+  const t = computeFinalHit(buf, dbBelowPeak);
+  hitCache.set(buf, { db: dbBelowPeak, t });
+  return t;
+}
+function computeFinalHit(buf, dbBelowPeak) {
   const win = Math.max(1, Math.floor(buf.sampleRate * 0.02));
   const n = Math.floor(buf.length / win);
   const chans = [];

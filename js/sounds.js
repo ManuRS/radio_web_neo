@@ -79,21 +79,36 @@ export function prefetchSounds() {
   allSoundSrcs().forEach(src => { getSoundData(src, true).catch(() => {}); });
 }
 
-// Decodifica los sonidos (necesita el contexto de audio, que se crea al pulsar Reproducir)
-export async function loadSounds() {
-  soundBuffers.clear();
-  const srcs = allSoundSrcs();
-  let ok = 0, failed = 0;
-  await Promise.all(srcs.map(async src => {
+// Decodifica los sonidos que falten (necesita el contexto de audio, que se crea al pulsar Reproducir o al activar el modo boletines).
+// Lo ya decodificado se conserva: un sonido decodificado sirve también para los contextos de audio que se creen después
+let loadingSounds = null;
+export function loadSounds() {
+  if (!S.audioCtx) return Promise.resolve();
+  if (loadingSounds) return loadingSounds;
+  const srcs = allSoundSrcs().filter(src => !soundBuffers.has(src));
+  if (!srcs.length) return Promise.resolve();
+  const ac = S.audioCtx;
+  let failed = 0, stale = false;
+  loadingSounds = Promise.all(srcs.map(async src => {
     try {
-      soundBuffers.set(src, await S.audioCtx.decodeAudioData(await getSoundData(src)));
-      ok++;
+      soundBuffers.set(src, await ac.decodeAudioData(await getSoundData(src)));
     } catch (err) {
+      if (S.audioCtx !== ac) { stale = true; return; }   // el contexto se recreó a medias: se repite con el nuevo
       failed++;
       const hint = err && err.name === 'TypeError' ? ' (descarga bloqueada: CORS o sin red)' : '';
       log('No se pudo cargar ' + soundName(src) + ': ' + ((err && err.name) || 'Error') + ' - ' + (err && err.message) + hint);
     }
-  }));
-  if (srcs.length) log('Sonidos de transición cargados: ' + ok + '/' + srcs.length);
-  if (failed) log('Sin sonido cargado solo habrá fundidos');
+  })).then(() => {
+    loadingSounds = null;
+    if (stale) return loadSounds();
+    log('Sonidos de transición cargados: ' + (allSoundSrcs().length - failed) + '/' + allSoundSrcs().length);
+    if (failed) log('Sin sonido cargado solo habrá fundidos');
+  });
+  return loadingSounds;
+}
+
+// Los sonidos solo hacen falta con el modo boletines: se descargan y decodifican al activarlo (no al abrir la web ni en cada Reproducir).
+// Con contexto de audio se decodifican ya; sin él, se dejan descargados en la caché
+export function ensureSounds() {
+  if (S.audioCtx) loadSounds(); else prefetchSounds();
 }

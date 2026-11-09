@@ -12,10 +12,10 @@ import { S, clockNow, endNewsState, NEWS_FADE_S, NEWS_IN_OVERLAP_S, NEWS_LOAD_MA
 import { clockEl, newsBox, newsToggle } from './dom.js';
 import { log } from './ui.js';
 import { applyVolume, initAudioGraph, decks } from './audio.js';
-import { jingleHit, soundBuffers, SOUNDS_FROM_NEWS_BY_NAME, SOUNDS_FROM_NEWS_DEFAULT, SOUNDS_TO_NEWS } from './sounds.js';
+import { ensureSounds, jingleHit, soundBuffers, SOUNDS_FROM_NEWS_BY_NAME, SOUNDS_FROM_NEWS_DEFAULT, SOUNDS_TO_NEWS } from './sounds.js';
 import { switchStation } from './transitions.js';
 import { blocksNews } from './stations.js';
-import { closeDeck, getMain, getNewsDeck, openDeck, setNewsDeck, syncUi } from './player.js';
+import { closeDeck, endNewsWhileHeld, getMain, getNewsDeck, openDeck, play, setNewsDeck, syncUi } from './player.js';
 
 // ==============================================
 // == FRANJAS DE NOTICIAS: ESTADO Y ANTELACIÓN ==
@@ -209,7 +209,11 @@ function newsTick(nowMs) {
   } else if (S.newsOn && (!S.newsMode || !S.newsSlot || nowMs >= S.newsSlot.endAbs)) {
     // Terminan las noticias (o se apaga el modo): volver a la emisora anterior
     const back = S.prevStation, vi = S.prevVariant;
-    if (back) {
+    if (S.held) {
+      // en pausa (notificación): ni sonido local ni música; la pausa se queda con la emisora de antes
+      endNewsState();
+      endNewsWhileHeld(back, vi);
+    } else if (back) {
       const list = SOUNDS_FROM_NEWS_BY_NAME[back.name] || SOUNDS_FROM_NEWS_DEFAULT;
       switchStation({ station: back, variant: vi }, {
         label: 'Fin de noticias',
@@ -219,6 +223,8 @@ function newsTick(nowMs) {
         fadeInS: NEWS_OUT_OVERLAP_S,
         overlapS: NEWS_OUT_OVERLAP_S,
         onSilence: endNewsState,
+        // la emisora de antes no conecta a la primera: no se queda en las noticias, se sigue intentando con ella como al pulsar Reproducir
+        onAbort: () => { log('Fin de noticias: se sigue intentando con ' + back.name); play(back, vi); },
       });
     } else {
       // no había música debajo: se apaga la emisora de noticias y se queda a la espera
@@ -239,6 +245,7 @@ function setNewsMode(on) {
   if (on) {
     S.skippedSlot = -1;
     if (S.session === 'off') initAudioGraph(decks.size === 0);   // sin música, se queda a la espera de las noticias: el audio se prepara con este gesto
+    ensureSounds();   // los sonidos de entrada y salida se descargan y decodifican ahora, no al abrir la web
   }
   log('Modo boletines ' + (on ? 'activado' : 'desactivado') + (on && S.session === 'off' ? ' (a la espera de las noticias, sin música)' : ''));
   applyVolume();

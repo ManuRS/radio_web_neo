@@ -9,7 +9,7 @@ import { stop, toggle } from './dom.js';
 import { layoutCheck, log } from './ui.js';
 import { runCustom } from './custom.js';
 import { refreshEq, refreshVolumeUi, resetEq } from './audio.js';
-import { loadSounds, prefetchSounds, ARTWORK_URL } from './sounds.js';
+import { ensureSounds, ARTWORK_URL } from './sounds.js';
 import { buildStations, refreshStations, restoreLast } from './stations.js';
 import { rebuildSlots, slotPlan, tick } from './boletines.js';
 import { loadArtwork } from './mediasession.js';
@@ -47,8 +47,7 @@ function applyConfig(cfg) {
   restoreLast();
   buildStations();
   refreshStations();
-  prefetchSounds();
-  if (S.audioCtx) loadSounds();
+  if (S.newsMode) ensureSounds();
 }
 
 // Cambio de emisoras con la reproducción en marcha (añadir, reordenar, eliminar una que no suena): se conservan los objetos de emisora que ya existen

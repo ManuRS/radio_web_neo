@@ -61,11 +61,11 @@ export async function switchStation(target, o = {}) {
   const abort = async why => {
     log((label ? label + ': ' : '') + why);
     if (nd && nd !== given) closeDeck(nd);
-    if (onAbort) onAbort();
     S.volMode = vm0;
     applyVolume();
     if (old && fadeLevel(old) < 0.99) fadeDeck(old, 1, fadeS);   // la anterior vuelve a sonar
     if (alive()) S.trans = null;
+    if (onAbort) onAbort();   // lo último: puede decidir otra cosa (por ejemplo, volver a intentarlo de otra forma)
   };
   const showTitle = ms => setTimeout(() => { if (alive() || !S.trans) scheduleMediaTitle(); }, ms);
 

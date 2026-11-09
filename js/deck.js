@@ -6,7 +6,7 @@
 // emisora es abrir un deck nuevo en silencio y fundir uno con otro. Basado en el motor de Radio Web Fast (script-livesound.js), sin depender de la página.
 // El deck no sabe nada del audio de la página: audio.js le conecta los nodos de Web Audio mediante los ganchos (hooks) que recibe.
 
-import { S, LIVE_MARGIN_S, LIVE_RESUME_SLACK_S, LIVE_SLACK_S, RETRY_S, STALL_S, VARIANT_AFTER_FAILS } from './state.js';
+import { S, LIVE_MARGIN_S, LIVE_RESUME_SLACK_S, LIVE_SLACK_S, RETRY_S, STALL_S } from './state.js';
 import { log } from './ui.js';
 
 // ===========
@@ -40,13 +40,34 @@ function hlsQuality(level) {
 // ====================================
 // == EMISORAS SIN CORS (SE RECUERDAN) ==
 // ====================================
-// Si una emisora marcada con CORS no carga y sí lo hace sin él, se anota aquí (en este navegador) y a partir de entonces va en modo degradado
+// Si una emisora marcada con CORS no carga y sí lo hace sin él, se anota aquí (en este navegador) y a partir de entonces va en modo degradado.
+// Se anota por emisora (su URL), no por cadena: una cadena puede reunir emisoras de servidores distintos, y que una no admita CORS no dice nada de las demás.
+// Además de lo detectado, vale "cors": false en la cadena entera o en una de sus emisoras (ajustes)
 const NOCORS_KEY = 'rn_nocors';
 let noCors = {};
 try { noCors = JSON.parse(localStorage.getItem(NOCORS_KEY)) || {}; } catch (_) {}
+for (const k of Object.keys(noCors)) if (!/^https?:/i.test(k)) delete noCors[k];   // antes se anotaba por cadena (su id): esas notas ya no valen
 const saveNoCors = () => { try { localStorage.setItem(NOCORS_KEY, JSON.stringify(noCors)); } catch (_) {} };
-export const corsAllowed = st => st.cors !== false && !noCors[st.id];
+export const corsAllowed = (st, vi = 0) => { const u = st.urls[vi]; return st.cors !== false && !!u && u.cors !== false && !noCors[u.url]; };
 export function forgetNoCors() { noCors = {}; saveNoCors(); }
+
+// =========================================
+// == BITRATE QUE ANUNCIA EL SERVIDOR (SE RECUERDA) ==
+// =========================================
+// Lo que respondió cada emisora a la consulta de calidad (cabecera icy-br; 0 = no la anuncia) se guarda una semana en este navegador: así no se abre
+// una segunda conexión al stream en cada arranque y en cada reconexión. Pasada la semana se vuelve a preguntar (las emisoras mejoran o empeoran su stream)
+const ICY_KEY = 'rn_icy';
+const ICY_MAX_AGE_MS = 7 * 24 * 3600 * 1000;
+let icy = {};
+try { icy = JSON.parse(localStorage.getItem(ICY_KEY)) || {}; } catch (_) {}
+if (typeof icy !== 'object' || Array.isArray(icy)) icy = {};
+const icyFresh = e => !!e && typeof e.t === 'number' && Date.now() - e.t < ICY_MAX_AGE_MS && Date.now() >= e.t;
+const icyGet = url => (icyFresh(icy[url]) ? icy[url] : null);
+function icySet(url, br) {
+  for (const k of Object.keys(icy)) if (!icyFresh(icy[k])) delete icy[k];   // lo caducado se tira
+  icy[url] = { t: Date.now(), br };
+  try { localStorage.setItem(ICY_KEY, JSON.stringify(icy)); } catch (_) {}
+}
 
 // ==========
 // == DECK ==
@@ -62,13 +83,15 @@ export class Deck {
     this.hooks = hooks;               // { attach(deck), detach(deck) }: los pone audio.js (nodos de Web Audio)
     this.giveUp = opts.giveUp || Infinity;
     this.direct = !!opts.direct;
-    this.cors = corsAllowed(station) && !this.direct;   // con CORS el <audio> puede pasar por Web Audio
+    this.cors = corsAllowed(station, this.variant) && !this.direct;   // con CORS el <audio> puede pasar por Web Audio
     this.state = 'idle';              // idle | loading | playing | failed | closed
     this.held = false;                // pausa retenida (el <audio> sigue, pero sin sonar)
     this.fadeV = 0;                   // nivel de fundido al que se ha mandado (audio.js)
     this.wa = false;                  // conectado a Web Audio (lo pone audio.js)
     this.fails = 0;                   // fallos seguidos
     this.hadTrouble = false;          // hay un fallo sin resolver (reintento pendiente): al volver la red se reconecta ya
+    this.retryWait = false;           // hay un reintento programado: los demás avisos del mismo intento fallido no cuentan
+    this.blocked = false;             // el navegador no dejó iniciar el audio (falta un gesto del usuario)
     this.everPlayed = false;
     this.triedDirect = false;
     this.quality = '';
@@ -147,6 +170,8 @@ export class Deck {
     if (this.state === 'closed') return;
     this.state = 'loading';
     this.held = false;
+    this.retryWait = false;
+    this.blocked = false;
     const token = ++this.token;
     const el = this.el;
     if (this.kind === 'hls') this.startHls(el, token); else this.startProgressive(el, token);
@@ -160,20 +185,27 @@ export class Deck {
     this.readServerQuality(token);
   }
 
-  // Calidad en directo: si el servidor anuncia su bitrate (cabecera icy-br), se lee en cada conexión con una petición aparte que solo espera las cabeceras y se corta.
-  // Hace falta CORS (y que el servidor exponga la cabecera); si no, se queda el formato sin más.
+  // Calidad en directo: si el servidor anuncia su bitrate (cabecera icy-br), se lee con una petición aparte que solo espera las cabeceras y se corta.
+  // Hace falta CORS (y que el servidor exponga la cabecera); si no, se queda el formato sin más. La respuesta (también "no lo anuncia") vale una semana
+  // para esa emisora (ver icyGet): mientras tanto no se abre la segunda conexión
   async readServerQuality(token) {
     if (!this.cors) return;
     const variant = this.variant, url = this.url, kind = this.kind;
+    const apply = br => {
+      if (!(br > 0) || token !== this.token || variant !== this.variant || this.state === 'closed') return;
+      const q = String(kind || 'mp3').toUpperCase() + ' ' + br + ' kb/s';
+      if (q !== this.quality) { this.quality = q; if (this.on.quality) this.on.quality(this); }
+    };
+    const known = icyGet(url);
+    if (known) { apply(known.br); return; }
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), 6000);
     try {
       const r = await fetch(url, { mode: 'cors', signal: ctl.signal, cache: 'no-store' });
       const br = parseInt(r.headers.get('icy-br'), 10);
       ctl.abort();
-      if (!(br > 0) || token !== this.token || variant !== this.variant || this.state === 'closed') return;
-      const q = String(kind || 'mp3').toUpperCase() + ' ' + br + ' kb/s';
-      if (q !== this.quality) { this.quality = q; if (this.on.quality) this.on.quality(this); }
+      icySet(url, br > 0 ? br : 0);   // solo si el servidor respondió: un fallo de red no dice nada
+      apply(br);
     } catch (_) {
     } finally { clearTimeout(timer); }
   }
@@ -213,7 +245,11 @@ export class Deck {
       if (el !== this.el || this.state === 'closed') return;
       if (err && err.name === 'AbortError') return;   // la carga se ha cambiado mientras tanto
       log('No se pudo iniciar ' + this.station.name + ': ' + ((err && err.message) || err));
-      if (err && err.name === 'NotAllowedError') return;   // sin gesto del usuario: no se reintenta en bucle
+      if (err && err.name === 'NotAllowedError') {   // sin gesto del usuario: no se reintenta en bucle; quien abrió el deck decide (player.js)
+        this.blocked = true;
+        if (this.on.blocked) this.on.blocked(this);
+        return;
+      }
       this.onError(el, true);
     });
   }
@@ -231,10 +267,10 @@ export class Deck {
     if (first) {
       this.everPlayed = true;
       // si funcionó sin CORS tras fallar con él, la emisora no lo admite: se recuerda
-      if (this.triedDirect && this.station.cors !== false && !noCors[this.station.id]) {
-        noCors[this.station.id] = 1;
+      if (this.triedDirect && corsAllowed(this.station, this.variant)) {
+        noCors[this.url] = 1;
         saveNoCors();
-        log(this.station.name + ' no admite CORS: pasa a modo degradado (sin ecualizador ni barras reales)');
+        log(this.station.name + ' (' + this.station.urls[this.variant].label + ') no admite CORS: esa emisora pasa a modo degradado (sin ecualizador ni barras reales)');
       }
       if (this.on.playing) this.on.playing(this);
     }
@@ -262,7 +298,7 @@ export class Deck {
   retryWithCors() {
     if (!this.triedDirect || this.everPlayed) return;
     this.triedDirect = false;
-    this.cors = corsAllowed(this.station) && !this.direct;
+    this.cors = corsAllowed(this.station, this.variant) && !this.direct;
   }
 
   fail(why) {
@@ -272,27 +308,24 @@ export class Deck {
     this.settle(false);
   }
 
-  // Reconexión con espera creciente; tras varios fallos seguidos se prueba otra variante de la emisora
+  // Reconexión con espera creciente, siempre a la misma emisora (las demás de la cadena son otras emisoras, no copias de esta).
+  // Un intento fallido puede avisar dos veces (el evento error y el rechazo de play()): con un reintento ya programado, lo demás no cuenta
   retrySoon(why) {
-    if (this.state === 'closed' || this.held) return;
+    if (this.state === 'closed' || this.held || this.retryWait) return;
     this.hadTrouble = true;
     // Sin red no se gastan intentos (ni se cambia de emisora por un corte de cobertura): se espera con la pausa más larga y, al volver la red, recoverIfStalled reconecta al instante
     const offline = typeof navigator !== 'undefined' && navigator.onLine === false;
     if (!offline) {
       this.fails++;
       if (this.fails >= this.giveUp) { this.fail(why + ', se renuncia'); return; }
-      if (this.fails % VARIANT_AFTER_FAILS === 0 && this.station.urls.length > 1) {
-        this.variant = (this.variant + 1) % this.station.urls.length;
-        log(this.station.name + ': se prueba la emisora ' + this.station.urls[this.variant].label);
-        if (this.on.quality) this.on.quality(this);
-      }
     }
     const wait = offline ? RETRY_S[RETRY_S.length - 1] : RETRY_S[Math.min(this.fails - 1, RETRY_S.length - 1)];
     log(this.station.name + ': ' + why + (offline ? '. Sin red: se espera a que vuelva' : '. Se reintenta en ' + wait + ' s'));
     if (this.state !== 'loading') this.state = 'loading';
     if (this.on.retry) this.on.retry(this);
     clearTimeout(this.retryTimer);
-    this.retryTimer = setTimeout(() => { if (this.state !== 'closed' && !this.held) { this.retryWithCors(); this.build(); this.start(); } }, wait * 1000);
+    this.retryWait = true;
+    this.retryTimer = setTimeout(() => { this.retryWait = false; if (this.state !== 'closed' && !this.held) { this.retryWithCors(); this.build(); this.start(); } }, wait * 1000);
   }
 
   // Al volver la red o la página a primer plano: si la emisora está esperando un reintento, parada o sin datos, se reconecta ya (sin esperar a la pausa del reintento
@@ -349,7 +382,21 @@ export class Deck {
     if (this.state === 'closed') return;
     this.held = true;
     clearTimeout(this.retryTimer);
+    this.retryWait = false;
     if (this.el) { try { this.el.pause(); } catch (_) {} }
+  }
+
+  // Con la pausa retenida, cambia la emisora a la que se volverá al reanudar (el <audio> en pausa se queda: la notificación sigue viva)
+  retarget(station, variant) {
+    if (this.state === 'closed' || !this.held) return;
+    this.station = station;
+    this.variant = variant % station.urls.length;
+    this.cors = corsAllowed(station, this.variant) && !this.direct;
+    this.everPlayed = false;
+    this.triedDirect = false;
+    this.fails = 0;
+    this.lagMin = Infinity;
+    this.quality = '';
   }
 
   // Reanuda en directo: se vuelve a conectar (el búfer acumulado durante la pausa se descarta)

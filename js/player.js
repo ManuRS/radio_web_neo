@@ -7,7 +7,7 @@
 import { S, FADE_S, endNewsState } from './state.js';
 import { Deck } from './deck.js';
 import { applyVolume, deckHooks, decks, fadeDeck, initAudioGraph, refreshEq, releaseDeck, setFade, viz } from './audio.js';
-import { log, setStatus, updateButtons } from './ui.js';
+import { log, setStatus, toast, updateButtons } from './ui.js';
 import { cancelTransition } from './transitions.js';
 import { clearMediaSession, scheduleMediaTitle, setPlaybackState } from './mediasession.js';
 import { refreshStations } from './stations.js';
@@ -29,6 +29,13 @@ export function openDeck(station, variant = 0, opts = {}) {
   d.on.quality = () => { if (d === main) syncUi(); };
   d.on.retry = () => { if (d === main) syncUi(); };
   d.on.failed = () => { if (d === main) syncUi(); };
+  // el navegador no dejó iniciar el audio (falta un gesto): se para todo para que se pueda volver a pulsar Reproducir, en vez de quedarse en "Conectando…"
+  d.on.blocked = () => {
+    if (d !== main) return;
+    log('El navegador ha bloqueado el audio de ' + d.station.name + ': hace falta pulsar Reproducir');
+    stopAll();
+    toast('El navegador ha bloqueado el audio: pulsa Reproducir');
+  };
   d.start();
   return d;
 }
@@ -127,8 +134,11 @@ export function play(station = null, variant = 0) {
   syncUi();
 }
 
-// Detener: se cierra todo (también la emisora de noticias en espera). El modo boletines queda como estaba
-export function stopAll(keepMedia = false) {
+// Detener: se cierra todo (también la emisora de noticias en espera). El modo boletines queda como estaba, pero si se detiene durante un boletín
+// esa franja se da por abandonada: con el interruptor puesto y nada sonando, si no, el boletín volvería a entrar al momento.
+// keepSlot: no se abandona (al cambiar la salida de audio se vuelve a entrar enseguida)
+export function stopAll(keepMedia = false, keepSlot = false) {
+  const slot = !keepSlot && S.newsOn && S.newsSlot ? S.newsSlot.idx : -1;
   cancelTransition();
   for (const d of [...decks]) closeDeck(d);
   main = newsDeck = null;
@@ -140,7 +150,7 @@ export function stopAll(keepMedia = false) {
   S.degraded = false;
   S.quality = '';
   endNewsState();
-  S.skippedSlot = -1;
+  S.skippedSlot = slot;
   viz.stop();
   applyVolume();
   if (keepMedia) setPlaybackState('paused'); else clearMediaSession();
@@ -157,6 +167,21 @@ export function holdPlayback() {
   main.hold();
   setPlaybackState('paused');
   log('Pausa: ' + main.station.name + ' queda retenida');
+  syncUi();
+}
+
+// Acaba un boletín con el audio en pausa: no se vuelve sonando. La pausa pasa a ser de la emisora de antes (al reanudar sonará ella) o,
+// si no había música debajo, se detiene todo y se queda a la espera
+export function endNewsWhileHeld(back, vi) {
+  if (!S.held || !main) return;
+  cancelTransition();
+  S.volMode = 'music';
+  if (!back) { log('Fin de noticias en pausa: no había cadena anterior, se queda a la espera'); stopAll(); return; }
+  main.retarget(back, vi);
+  S.current = back;
+  S.variant = main.variant;
+  log('Fin de noticias en pausa: al reanudar sonará ' + back.name);
+  applyVolume();
   syncUi();
 }
 
@@ -181,7 +206,7 @@ export function resumePlayback() {
 export function restartAudio() {
   if (S.session === 'off') return;
   const st = S.current && !S.newsOn ? S.current : S.lastStation, vi = S.current && !S.newsOn ? S.variant : S.lastVariant;
-  stopAll();
+  stopAll(false, true);
   if (st) play(st, vi);
 }
 

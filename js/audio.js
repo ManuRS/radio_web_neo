@@ -116,7 +116,7 @@ export function initAudioGraph(fresh = false) {
       analyser = null;
       log('Visualización no disponible: ' + err.message);
     }
-    loadSounds();
+    if (S.newsMode) loadSounds();   // los sonidos son del modo boletines: sin él no se descargan ni se decodifican
   } catch (err) {
     log('Web Audio no disponible (' + err.message + '). Se usa el volumen del navegador y no habrá barras reales');
     S.audioCtx = busNode = mixNode = gainNode = analyser = null;
@@ -134,6 +134,7 @@ export const deckHooks = {
     d.wa = false;
     d.srcNode = d.levelAn = d.normNode = d.fadeNode = null;
     d.norm = null;
+    d.fadeInfo = null;
     if (!S.audioCtx || !d.cors) { d.el.volume = Math.min(1, d.fadeV * masterVol()); return; }
     try {
       const ac = S.audioCtx;
@@ -184,16 +185,34 @@ function curve(from, to, power) {
   return c;
 }
 
+// Nivel por el que va el fundido programado de un deck con Web Audio. Se lleva la cuenta aquí (inicio, fin, duración y forma) en vez de leer gain.value:
+// no todos los navegadores reflejan en gain.value una rampa en curso
+function rampLevel(d) {
+  const f = d.fadeInfo;
+  if (!f) return d.fadeV;
+  const k = Math.min(1, Math.max(0, (performance.now() - f.t0) / f.ms));
+  if (k >= 1) return f.to;
+  if (!f.power) return f.from + (f.to - f.from) * k;
+  return f.to > f.from ? f.from + (f.to - f.from) * Math.sin(k * Math.PI / 2) : f.to + (f.from - f.to) * Math.cos(k * Math.PI / 2);
+}
+
 export function fadeDeck(d, target, seconds, power = false) {
   const dur = Math.max(0.01, seconds);
   if (d.rampTimer) { clearInterval(d.rampTimer); d.rampTimer = null; }
   if (d.wa && d.fadeNode) {
-    const g = d.fadeNode.gain, t = S.audioCtx.currentTime, cur = g.value;
-    g.cancelScheduledValues(t);
-    g.setValueAtTime(cur, t);
-    if (power && Math.abs(target - cur) > 0.02) { try { g.setValueCurveAtTime(curve(cur, target, true), t, dur); } catch (_) { g.linearRampToValueAtTime(target, t + dur); } }
-    else g.linearRampToValueAtTime(target, t + dur);
+    const g = d.fadeNode.gain, t = S.audioCtx.currentTime, cur = rampLevel(d);
+    const curved = power && Math.abs(target - cur) > 0.02;
+    d.fadeInfo = { from: cur, to: target, t0: performance.now(), ms: dur * 1000, power: curved };
     d.fadeV = target;
+    try {
+      g.cancelScheduledValues(t);
+      g.setValueAtTime(cur, t);
+      if (curved) { try { g.setValueCurveAtTime(curve(cur, target, true), t, dur); } catch (_) { d.fadeInfo.power = false; g.linearRampToValueAtTime(target, t + dur); } }
+      else g.linearRampToValueAtTime(target, t + dur);
+    } catch (_) {   // si el navegador no deja programar la rampa, el nivel se pone de golpe: una transición nunca debe quedarse a medias
+      d.fadeInfo = null;
+      try { g.value = target; } catch (_2) {}
+    }
     return;
   }
   // degradado: pasos de 50 ms
@@ -208,13 +227,14 @@ export function fadeDeck(d, target, seconds, power = false) {
 
 // Nivel de fundido actual de un deck (0 a 1)
 export function fadeLevel(d) {
-  return d.wa && d.fadeNode ? d.fadeNode.gain.value : d.fadeV;
+  return d.wa && d.fadeNode ? rampLevel(d) : d.fadeV;
 }
 
 // Pone el fundido de golpe (sin rampa)
 export function setFade(d, v) {
   if (d.rampTimer) { clearInterval(d.rampTimer); d.rampTimer = null; }
   d.fadeV = v;
+  d.fadeInfo = null;
   if (d.wa && d.fadeNode) { const g = d.fadeNode.gain; g.cancelScheduledValues(S.audioCtx.currentTime); g.value = v; }
   else if (d.el) d.el.volume = Math.min(1, Math.max(0, v * masterVol()));
 }

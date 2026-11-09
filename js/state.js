@@ -26,10 +26,9 @@ export const NEWS_LOAD_MARGIN_S = 4;   // si la emisora de noticias aún no suen
 export const LIVE_MARGIN_S = 1.5;       // al saltar se deja este colchón de audio por delante (s)
 export const LIVE_RESUME_SLACK_S = 1;   // tras una pausa ajena se salta si el retraso supera el normal en más de esto (s)
 export const LIVE_SLACK_S = 3;          // sonando, se salta si el retraso supera el normal en más de esto (s)
-// Reconexión de una emisora que se corta: esperas crecientes (s), tiempo sin avanzar que se da por colgado (s) y cambios de variante
+// Reconexión de una emisora que se corta: esperas crecientes (s) y tiempo sin avanzar que se da por colgado (s)
 export const RETRY_S = [2, 4, 8, 10];
 export const STALL_S = 8;
-export const VARIANT_AFTER_FAILS = 3;   // tras tantos fallos seguidos se prueba la siguiente variante de la emisora (si la tiene)
 // Normalización del volumen: lo que llega bajo se sube hasta un nivel de referencia (solo sube, con tope). Niveles en dB (RMS)
 export const NORM_TARGET_DB = -16;    // nivel de referencia al que se lleva todo lo que llega
 export const NORM_MAX_BOOST_DB = 24;  // subida máxima (dB)
