@@ -4,7 +4,7 @@
 // Excepción: stations.json (los ajustes por defecto, con las URL de los streams, que cambian con el tiempo) y catalogo.json (las mismas cadenas, para la búsqueda) van "red primero", con la caché de respaldo.
 // Los sonidos y la imagen de la notificación (sounds/, img/) NO se gestionan aquí: la propia página los guarda en la caché "rn-sounds", que este archivo respeta.
 // Los streams (otro origen) tampoco pasan por aquí.
-const CACHE = 'rn-shell-50';
+const CACHE = 'rn-shell-51';
 const NET_WAIT_MS = 3000;   // lo que se espera a la red por stations.json y catalogo.json antes de tirar de la copia guardada
 const SHELL = [
   './', './css/styles.css', './favicon.ico', './favicon-32.png', './icon.svg', './stations.json', './catalogo.json',

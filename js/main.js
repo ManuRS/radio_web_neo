@@ -3,7 +3,7 @@
 // ===============
 // Punto de entrada: aplica los ajustes y arranca la aplicación.
 
-import { emptyConfigFn, fetchDefaultConfigText, initSettingsDialog, loadConfigText, validateConfig } from './settings.js';
+import { emptyConfigFn, fetchDefaultConfigText, initSettingsDialog, loadConfigText, syncDefaults, validateConfig } from './settings.js';
 import { S } from './state.js';
 import { stop, toggle } from './dom.js';
 import { layoutCheck, log } from './ui.js';
@@ -89,21 +89,23 @@ async function loadSettings() {
     if (r && r.errors.length) { log('Los ajustes por defecto no son válidos: ' + r.errors[0]); r = null; }
     source = 'por defecto';
   }
-  if (!r) { applyConfig(emptyConfigFn()); log('Sin ajustes'); return; }
+  if (!r) { applyConfig(emptyConfigFn()); log('Sin ajustes'); return ''; }
   applyConfig(r.cfg);
   S.configText = stored && source === 'por defecto' ? stored : JSON.stringify(r.parsed, null, 2);   // si lo guardado no vale, se deja a la vista para corregirlo
   log('Ajustes ' + source + ': ' + r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas');
+  return source;
 }
 
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   navigator.serviceWorker.register('sw.js').catch(() => {});   // permite instalarla como app (PWA)
 }
 
-loadSettings().then(() => {
+loadSettings().then(source => {
   started = true;
   syncUi();
   layoutCheck();
   tick();
   setInterval(tick, 1000);
   runCustom();   // personalizar.js (si el usuario lo ha subido): lo último de todo
+  if (source === 'guardados') syncDefaults();   // por detrás: las cadenas por defecto que no se han tocado se ponen al día con stations.json
 });
