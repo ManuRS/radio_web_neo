@@ -11,8 +11,8 @@
 /stations.json
   Cache-Control: no-cache
 
-# el catálogo interno (las mismas cadenas, para la búsqueda) también se revisa siempre
-/catalogo.json
+# la base de datos de emisoras (para la búsqueda) también se revisa siempre
+/bbdd/*
   Cache-Control: no-cache
 
 # hls.js (copia local): si lo actualizas, cambia también el nombre del archivo

@@ -7,8 +7,8 @@
 // Formato de origen: { countries: [{ name, ambits: [{ name, channels: [{ name, options: [{ format, url, ... }], extra_info? }] }] }] }
 // Radio: se aceptan aac, mp3, m3u8 y stream (enlace directo de audio). Televisión: solo m3u8 (HLS: se escucha solo el audio, como La 1);
 // youtube, twitch y los enlaces que son una página no son audio y se descartan.
-// Además del origen externo, el proyecto lleva su propio catálogo interno (catalogo.json, armado a partir del JSON por defecto stations.json): así las cadenas
-// predeterminadas siguen disponibles en la búsqueda aunque se borren de los ajustes. Sus canales llevan k: 'neo', las URL con el nombre (l) de cada emisora y, de la cadena, short, tipo (t) y color (c).
+// Además del origen externo, el proyecto lleva su propia base de datos (los archivos de bbdd/, independientes de los ajustes por defecto stations.json): así las cadenas
+// y emisoras conocidas siguen disponibles en la búsqueda aunque no estén en los ajustes. Sus canales llevan k: 'neo', las URL con el nombre (l) de cada emisora y, de la cadena, short, tipo (t) y color (c).
 // Lo que se guarda por canal: { n: nombre, a: ámbito, k: 'radio' | 'tv', g: 1 si es solo para España (GEO), o: [{ f: formato, u: url }] }
 
 export const TDT_URLS = {
@@ -146,19 +146,24 @@ export async function loadLists(force = false) {
   return { items, errors, missing, oldest: isFinite(oldest) ? oldest : 0, refreshed };
 }
 
-// Catálogo interno del proyecto (catalogo.json, junto a la página; si no se puede leer, no pasa nada: quedan las listas de TDTChannels)
+// Catálogo interno del proyecto: la base de datos de la carpeta bbdd/ (junto a la página), un archivo por tema. Cada archivo es { chains: [{ name, short?, group, color?, urls: [{ label, url, kind }] }] }.
+// Si un archivo no se puede leer, no pasa nada: se usan los demás y las listas de TDTChannels
+const CATALOG_FILES = ['bbdd/ser.json', 'bbdd/los40.json', 'bbdd/resto.json'];
 let catalog = null;
-export async function loadCatalog() {
-  if (catalog) return catalog;
+async function readCatalogFile(path) {
   try {
-    const res = await fetch('catalogo.json', { cache: 'no-cache' });
+    const res = await fetch(path, { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
-    catalog = (json.chains || []).filter(c => c && typeof c.name === 'string' && Array.isArray(c.urls)).map(c => ({
+    return (json.chains || []).filter(c => c && typeof c.name === 'string' && Array.isArray(c.urls)).map(c => ({
       n: c.name.trim(), a: '', k: 'neo', short: c.short || '', t: c.group === 'musical' ? 'musical' : 'general', c: c.color || '',
       o: c.urls.filter(u => u && /^https?:\/\//i.test(u.url)).map(u => ({ f: u.kind === 'hls' ? 'm3u8' : String(u.kind || 'mp3').toLowerCase(), u: u.url, l: String(u.label || '').trim() })),
     })).filter(c => c.o.length);
-  } catch (_) { catalog = []; }
+  } catch (_) { return []; }
+}
+export async function loadCatalog() {
+  if (catalog) return catalog;
+  catalog = (await Promise.all(CATALOG_FILES.map(readCatalogFile))).flat();
   return catalog;
 }
 
@@ -203,9 +208,9 @@ export function search(items, query, httpOk = false) {
 }
 
 // Nombre propuesto para una opción: en el catálogo interno, el de la emisora (su nombre); en TDTChannels, el del canal; si tiene varias, con el formato (y su número si se repite): "Cadena SER AAC 2".
-// El nombre de una emisora admite 24 caracteres: si no cabe, se acorta el nombre del canal y se conserva el sufijo
+// El nombre de una emisora admite 30 caracteres: si no cabe, se acorta el nombre del canal y se conserva el sufijo
 export function optionName(ch, i) {
-  if (ch.k === 'neo' && ch.o[i].l) return ch.o[i].l.slice(0, 24);
+  if (ch.k === 'neo' && ch.o[i].l) return ch.o[i].l.slice(0, 30);
   let suffix = '';
   if (ch.o.length > 1) {
     const f = ch.o[i].f === 'm3u8' ? 'HLS' : ch.o[i].f === 'stream' ? '' : ch.o[i].f.toUpperCase();
@@ -213,7 +218,7 @@ export function optionName(ch, i) {
     suffix = [f, same.length > 1 ? same.indexOf(ch.o[i]) + 1 : ''].filter(Boolean).join(' ');
     if (!suffix) suffix = String(i + 1);
   }
-  const room = 24 - (suffix ? suffix.length + 1 : 0);
+  const room = 30 - (suffix ? suffix.length + 1 : 0);
   const base = ch.n.length > room ? ch.n.slice(0, room).trim() : ch.n;
   return suffix ? base + ' ' + suffix : base;
 }

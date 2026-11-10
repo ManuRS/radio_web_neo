@@ -9,7 +9,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "SER Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER.mp3",
           "kind": "mp3"
         },
@@ -24,13 +24,13 @@
           "kind": "mp3"
         },
         {
-          "label": "Radio Zamora",
-          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ZAMORA.mp3",
+          "label": "SER Madrid Norte",
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MADRID_NORTE.mp3",
           "kind": "mp3"
         },
         {
-          "label": "SER Madrid Norte",
-          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MADRID_NORTE.mp3",
+          "label": "Radio Zamora",
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ZAMORA.mp3",
           "kind": "mp3"
         },
         {
@@ -44,17 +44,17 @@
           "kind": "mp3"
         },
         {
-          "label": "Extra: Ser2",
+          "label": "SER Web 2",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER2.mp3",
           "kind": "mp3"
         },
         {
-          "label": "Extra: Alt1",
+          "label": "SER Alternativa",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER_ALT1.mp3",
           "kind": "mp3"
         },
         {
-          "label": "Extra: Alt2",
+          "label": "SER Alternativa 2",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER_ALT2.mp3",
           "kind": "mp3"
         }
@@ -67,7 +67,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "COPE Web",
           "url": "https://flucast09-h-cloud.flumotion.com/cope/net1.mp3",
           "kind": "mp3"
         },
@@ -85,7 +85,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "Onda Cero Web",
           "url": "https://atres-live.ondacero.es/live/ondacero/bitrate_1.m3u8",
           "kind": "hls"
         }
@@ -122,7 +122,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "Señal web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC_1.mp3",
           "kind": "mp3"
         }
@@ -135,7 +135,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "Señal web",
           "url": "https://libertaddigital-radio-live1.flumotion.com/libertaddigital/ld-live1-med.aac",
           "kind": "aac"
         }
@@ -149,7 +149,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "Señal web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOMARCA_NACIONAL.mp3",
           "kind": "mp3"
         }
@@ -162,7 +162,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "Señal web",
           "url": "https://dispatcher.rndfnk.com/crtve/rner3/main/mp3/high",
           "kind": "mp3"
         }
@@ -273,7 +273,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "Señal central",
+          "label": "LOS40 Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40.mp3",
           "kind": "mp3"
         },
@@ -298,12 +298,22 @@
           "kind": "mp3"
         },
         {
-          "label": "México",
+          "label": "LOS40 Córdoba",
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CORDOBA.mp3",
+          "kind": "mp3"
+        },
+        {
+          "label": "LOS40 Granada",
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_GRANADA.mp3",
+          "kind": "mp3"
+        },
+        {
+          "label": "LOS40 México",
           "url": "https://26143.live.streamtheworld.com/LOS40_MEXICO.mp3",
           "kind": "mp3"
         },
         {
-          "label": "Argentina",
+          "label": "LOS40 Argentina",
           "url": "https://edge02.radiohdvivo.com/los40",
           "kind": "mp3"
         }

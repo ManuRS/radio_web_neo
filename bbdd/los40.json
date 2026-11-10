@@ -1,0 +1,214 @@
+{
+ "chains": [
+  {
+   "name": "LOS40 Web",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Andalucía",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Algeciras", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ALGECIRAS.mp3", "kind": "mp3"},
+    {"label": "LOS40 Almería", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ALMERIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Antequera", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ANTEQUERA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Baza", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_BAZA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Cádiz", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CADIZ.mp3", "kind": "mp3"},
+    {"label": "LOS40 Córdoba", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CORDOBA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Granada", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_GRANADA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Guadix", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_GUADIX.mp3", "kind": "mp3"},
+    {"label": "LOS40 Huelva", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_HUELVA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Índalo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_INDALO.mp3", "kind": "mp3"},
+    {"label": "LOS40 Jaén", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_JAEN.mp3", "kind": "mp3"},
+    {"label": "LOS40 Jerez", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_JEREZ.mp3", "kind": "mp3"},
+    {"label": "LOS40 Linares", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_LINARES.mp3", "kind": "mp3"},
+    {"label": "LOS40 Málaga", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MALAGA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Poniente", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_PONIENTE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Sevilla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SEVILLA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Úbeda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_UBEDA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Aragón",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Cinco Villas", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CINCO_VILLAS.mp3", "kind": "mp3"},
+    {"label": "LOS40 Huesca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_HUESCA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Tarazona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TARAZONA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Teruel", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TERUEL.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Asturias",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Asturias", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ASTURIAS.mp3", "kind": "mp3"},
+    {"label": "LOS40 Gijón", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_GIJON.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Canarias",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 La Palma", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_LA_PALMA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Lanzarote", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_LANZAROTE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Tenerife", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TENERIFE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Tenerife Norte", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TENERIFE_NORTE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Tenerife Sur", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TENERIFE_SUR.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Cantabria",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Santander", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SANTANDER.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Castilla y León",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Ávila", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_AVILA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Benavente", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_BENAVENTE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Bierzo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_BIERZO.mp3", "kind": "mp3"},
+    {"label": "LOS40 Burgos", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_BURGOS.mp3", "kind": "mp3"},
+    {"label": "LOS40 León", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_LEON.mp3", "kind": "mp3"},
+    {"label": "LOS40 Palencia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_PALENCIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Salamanca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SALAMANCA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Segovia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_SEGOVIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Soria", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SORIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Zamora", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ZAMORA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Castilla-La Mancha",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Ciudad Real", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CIUDAD_REAL.mp3", "kind": "mp3"},
+    {"label": "LOS40 Cuenca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_CUENCA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Talavera", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TALAVERA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Toledo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TOLEDO.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Cataluña",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "ELS40 Barcelona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CAT.mp3", "kind": "mp3"},
+    {"label": "ELS40 Girona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_GIRONA.mp3", "kind": "mp3"},
+    {"label": "ELS40 Penedés - Garraf", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_PENEDES_GARRAF.mp3", "kind": "mp3"},
+    {"label": "ELS40 Tarragona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_TARRAGONA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Comunidad Valenciana",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Alcoy", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ALCOY.mp3", "kind": "mp3"},
+    {"label": "LOS40 Alicante", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ALICANTE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Benidorm", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_BENIDORM.mp3", "kind": "mp3"},
+    {"label": "LOS40 Castellón", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_CASTELLON.mp3", "kind": "mp3"},
+    {"label": "LOS40 Elche", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ELCHE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Elda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ELDA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Gandía", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_GANDIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Maestrat", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_MAESTRAT.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Extremadura",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Cáceres", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CACERES.mp3", "kind": "mp3"},
+    {"label": "LOS40 Extremadura", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_EXTREMADURA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Navalmoral", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_NAVALMORAL.mp3", "kind": "mp3"},
+    {"label": "LOS40 Vegas Altas", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_VEGAS_ALTAS.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Galicia",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Nordés", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_NORDES.mp3", "kind": "mp3"},
+    {"label": "LOS40 Ourense", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_OURENSE.mp3", "kind": "mp3"},
+    {"label": "LOS40 Pontevedra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_PONTEVEDRA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Santiago", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SANTIAGO.mp3", "kind": "mp3"},
+    {"label": "LOS40 Vigo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_VIGO.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 La Rioja",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Rioja", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_RIOJA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Madrid",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Henares", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_HENARES.mp3", "kind": "mp3"},
+    {"label": "LOS40 Madrid", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MADRID.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Melilla",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Melilla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MELILLA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Murcia",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Cartagena", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CARTAGENA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Murcia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MURCIA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Navarra",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Pamplona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_PAMPLONA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 País Vasco",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Bilbao", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_BILBAO.mp3", "kind": "mp3"},
+    {"label": "LOS40 San Sebastián", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SAN_SEBASTIAN.mp3", "kind": "mp3"},
+    {"label": "LOS40 Vitoria", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_VITORIA.mp3", "kind": "mp3"}
+   ]
+  },
+  {
+   "name": "LOS40 Internacional",
+   "group": "musical",
+   "color": "#ff6a2a",
+   "urls": [
+    {"label": "LOS40 Argentina", "url": "https://edge02.radiohdvivo.com/los40", "kind": "mp3"},
+    {"label": "LOS40 México", "url": "https://26143.live.streamtheworld.com/LOS40_MEXICO.mp3", "kind": "mp3"}
+   ]
+  }
+ ]
+}

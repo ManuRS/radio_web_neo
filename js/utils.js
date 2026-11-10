@@ -92,9 +92,9 @@ export function effectiveDuration(buf, silenceDb) {
   return d;
 }
 
-// Nombre de una emisora (cada URL de una cadena). Es genérico si no dice nada de la señal: vacío, el formato (MP3) o "Señal central" / "Directo".
+// Nombre de una emisora (cada URL de una cadena). Es genérico si no dice nada de la señal: vacío, el formato (MP3) o "Señal central" / "Señal web" / "Directo".
 // En títulos se prefiere el nombre de la emisora que suena (Radio Madrid) al de la cadena (Cadena SER); si es genérico, se usa el de la cadena.
-const GENERIC_LABEL = /^(se[ñn]al central|directo|mp3|aac|hls|stream)$/i;
+const GENERIC_LABEL = /^(se[ñn]al central|se[ñn]al web|directo|mp3|aac|hls|stream)$/i;
 const emisoraLabel = u => (u && u.label ? String(u.label).trim() : '');
 const isGenericLabel = u => !emisoraLabel(u) || GENERIC_LABEL.test(emisoraLabel(u));
 export function emisoraName(st, vi, short = false) {

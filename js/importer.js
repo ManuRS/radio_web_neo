@@ -4,7 +4,7 @@
 // El panel gris con la lupa (sobre el modo boletines) abre una ventana con los canales de las listas de TDTChannels que coinciden con el nombre buscado.
 // Cada canal muestra sus opciones (formato y servidor); se elige una y se decide: añadirla como una emisora más de una cadena que ya existe
 // (con el nombre de la opción, editable) o crear con ella una cadena nueva. Las listas y su caché de una semana están en tdt.js, junto al catálogo interno
-// del proyecto (catalogo.json), que también entra en la búsqueda: las cadenas predeterminadas se pueden recuperar aunque se borren de los ajustes.
+// del proyecto (la base de datos de bbdd/), que también entra en la búsqueda: las cadenas y emisoras conocidas se pueden recuperar aunque no estén en los ajustes.
 
 import { S } from './state.js';
 import { closeDialog, log, openDialog } from './ui.js';

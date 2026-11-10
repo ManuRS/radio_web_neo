@@ -119,7 +119,7 @@ export function validateConfig(text) {
       const url = typeof o.url === 'string' ? o.url.trim() : '';
       if (!/^https?:\/\/\S+$/i.test(url)) { errors.push('"' + where + '.urls[' + j + ']": la URL debe empezar por http:// o https://'); return; }
       const kind = o.kind === 'hls' || o.kind === 'aac' || o.kind === 'mp3' ? o.kind : kindOfUrl(url);
-      const item = { url, kind, label: typeof o.label === 'string' && o.label.trim() ? o.label.trim().slice(0, 24) : kind.toUpperCase() };
+      const item = { url, kind, label: typeof o.label === 'string' && o.label.trim() ? o.label.trim().slice(0, 30) : kind.toUpperCase() };
       if (o.cors === false) item.cors = false;   // esa emisora no admite CORS (modo degradado), aunque las demás de la cadena sí
       urls.push(item);   // el nombre de la variante es libre ("SER Málaga"); por defecto, el formato. La calidad no se guarda: se lee en directo
     });
@@ -572,7 +572,7 @@ function urlProblem(url) {
   return '';
 }
 // Variante (URL) tal como se guarda en el JSON, a partir de lo que dijo la comprobación (sin calidad: se lee en directo al sonar). El nombre es opcional; sin él, el formato
-const variantOf = (url, p, name = '') => ({ label: name.trim().slice(0, 24) || p.kind.toUpperCase(), url, kind: p.kind, ...(p.cors ? {} : { cors: false }) });
+const variantOf = (url, p, name = '') => ({ label: name.trim().slice(0, 30) || p.kind.toUpperCase(), url, kind: p.kind, ...(p.cors ? {} : { cors: false }) });
 
 // Crea una cadena nueva con una emisora (enlace comprobado). opts: { name, short, group, color, url, label }. Devuelve el texto del error, o '' si se creó
 // (también la usa el importador de TDTChannels). El mensaje de éxito lo muestra showCfgMsg (en la pestaña, o como aviso si la ventana está cerrada)
@@ -683,7 +683,7 @@ editHooks.rename = (id, rawName, rawShort, rawLabels = []) => {
         s.urls = s.urls.map((u, i) => {
           if (i >= rawLabels.length) return u;
           const o = typeof u === 'string' ? { url: u } : u;
-          const label = String(rawLabels[i] || '').trim().slice(0, 24);
+          const label = String(rawLabels[i] || '').trim().slice(0, 30);
           if (label) o.label = label; else delete o.label;   // sin nombre, el formato
           return o;
         });

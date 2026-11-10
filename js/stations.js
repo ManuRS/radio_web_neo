@@ -342,7 +342,7 @@ function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }
 const openVariantForm = (m, head, st, x, y) => openMenuForm(m, head, x, y, {
   fields: [
     { type: 'url', placeholder: 'https://…/stream.aac', aria: 'Enlace de la emisora' },
-    { max: 24, placeholder: 'SER Málaga', aria: 'Nombre de la emisora (opcional)' },
+    { max: 30, placeholder: 'SER Málaga', aria: 'Nombre de la emisora (opcional)' },
   ],
   button: 'Añadir', busyText: 'Comprobando…', failText: 'No se pudo añadir la emisora',
   run: ([url, name]) => editHooks.addVariant ? editHooks.addVariant(st.id, url, name) : 'No disponible',
@@ -352,51 +352,66 @@ const openRenameForm = (m, head, st, x, y) => openMenuForm(m, head, x, y, {
   fields: [
     { max: 40, value: st.name, label: 'Nombre de la cadena' },
     { max: 14, value: st.short || '', label: 'Nombre corto (botón)' },
-    ...st.urls.map((u, i) => ({ max: 24, value: u.label, placeholder: u.kind.toUpperCase(), label: (st.urls.length > 1 ? 'Emisora ' + (i + 1) : 'Emisora') + ' (' + u.kind.toUpperCase() + ')' })),
+    ...st.urls.map((u, i) => ({ max: 30, value: u.label, placeholder: u.kind.toUpperCase(), label: (st.urls.length > 1 ? 'Emisora ' + (i + 1) : 'Emisora') + ' (' + u.kind.toUpperCase() + ')' })),
   ],
   button: 'Guardar', failText: 'No se pudo cambiar el nombre',
   run: ([name, short, ...labels]) => editHooks.rename ? editHooks.rename(st.id, name, short, labels) : 'No disponible',
 });
-// Menú: arriba el nombre de la emisora (en gris); una fila por variante (clic = sintonizarla) con "Eliminar" en rojo a la derecha (pide una segunda pulsación;
-// con una sola variante elimina la emisora entera); al final, "Añadir variante…" y "Cambiar nombre…"
+// Menú. Con varias emisoras: arriba el nombre de la cadena (en gris) y una fila por emisora (clic = sintonizarla) con "Eliminar" en rojo a la derecha
+// (pide una segunda pulsación; quita solo esa emisora). Con una sola no hay nada que elegir: arriba el nombre de la cadena, con el color normal, y "Eliminar" a su lado
+// (quita la cadena entera). Al final, en ambos casos, "Añadir emisora…" y "Cambiar nombre…"
 function openMenu(x, y, st) {
   closeMenu();
   const m = document.createElement('div');
   m.className = 'ctxmenu';
   m.setAttribute('role', 'menu');
-  const head = document.createElement('div');
+  const head = document.createElement('div');   // cabecera gris: la del menú con varias emisoras y la de los formularios (añadir, cambiar nombre)
   head.className = 'ctxtitle';
   head.textContent = st.name;
-  m.appendChild(head);
-  const list = document.createElement('div');   // la lista de emisoras se desplaza por dentro; el nombre arriba y las acciones abajo siempre se ven
-  list.className = 'ctxlist';
-  m.appendChild(list);
-  st.urls.forEach((u, i) => {
-    const row = document.createElement('div');
-    row.className = 'ctxrow';
-    const go = document.createElement('button');
-    go.type = 'button';
-    go.className = 'ctxgo';
-    go.setAttribute('role', 'menuitem');
-    go.textContent = variantLabel(st, i);
-    if (S.current === st && S.variant === i) go.classList.add('on');   // la que suena
-    go.addEventListener('click', () => { closeMenu(); pickVariant(st, i); });
+  // "Eliminar" en dos pasos: la primera pulsación pide confirmación; la segunda quita la emisora i (con una sola, la cadena entera)
+  const deleteButton = (i, aria) => {
     const del = document.createElement('button');
     del.type = 'button';
     del.className = 'ctxdel';
     del.setAttribute('role', 'menuitem');
     del.textContent = 'Eliminar';
-    del.setAttribute('aria-label', 'Eliminar ' + (st.urls.length > 1 ? variantLabel(st, i) : st.name));
-    let armed = false;   // dos pasos: la primera pulsación pide confirmación
+    del.setAttribute('aria-label', aria);
+    let armed = false;
     del.addEventListener('click', () => {
       if (!armed) { armed = true; del.textContent = '¿Seguro?'; del.classList.add('danger'); return; }
       closeMenu();
       if (st.urls.length > 1) { if (editHooks.removeVariant) editHooks.removeVariant(st.id, i); }
       else if (editHooks.remove) editHooks.remove(st.id);
     });
-    row.append(go, del);
-    list.appendChild(row);
-  });
+    return del;
+  };
+  if (st.urls.length === 1) {
+    const row = document.createElement('div');
+    row.className = 'ctxrow ctxsolo';
+    const name = document.createElement('div');
+    name.className = 'ctxname';
+    name.textContent = st.name;
+    row.append(name, deleteButton(0, 'Eliminar ' + st.name));
+    m.appendChild(row);
+  } else {
+    m.appendChild(head);
+    const list = document.createElement('div');   // la lista de emisoras se desplaza por dentro; el nombre arriba y las acciones abajo siempre se ven
+    list.className = 'ctxlist';
+    m.appendChild(list);
+    st.urls.forEach((u, i) => {
+      const row = document.createElement('div');
+      row.className = 'ctxrow';
+      const go = document.createElement('button');
+      go.type = 'button';
+      go.className = 'ctxgo';
+      go.setAttribute('role', 'menuitem');
+      go.textContent = variantLabel(st, i);
+      if (S.current === st && S.variant === i) go.classList.add('on');   // la que suena
+      go.addEventListener('click', () => { closeMenu(); pickVariant(st, i); });
+      row.append(go, deleteButton(i, 'Eliminar ' + variantLabel(st, i)));
+      list.appendChild(row);
+    });
+  }
   const add = document.createElement('button');
   add.type = 'button';
   add.className = 'ctxadd';
@@ -414,7 +429,7 @@ function openMenu(x, y, st) {
   document.body.appendChild(m);
   placeMenu(m, x, y);
   menuEl = m;
-  const first = m.querySelector('.ctxgo');
+  const first = m.querySelector('.ctxgo') || m.querySelector('.ctxadd');   // sin lista de emisoras (una sola), el foco va a "Añadir emisora…"
   if (first) first.focus({ preventScroll: true });
 }
 document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
