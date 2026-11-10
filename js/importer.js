@@ -10,12 +10,12 @@ import { S } from './state.js';
 import { closeDialog, log, openDialog } from './ui.js';
 import { editHooks } from './stations.js';
 import { createChain } from './settings.js';
-import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optionName, search } from './tdt.js';
+import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optionName, optionSuffix, search } from './tdt.js';
 
 const $ = id => document.getElementById(id);
 const panel = $('tdtPanel'), query = $('tdtQuery'), go = $('tdtGo');
 const dlg = $('tdtDlg'), q2 = $('tdtQ'), statusEl = $('tdtStatus'), listEl = $('tdtList'), infoEl = $('tdtInfo');
-const act = $('tdtAct'), selEl = $('tdtSel'), msg = $('tdtMsg');
+const act = $('tdtAct'), selName = $('tdtSelName'), msg = $('tdtMsg');
 const modeOld = $('tdtModeOld'), modeNew = $('tdtModeNew'), oldRow = $('tdtOldRow'), newRow = $('tdtNewRow');
 const chainSel = $('tdtChain'), labelIn = $('tdtLabel'), addBtn = $('tdtAdd');
 const nName = $('tdtNName'), nShort = $('tdtNShort'), nType = $('tdtNType'), nColor = $('tdtNColor'), nColorPick = $('tdtNColorPick');
@@ -114,8 +114,9 @@ function renderResults() {
     const card = el('div', solo ? 'tdtch solo' : 'tdtch');
     const head = el(solo ? 'span' : 'div', solo ? 'fmt tdthead' : 'tdthead');
     head.appendChild(el('b', '', ch.n));
+    if (solo && ch.k !== 'neo') head.appendChild(el('span', 'tag', optLabel(ch, 0)));   // en TDTChannels, el formato de su única opción en una burbuja (con varias, va en cada fila)
     if (ch.k !== 'neo') head.appendChild(el('span', 'tag', ch.k === 'tv' ? 'TV · solo audio' : 'Radio'));
-    if (ch.a) head.appendChild(el('span', 'amb', ch.a));
+    if (ch.a) head.appendChild(el('span', 'tag', ch.a));   // el tipo/ámbito que da TDTChannels (Musicales, Andalucía…), también en burbuja
     if (ch.g) head.appendChild(el('span', 'tag geo', 'solo España'));
     if (!solo) card.appendChild(head);
     ch.o.forEach((o, i) => {
@@ -123,7 +124,7 @@ function renderResults() {
       b.type = 'button';
       b.appendChild(solo ? head : el('span', 'fmt', optLabel(ch, i)));
       if (keep && keep === ch && picked.i === i) { b.classList.add('sel'); picked = { ch, i }; }
-      b.addEventListener('click', () => pick(ch, i, b));
+      b.addEventListener('click', () => (picked && picked.ch === ch && picked.i === i ? clearPick() : pick(ch, i, b)));   // pulsar la elegida la deselecciona
       card.appendChild(b);
     });
     listEl.appendChild(card);
@@ -137,6 +138,7 @@ function renderResults() {
 // ================
 function clearPick() {
   picked = null;
+  listEl.querySelectorAll('.tdtopt.sel').forEach(b => b.classList.remove('sel'));
   act.hidden = true;
   infoEl.hidden = false;
   setMsg('');
@@ -184,7 +186,7 @@ function pick(ch, i, btn) {
   btn.classList.add('sel');
   picked = { ch, i };
   const o = ch.o[i];
-  selEl.textContent = isSolo(ch) ? ch.n : ch.n + ' · ' + optLabel(ch, i);
+  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + optLabel(ch, i);
   labelIn.value = optionName(ch, i);
   // el catálogo interno ya trae el nombre corto, el tipo y el color de la cadena; las listas de TDTChannels, no
   nName.value = ch.n.slice(0, 40);
@@ -262,6 +264,7 @@ dlg.addEventListener('close', () => { query.value = q2.value.trim(); });
 modeOld.addEventListener('click', () => setMode('old'));
 modeNew.addEventListener('click', () => setMode('new'));
 addBtn.addEventListener('click', add);
+$('tdtSelClose').addEventListener('click', clearPick);
 nColorPick.addEventListener('input', () => { nColor.value = nColorPick.value; });
 nColor.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(nColor.value.trim())) nColorPick.value = nColor.value.trim(); });
 

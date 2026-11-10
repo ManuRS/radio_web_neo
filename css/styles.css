@@ -329,7 +329,6 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdthead b { font-size: .92rem; font-weight: 650; }
 .tdthead .tag { padding: 1px 6px; border: 1px solid #3d4959; border-radius: 6px; font-size: .66rem; color: #9fabb9; }
 .tdthead .geo { color: #f2b84b; border-color: #5a4720; }
-.tdthead .amb { font-size: .74rem; color: #9fabb9; }
 .tdtopt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 0; border: 0; border-top: 1px solid #364254; border-radius: 0; background: none; color: #cbd5e1; font-size: .82rem; font-weight: 500; text-align: left; }
 .tdtopt::before { content: ''; flex: none; width: 9px; height: 9px; box-sizing: border-box; border: 1.5px solid #6f7b8b; border-radius: 50%; }
 .tdtopt .fmt { flex: 1; min-width: 0; font-weight: 650; }
@@ -340,9 +339,12 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtch.solo .tdtopt { border-top: 0; }
 .tdtch.solo .tdthead { margin-bottom: 0; }
 .tdtopt.sel::before { border-color: var(--accent); background: var(--accent); }
-.tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; padding-top: 12px; border-top: 1px solid #303a47; }
+.tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; margin-top: 14px; padding: 12px 14px 14px; border-radius: 12px; background: #1c232d; box-shadow: 0 0 0 1.5px var(--accent), 0 -10px 18px -6px rgba(0,0,0,.45); }
 .tdtact[hidden] { display: none; }
-.tdtsel { font-size: .85rem; font-weight: 650; color: #edf2f7; }
+.tdtsel { display: flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 700; color: var(--accent); }
+.tdtsel span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.tdtselx { flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: #2a3441; color: #aeb9c8; font-size: 1.25rem; line-height: 1; }
+.tdtselx:hover { color: #fff; }
 .seg { display: flex; gap: 6px; }
 .seg button { padding: 8px 6px; font-size: .8rem; font-weight: 600; background: #2a3441; color: #aeb9c8; border-radius: 8px; }
 .seg button.on { background: var(--accent-bg); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
