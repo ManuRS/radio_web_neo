@@ -44,41 +44,6 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#11151b">
-<script>
-// TEMPORAL: diagnóstico de la barrita de carga de Chrome (para compararlo con Radio Fast). Enseña unos segundos, abajo,
-// cuánto tarda en cargar la página y qué recursos van más lentos. Para quitarlo, borrar este bloque.
-(function () {
-  var marcas = {};
-  document.addEventListener('DOMContentLoaded', function () { marcas.dcl = Math.round(performance.now()); });
-  try {
-    new PerformanceObserver(function (lista) {
-      lista.getEntries().forEach(function (e) { if (e.name === 'first-contentful-paint') marcas.fcp = Math.round(e.startTime); });
-    }).observe({ type: 'paint', buffered: true });
-  } catch (e) {}
-  window.addEventListener('load', function () {
-    marcas.load = Math.round(performance.now());
-    setTimeout(function () {
-      try {
-        var nav = performance.getEntriesByType('navigation')[0] || {};
-        var res = performance.getEntriesByType('resource');
-        var rec = res.slice().sort(function (a, b) { return b.responseEnd - a.responseEnd; }).slice(0, 3)
-          .map(function (r) { return r.name.split('/').slice(-2).join('/') + ' ' + Math.round(r.responseEnd); });
-        var linea = [
-          'neo', nav.type,
-          navigator.serviceWorker && navigator.serviceWorker.controller ? 'SW' : 'sin SW',
-          'resp ' + Math.round(nav.responseStart), 'dcl ' + marcas.dcl, 'fcp ' + marcas.fcp, 'load ' + marcas.load, 'n=' + res.length
-        ].join(' · ');
-        var caja = document.createElement('div');
-        caja.textContent = linea + '\n' + rec.join('\n');
-        caja.style.cssText = 'position:fixed;left:4px;right:4px;bottom:4px;z-index:99999;padding:6px 8px;' +
-          'background:rgba(0,0,0,.8);color:#9f9;font:11px/1.35 monospace;white-space:pre-wrap;pointer-events:none;border-radius:6px';
-        document.body.appendChild(caja);
-        setTimeout(function () { caja.remove(); }, 15000);
-      } catch (e) {}
-    }, 300);
-  });
-})();
-</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Radio Neo">
