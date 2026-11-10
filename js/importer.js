@@ -81,10 +81,11 @@ function renderInfo() {
 }
 
 // Lo que se ve de una opción: su formato, con número si el canal tiene varias del mismo (AAC 1, AAC 2…)
+const fmtName = o => (o.f === 'm3u8' ? 'HLS' : o.f === 'stream' ? 'Directo' : o.f.toUpperCase());
 function optLabel(ch, i) {
   const o = ch.o[i];
   if (ch.k === 'neo' && o.l) return o.l;   // catálogo interno: el nombre de la emisora
-  const f = o.f === 'm3u8' ? 'HLS' : o.f === 'stream' ? 'Directo' : o.f.toUpperCase();
+  const f = fmtName(o);
   const same = ch.o.filter(x => x.f === o.f);
   return same.length > 1 ? f + ' ' + (same.indexOf(o) + 1) : f;
 }
@@ -115,14 +116,20 @@ function renderResults() {
     const head = el(solo ? 'span' : 'div', solo ? 'fmt tdthead' : 'tdthead');
     head.appendChild(el('b', '', ch.n));
     if (solo && ch.k !== 'neo') head.appendChild(el('span', 'tag', optLabel(ch, 0)));   // en TDTChannels, el formato de su única opción en una burbuja (con varias, va en cada fila)
-    if (ch.k !== 'neo') head.appendChild(el('span', 'tag', ch.k === 'tv' ? 'TV · solo audio' : 'Radio'));
+    if (ch.k !== 'neo') head.appendChild(el('span', 'tag', ch.k === 'tv' ? 'Audio TV' : 'Radio'));
     if (ch.a) head.appendChild(el('span', 'tag', ch.a));   // el tipo/ámbito que da TDTChannels (Musicales, Andalucía…), también en burbuja
     if (ch.g) head.appendChild(el('span', 'tag geo', 'solo España'));
     if (!solo) card.appendChild(head);
     ch.o.forEach((o, i) => {
       const b = el('button', 'tdtopt');
       b.type = 'button';
-      b.appendChild(solo ? head : el('span', 'fmt', optLabel(ch, i)));
+      if (solo) b.appendChild(head);
+      else if (ch.k === 'neo') b.appendChild(el('span', 'fmt', optLabel(ch, i)));
+      else {   // TDTChannels: varias opciones son varios tipos de stream del mismo canal: "Opción 1" y su formato en una burbuja
+        const f = el('span', 'fmt', 'Opción ' + (i + 1));
+        f.appendChild(el('span', 'tag', fmtName(o)));
+        b.appendChild(f);
+      }
       if (keep && keep === ch && picked.i === i) { b.classList.add('sel'); picked = { ch, i }; }
       b.addEventListener('click', () => (picked && picked.ch === ch && picked.i === i ? clearPick() : pick(ch, i, b)));   // pulsar la elegida la deselecciona
       card.appendChild(b);
@@ -140,6 +147,7 @@ function clearPick() {
   picked = null;
   listEl.querySelectorAll('.tdtopt.sel').forEach(b => b.classList.remove('sel'));
   act.hidden = true;
+  dlg.classList.remove('picking');
   infoEl.hidden = false;
   setMsg('');
 }
@@ -186,7 +194,7 @@ function pick(ch, i, btn) {
   btn.classList.add('sel');
   picked = { ch, i };
   const o = ch.o[i];
-  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + optLabel(ch, i);
+  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + (ch.k === 'neo' ? optLabel(ch, i) : 'Opción ' + (i + 1) + ' (' + fmtName(ch.o[i]) + ')');
   labelIn.value = optionName(ch, i);
   // el catálogo interno ya trae el nombre corto, el tipo y el color de la cadena; las listas de TDTChannels, no
   nName.value = ch.n.slice(0, 40);
@@ -198,6 +206,7 @@ function pick(ch, i, btn) {
   fillChains(guess ? guess.id : '');
   setMode(guess ? 'old' : 'new');
   act.hidden = false;
+  dlg.classList.add('picking');   // oscurece lo que queda detrás del panel de añadir
   infoEl.hidden = true;   // con el formulario abierto, el espacio es para la lista
   setMsg('');
   act.scrollIntoView({ block: 'nearest' });

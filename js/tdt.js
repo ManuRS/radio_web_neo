@@ -207,18 +207,15 @@ export function search(items, query, httpOk = false) {
   return hits;
 }
 
-// Etiqueta de una opción de TDTChannels: su formato (aac, mp3, hls) y, si el canal tiene varias del mismo, su número ("aac 2"). Va siempre, también con una sola opción;
-// el catálogo interno no lleva ninguna (ahí el nombre de la emisora ya lo dice todo). Un enlace sin formato ("stream") solo se numera si hay varias
+// Etiqueta de una opción de TDTChannels: su formato (aac, mp3, hls), sin número aunque el canal tenga varias iguales (la posición en su lista no significa nada una vez añadida).
+// Va siempre, también con una sola opción; el catálogo interno no lleva ninguna (ahí el nombre de la emisora ya lo dice todo). Un enlace sin formato ("stream") no lleva
 export function optionSuffix(ch, i) {
   if (ch.k === 'neo') return '';
-  const o = ch.o[i];
-  const f = o.f === 'm3u8' ? 'hls' : o.f === 'stream' ? '' : o.f;
-  const same = ch.o.filter(x => x.f === o.f);
-  const suffix = [f, same.length > 1 ? same.indexOf(o) + 1 : ''].filter(Boolean).join(' ');
-  return suffix || (ch.o.length > 1 ? String(i + 1) : '');
+  const f = ch.o[i].f;
+  return f === 'm3u8' ? 'hls' : f === 'stream' ? '' : f;
 }
 
-// Nombre propuesto para una opción: en el catálogo interno, el de la emisora; en TDTChannels, el del canal con su etiqueta entre paréntesis: "Cadena SER (aac 2)".
+// Nombre propuesto para una opción: en el catálogo interno, el de la emisora; en TDTChannels, el del canal con su etiqueta entre paréntesis: "Cadena SER (aac)".
 // El nombre de una emisora admite 30 caracteres: si no cabe, se acorta el nombre del canal y se conserva el paréntesis
 export function optionName(ch, i) {
   if (ch.k === 'neo' && ch.o[i].l) return ch.o[i].l.slice(0, 30);
