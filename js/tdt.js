@@ -148,15 +148,15 @@ export async function loadLists(force = false) {
 
 // Catálogo interno del proyecto: la base de datos de la carpeta bbdd/ (junto a la página), un archivo por tema. Cada archivo es { chains: [{ name, short?, group, color?, urls: [{ label, url, kind }] }] }.
 // Si un archivo no se puede leer, no pasa nada: se usan los demás y las listas de TDTChannels
-const CATALOG_FILES = ['bbdd/ser.json', 'bbdd/los40.json', 'bbdd/resto.json'];
+const CATALOG_FILES = [['bbdd/ser.json', true], ['bbdd/los40.json', true], ['bbdd/resto.json', false]];   // [archivo, ¿cadenas por comunidad?]: en las de comunidad se ve siempre la tarjeta entera, aunque tengan una sola emisora
 let catalog = null;
-async function readCatalogFile(path) {
+async function readCatalogFile([path, byRegion]) {
   try {
     const res = await fetch(path, { cache: 'no-cache' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const json = await res.json();
     return (json.chains || []).filter(c => c && typeof c.name === 'string' && Array.isArray(c.urls)).map(c => ({
-      n: c.name.trim(), a: '', k: 'neo', short: c.short || '', t: c.group === 'musical' ? 'musical' : 'general', c: c.color || '',
+      n: c.name.trim(), a: '', k: 'neo', r: byRegion, short: c.short || '', t: c.group === 'musical' ? 'musical' : 'general', c: c.color || '',
       o: c.urls.filter(u => u && /^https?:\/\//i.test(u.url)).map(u => ({ f: u.kind === 'hls' ? 'm3u8' : String(u.kind || 'mp3').toLowerCase(), u: u.url, l: String(u.label || '').trim() })),
     })).filter(c => c.o.length);
   } catch (_) { return []; }
@@ -200,33 +200,34 @@ export function search(items, query, httpOk = false) {
     // 0 = nombre exacto; 1 = las palabras buscadas son palabras enteras del nombre ("ser" en "Cadena SER" y en "SER Algeciras", no en "Serie");
     // 2 = empiezan una palabra; 3 = aparecen dentro de una
     const rank = !inName ? 1 : name === q ? 0 : words.every(w => nw.includes(w)) ? 1 : words.every(w => nw.some(x => x.startsWith(w))) ? 2 : 3;
-    hits.push({ ...it, o: opts, _rank: rank, _idx: idx });
+    hits.push({ ...it, o: opts, _all: it.o.length, _rank: rank, _idx: idx });   // _all: cuántas opciones tiene el canal (no solo las que se ven)
   });
   // primero las más parecidas; a igualdad, el orden de la lista (el catálogo interno primero, luego radio antes que televisión y las nacionales antes que las locales)
   hits.sort((a, b) => a._rank - b._rank || a._idx - b._idx);
   return hits;
 }
 
-// Nombre propuesto para una opción: en el catálogo interno, el de la emisora (su nombre); en TDTChannels, el del canal; si tiene varias, con el formato (y su número si se repite): "Cadena SER AAC 2".
-// El nombre de una emisora admite 30 caracteres: si no cabe, se acorta el nombre del canal y se conserva el sufijo
+// Nombre propuesto para una opción: en el catálogo interno, el de la emisora (su nombre); en TDTChannels, el del canal; si tiene varias, con el formato entre paréntesis
+// (y su número si se repite): "Cadena SER (aac 2)". El nombre de una emisora admite 30 caracteres: si no cabe, se acorta el nombre del canal y se conserva el paréntesis
 export function optionName(ch, i) {
   if (ch.k === 'neo' && ch.o[i].l) return ch.o[i].l.slice(0, 30);
   let suffix = '';
   if (ch.o.length > 1) {
-    const f = ch.o[i].f === 'm3u8' ? 'HLS' : ch.o[i].f === 'stream' ? '' : ch.o[i].f.toUpperCase();
+    const f = ch.o[i].f === 'm3u8' ? 'hls' : ch.o[i].f === 'stream' ? '' : ch.o[i].f;
     const same = ch.o.filter(o => o.f === ch.o[i].f);
     suffix = [f, same.length > 1 ? same.indexOf(ch.o[i]) + 1 : ''].filter(Boolean).join(' ');
     if (!suffix) suffix = String(i + 1);
   }
-  const room = 30 - (suffix ? suffix.length + 1 : 0);
+  const room = 30 - (suffix ? suffix.length + 3 : 0);
   const base = ch.n.length > room ? ch.n.slice(0, room).trim() : ch.n;
-  return suffix ? base + ' ' + suffix : base;
+  return suffix ? base + ' (' + suffix + ')' : base;
 }
 
 
 // Quita de las listas de TDTChannels las opciones cuyo enlace ya está en el catálogo interno (o en otra opción anterior): cada enlace sale una sola vez,
-// en el primer apartado donde está. Un canal que se queda sin opciones desaparece. El enlace se compara sin http/https, sin www. y sin barra final.
-const urlKey = u => String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/#.*$/, '').replace(/\/+$/, '');
+// en el primer apartado donde está. Un canal que se queda sin opciones desaparece. El enlace se compara sin http/https, sin www., sin barra final y sin el parámetro ?dist=…
+const urlKey = u => String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/#.*$/, '')
+  .replace(/([?&])dist=[^&]*&?/, '$1').replace(/[?&]$/, '').replace(/\/+$/, '');   // el parámetro ?dist=… (de dónde viene la petición) no cambia el stream
 export function dedupe(catalogItems, tdtItems) {
   const seen = new Set();
   for (const c of catalogItems) for (const o of c.o) seen.add(urlKey(o.u));

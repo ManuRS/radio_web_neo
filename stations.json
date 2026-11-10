@@ -122,7 +122,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal web",
+          "label": "RAC1 Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC_1.mp3",
           "kind": "mp3"
         }
@@ -135,7 +135,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal web",
+          "label": "esRadio Web",
           "url": "https://libertaddigital-radio-live1.flumotion.com/libertaddigital/ld-live1-med.aac",
           "kind": "aac"
         }
@@ -149,7 +149,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal web",
+          "label": "Radio MARCA Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOMARCA_NACIONAL.mp3",
           "kind": "mp3"
         }
@@ -162,7 +162,7 @@
       "group": "general",
       "urls": [
         {
-          "label": "Señal web",
+          "label": "Radio 3 Web",
           "url": "https://dispatcher.rndfnk.com/crtve/rner3/main/mp3/high",
           "kind": "mp3"
         }
@@ -314,7 +314,7 @@
         },
         {
           "label": "LOS40 Argentina",
-          "url": "https://edge02.radiohdvivo.com/los40",
+          "url": "https://frontend.radiohdvivo.com/los40/live",
           "kind": "mp3"
         }
       ],
@@ -327,7 +327,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "LOS40 CLASSIC Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CLASSIC.mp3",
           "kind": "mp3"
         }
@@ -340,7 +340,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "MegaStar Web",
           "url": "https://megastar-cope-rrcast.flumotion.com/cope/megastar.mp3",
           "kind": "mp3"
         }
@@ -353,7 +353,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "HitFM Web",
           "url": "https://hitfm.kissfmradio.cires21.com/hitfm.mp3",
           "kind": "mp3"
         }
@@ -367,7 +367,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "RockFM Web",
           "url": "https://rockfm-cope-rrcast.flumotion.com/cope/rockfm.mp3",
           "kind": "mp3"
         }
@@ -381,7 +381,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "AAC",
+          "label": "Melodía FM Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MELODIA_FMAAC.aac",
           "kind": "aac"
         }
@@ -395,7 +395,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "Europa FM Web",
           "url": "https://str1.mediatelekom.net:9950/live",
           "kind": "mp3"
         }
@@ -408,7 +408,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "Cadena 100 Web",
           "url": "https://cadena100-cope-rrcast.flumotion.com/cope/cadena100.mp3",
           "kind": "mp3"
         }
@@ -421,7 +421,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "KissFM Web",
           "url": "https://kissfm.kissfmradio.cires21.com/kissfm.mp3",
           "kind": "mp3"
         }
@@ -460,7 +460,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "LOS40 DANCE Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_DANCE.mp3",
           "kind": "mp3"
         }
@@ -474,7 +474,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "LOS40 URBAN Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_URBAN.mp3",
           "kind": "mp3"
         }
@@ -487,7 +487,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "RAC105 Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC105.mp3",
           "kind": "mp3"
         }
@@ -500,7 +500,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "Directo",
+          "label": "Flaix FM Web",
           "url": "https://us-b4-p-e-cg11-audio.cdn.mdstrm.com/live-audio-aw/65afe4a0357cec56667ac739",
           "kind": "mp3"
         }
@@ -513,7 +513,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "Directo",
+          "label": "Flaixbac Web",
           "url": "https://us-b4-p-e-qg12-audio.cdn.mdstrm.com/live-audio-aw/65afe517d47dc208abd053d2",
           "kind": "mp3"
         }
@@ -527,7 +527,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "Radio Clásica Web",
           "url": "https://dispatcher.rndfnk.com/crtve/rnerc/main/mp3/high",
           "kind": "mp3"
         }
@@ -540,7 +540,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "Radiolé Web",
           "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOLE.mp3",
           "kind": "mp3"
         }
@@ -554,7 +554,7 @@
       "group": "musical",
       "urls": [
         {
-          "label": "MP3",
+          "label": "Canal Fiesta Radio Web",
           "url": "https://rtva-live-radio.flumotion.com/rtva/cfr.mp3",
           "kind": "mp3"
         }

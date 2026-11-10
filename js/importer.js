@@ -96,6 +96,9 @@ function el(tag, cls, text) {
   return e;
 }
 
+// Salvo en las cadenas por comunidad de SER y LOS40 (ahí la tarjeta con el nombre de la comunidad se ve siempre, aunque tengan una sola emisora)
+const isSolo = ch => ch._all === 1 && !ch.r;
+
 function renderResults() {
   listEl.textContent = '';
   const hits = lists ? search(lists.items, q2.value, httpOk) : [];
@@ -107,17 +110,18 @@ function renderResults() {
   for (const ch of shown) {
     const sec = ch.k === 'neo' ? 'Catálogo Radio Web Neo' : 'Catálogo TDTChannels';
     if (sec !== section) { section = sec; listEl.appendChild(el('div', 'tdtsec', sec)); }
-    const card = el('div', 'tdtch');
-    const head = el('div', 'tdthead');
+    const solo = isSolo(ch);   // un canal con una sola emisora no tiene nada que elegir: su nombre es el botón (como en el menú de una cadena con una sola emisora)
+    const card = el('div', solo ? 'tdtch solo' : 'tdtch');
+    const head = el(solo ? 'span' : 'div', solo ? 'fmt tdthead' : 'tdthead');
     head.appendChild(el('b', '', ch.n));
     if (ch.k !== 'neo') head.appendChild(el('span', 'tag', ch.k === 'tv' ? 'TV · solo audio' : 'Radio'));
     if (ch.a) head.appendChild(el('span', 'amb', ch.a));
     if (ch.g) head.appendChild(el('span', 'tag geo', 'solo España'));
-    card.appendChild(head);
+    if (!solo) card.appendChild(head);
     ch.o.forEach((o, i) => {
       const b = el('button', 'tdtopt');
       b.type = 'button';
-      b.appendChild(el('span', 'fmt', optLabel(ch, i)));
+      b.appendChild(solo ? head : el('span', 'fmt', optLabel(ch, i)));
       if (keep && keep === ch && picked.i === i) { b.classList.add('sel'); picked = { ch, i }; }
       b.addEventListener('click', () => pick(ch, i, b));
       card.appendChild(b);
@@ -180,7 +184,7 @@ function pick(ch, i, btn) {
   btn.classList.add('sel');
   picked = { ch, i };
   const o = ch.o[i];
-  selEl.textContent = ch.n + ' · ' + optLabel(ch, i);
+  selEl.textContent = isSolo(ch) ? ch.n : ch.n + ' · ' + optLabel(ch, i);
   labelIn.value = optionName(ch, i);
   // el catálogo interno ya trae el nombre corto, el tipo y el color de la cadena; las listas de TDTChannels, no
   nName.value = ch.n.slice(0, 40);

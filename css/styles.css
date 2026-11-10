@@ -220,7 +220,8 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-qual span:empty { display: none; }
 @media (max-width: 599.98px) { .pres[data-mode="0"] .pres-info { top: 14vh; } }
 .pres[data-mode="1"] .pres-info { top: 50%; transform: translateY(-50%); gap: .6vmin; }
-.pres[data-mode="1"] .pres-ps { max-width: 34vmin; font-size: 5.6vmin; }
+.pres[data-mode="1"] .pres-ps { max-width: 34vmin; font-size: 5.6vmin; white-space: normal; overflow-wrap: break-word; text-overflow: clip; }   /* en el Radial el nombre no se desplaza: se reparte en varias líneas dentro del círculo */
+.pres[data-mode="1"] .pres-ps > span { white-space: normal; }
 .pres[data-mode="1"] .pres[data-mode="1"] .pres-clock { margin-top: .4vmin; font-size: 2.6vmin; }
 .pres[data-mode="1"] .pres-qual { flex-direction: column; align-items: center; gap: .15em; max-width: 34vmin; font-size: 1.5vmin; }
 .pres[data-mode="2"] .pres-ps, .pres[data-mode="2"] .pres-qual, .pres[data-mode="2"] .pres-clock { text-shadow: 0 0 .35em #000, 0 0 .1em #000; }
@@ -319,8 +320,8 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtlist { flex: 1 1 0; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px; }
 .tdtinfo { font-size: .72rem; color: #6f7b8b; line-height: 1.35; }
 .tdtinfo:empty { display: none; }
-.tdtsec { display: flex; align-items: center; gap: 12px; margin: 16px 2px 8px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8c98a8; }
-.tdtsec::after { content: ''; flex: 1; height: 1px; background: #252e3a; }
+.tdtsec { display: flex; align-items: center; gap: 12px; margin: 34px 2px 12px; font-size: 1rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); }
+.tdtsec::after { content: ''; flex: 1; height: 2px; border-radius: 1px; background: var(--accent); opacity: .4; }
 .tdtsec:first-child { margin-top: 2px; }
 /* Una sola tarjeta por canal, sin tarjetas dentro: las opciones son filas con una línea de separación y un punto (relleno = elegida) */
 .tdtch { margin-bottom: 8px; padding: 12px 14px 2px; border-radius: 12px; background: #2a3441; }
@@ -335,6 +336,9 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtopt:hover { color: #fff; }
 .tdtopt:hover::before { border-color: #cbd5e1; }
 .tdtopt.sel { color: var(--accent); }
+.tdtch.solo { padding-top: 2px; }
+.tdtch.solo .tdtopt { border-top: 0; }
+.tdtch.solo .tdthead { margin-bottom: 0; }
 .tdtopt.sel::before { border-color: var(--accent); background: var(--accent); }
 .tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; padding-top: 12px; border-top: 1px solid #303a47; }
 .tdtact[hidden] { display: none; }

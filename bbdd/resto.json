@@ -33,7 +33,7 @@
    "group": "general",
    "color": "#cc5a74",
    "urls": [
-    {"label": "Señal web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC_1.mp3", "kind": "mp3"}
+    {"label": "RAC1 Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC_1.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -41,7 +41,7 @@
    "group": "general",
    "color": "#cc5a74",
    "urls": [
-    {"label": "Señal web", "url": "https://libertaddigital-radio-live1.flumotion.com/libertaddigital/ld-live1-med.aac", "kind": "aac"}
+    {"label": "esRadio Web", "url": "https://libertaddigital-radio-live1.flumotion.com/libertaddigital/ld-live1-med.aac", "kind": "aac"}
    ]
   },
   {
@@ -50,7 +50,7 @@
    "group": "general",
    "color": "#ff3d3d",
    "urls": [
-    {"label": "Señal web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOMARCA_NACIONAL.mp3", "kind": "mp3"}
+    {"label": "Radio MARCA Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOMARCA_NACIONAL.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -58,7 +58,7 @@
    "group": "general",
    "color": "#f06292",
    "urls": [
-    {"label": "Señal web", "url": "https://dispatcher.rndfnk.com/crtve/rner3/main/mp3/high", "kind": "mp3"}
+    {"label": "Radio 3 Web", "url": "https://dispatcher.rndfnk.com/crtve/rner3/main/mp3/high", "kind": "mp3"}
    ]
   },
   {
@@ -100,7 +100,7 @@
    "group": "musical",
    "color": "#6cb4ee",
    "urls": [
-    {"label": "MP3", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CLASSIC.mp3", "kind": "mp3"}
+    {"label": "LOS40 CLASSIC Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CLASSIC.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -108,7 +108,7 @@
    "group": "musical",
    "color": "#ffe135",
    "urls": [
-    {"label": "MP3", "url": "https://megastar-cope-rrcast.flumotion.com/cope/megastar.mp3", "kind": "mp3"}
+    {"label": "MegaStar Web", "url": "https://megastar-cope-rrcast.flumotion.com/cope/megastar.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -117,7 +117,7 @@
    "color": "#ff4fa3",
    "cors": false,
    "urls": [
-    {"label": "MP3", "url": "https://hitfm.kissfmradio.cires21.com/hitfm.mp3", "kind": "mp3"}
+    {"label": "HitFM Web", "url": "https://hitfm.kissfmradio.cires21.com/hitfm.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -125,7 +125,7 @@
    "group": "musical",
    "color": "#ff4040",
    "urls": [
-    {"label": "MP3", "url": "https://rockfm-cope-rrcast.flumotion.com/cope/rockfm.mp3", "kind": "mp3"}
+    {"label": "RockFM Web", "url": "https://rockfm-cope-rrcast.flumotion.com/cope/rockfm.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -134,7 +134,7 @@
    "group": "musical",
    "color": "#4aa8ff",
    "urls": [
-    {"label": "AAC", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MELODIA_FMAAC.aac", "kind": "aac"}
+    {"label": "Melodía FM Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MELODIA_FMAAC.aac", "kind": "aac"}
    ]
   },
   {
@@ -143,7 +143,7 @@
    "group": "musical",
    "color": "#32c8c8",
    "urls": [
-    {"label": "MP3", "url": "https://str1.mediatelekom.net:9950/live", "kind": "mp3"}
+    {"label": "Europa FM Web", "url": "https://str1.mediatelekom.net:9950/live", "kind": "mp3"}
    ]
   },
   {
@@ -151,7 +151,7 @@
    "group": "musical",
    "color": "#ff5a3c",
    "urls": [
-    {"label": "MP3", "url": "https://cadena100-cope-rrcast.flumotion.com/cope/cadena100.mp3", "kind": "mp3"}
+    {"label": "Cadena 100 Web", "url": "https://cadena100-cope-rrcast.flumotion.com/cope/cadena100.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -160,7 +160,7 @@
    "color": "#ff3c7e",
    "cors": false,
    "urls": [
-    {"label": "MP3", "url": "https://kissfm.kissfmradio.cires21.com/kissfm.mp3", "kind": "mp3"}
+    {"label": "KissFM Web", "url": "https://kissfm.kissfmradio.cires21.com/kissfm.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -180,7 +180,7 @@
    "group": "musical",
    "color": "#b06cff",
    "urls": [
-    {"label": "MP3", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_DANCE.mp3", "kind": "mp3"}
+    {"label": "LOS40 DANCE Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_DANCE.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -189,7 +189,7 @@
    "group": "musical",
    "color": "#ffd23f",
    "urls": [
-    {"label": "MP3", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_URBAN.mp3", "kind": "mp3"}
+    {"label": "LOS40 URBAN Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_URBAN.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -197,7 +197,7 @@
    "group": "musical",
    "color": "#ffd23f",
    "urls": [
-    {"label": "MP3", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC105.mp3", "kind": "mp3"}
+    {"label": "RAC105 Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC105.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -205,7 +205,7 @@
    "group": "musical",
    "color": "#ff3b30",
    "urls": [
-    {"label": "Directo", "url": "https://us-b4-p-e-cg11-audio.cdn.mdstrm.com/live-audio-aw/65afe4a0357cec56667ac739", "kind": "mp3"}
+    {"label": "Flaix FM Web", "url": "https://us-b4-p-e-cg11-audio.cdn.mdstrm.com/live-audio-aw/65afe4a0357cec56667ac739", "kind": "mp3"}
    ]
   },
   {
@@ -213,7 +213,7 @@
    "group": "musical",
    "color": "#ff8a1f",
    "urls": [
-    {"label": "Directo", "url": "https://us-b4-p-e-qg12-audio.cdn.mdstrm.com/live-audio-aw/65afe517d47dc208abd053d2", "kind": "mp3"}
+    {"label": "Flaixbac Web", "url": "https://us-b4-p-e-qg12-audio.cdn.mdstrm.com/live-audio-aw/65afe517d47dc208abd053d2", "kind": "mp3"}
    ]
   },
   {
@@ -222,7 +222,7 @@
    "group": "musical",
    "color": "#d4a24c",
    "urls": [
-    {"label": "MP3", "url": "https://dispatcher.rndfnk.com/crtve/rnerc/main/mp3/high", "kind": "mp3"}
+    {"label": "Radio Clásica Web", "url": "https://dispatcher.rndfnk.com/crtve/rnerc/main/mp3/high", "kind": "mp3"}
    ]
   },
   {
@@ -230,7 +230,7 @@
    "group": "musical",
    "color": "#ff9f1c",
    "urls": [
-    {"label": "MP3", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOLE.mp3", "kind": "mp3"}
+    {"label": "Radiolé Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOLE.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -239,7 +239,7 @@
    "group": "musical",
    "color": "#ff7b2c",
    "urls": [
-    {"label": "MP3", "url": "https://rtva-live-radio.flumotion.com/rtva/cfr.mp3", "kind": "mp3"}
+    {"label": "Canal Fiesta Radio Web", "url": "https://rtva-live-radio.flumotion.com/rtva/cfr.mp3", "kind": "mp3"}
    ]
   }
  ]

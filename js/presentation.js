@@ -410,7 +410,7 @@ function syncStrip() {
   stripKey = key;
 }
 
-// Nombre que no cabe (en el modo Radial, dentro del círculo, y con nombres largos): va de un lado a otro, con una pausa en cada extremo
+// Nombre que no cabe (con nombres largos, en los modos que no son el Radial): va de un lado a otro, con una pausa en cada extremo. En el Radial se reparte en varias líneas
 let fitKey = '';
 function fitName() {
   const key = presPsText.textContent + '|' + presPs.clientWidth + '|' + mode;
@@ -419,7 +419,7 @@ function fitName() {
   const cs = getComputedStyle(presPs);
   const avail = presPs.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const over = presPsText.offsetWidth - avail;
-  if (over > 1) {
+  if (mode !== 1 && over > 1) {
     presPs.style.setProperty('--dx', -Math.ceil(over) + 'px');
     presPs.style.setProperty('--dur', Math.max(6, over / 35 + 5).toFixed(1) + 's');
     presPs.classList.add('marquee');

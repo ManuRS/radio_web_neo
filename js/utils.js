@@ -93,14 +93,15 @@ export function effectiveDuration(buf, silenceDb) {
 }
 
 // Nombre de una emisora (cada URL de una cadena). Es genérico si no dice nada de la señal: vacío, el formato (MP3) o "Señal central" / "Señal web" / "Directo".
-// En títulos se prefiere el nombre de la emisora que suena (Radio Madrid) al de la cadena (Cadena SER); si es genérico, se usa el de la cadena.
+// En títulos se prefiere el nombre de la emisora que suena (Radio Madrid) al de la cadena (Cadena SER); si es genérico, o la cadena tiene una sola emisora, se usa el de la cadena.
 const GENERIC_LABEL = /^(se[ñn]al central|se[ñn]al web|directo|mp3|aac|hls|stream)$/i;
 const emisoraLabel = u => (u && u.label ? String(u.label).trim() : '');
 const isGenericLabel = u => !emisoraLabel(u) || GENERIC_LABEL.test(emisoraLabel(u));
 export function emisoraName(st, vi, short = false) {
   if (!st) return '';
   const u = st.urls[vi];
-  return isGenericLabel(u) ? (short && st.short) || st.name : emisoraLabel(u);
+  // con una sola emisora, el nombre de la cadena (el de dentro no importa); con varias, el de la que suena, salvo que sea genérico
+  return st.urls.length === 1 || isGenericLabel(u) ? (short && st.short) || st.name : emisoraLabel(u);
 }
 // Texto ligero bajo el nombre de la cadena en su botón: solo en la elegida y si tiene varias emisoras ("10 emisoras"); en las demás, nada
 export const emisoraSub = (st, active) => (active && st && st.urls.length > 1 ? st.urls.length + ' emisoras' : '');
