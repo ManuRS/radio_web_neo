@@ -146,7 +146,8 @@ export async function loadLists(force = false) {
   return { items, errors, missing, oldest: isFinite(oldest) ? oldest : 0, refreshed };
 }
 
-// Catálogo interno del proyecto: la base de datos de la carpeta bbdd/ (junto a la página), un archivo por tema. Cada archivo es { chains: [{ name, short?, group, color?, urls: [{ label, url, kind }] }] }.
+// Catálogo interno del proyecto: la base de datos de la carpeta bbdd/ (junto a la página), un archivo por tema. Cada archivo es { chains: [{ name, short?, group, color?, urls: [{ label, url, kind, alt? }] }] }.
+// `alt` (opcional): otros enlaces de TDTChannels que son esta misma emisora (otro formato u otro servidor); no se ofrecen, solo sirven para no repetirla en su apartado.
 // Si un archivo no se puede leer, no pasa nada: se usan los demás y las listas de TDTChannels
 const CATALOG_FILES = [['bbdd/ser.json', true], ['bbdd/los40.json', true], ['bbdd/resto.json', false]];   // [archivo, ¿cadenas por comunidad?]: en las de comunidad se ve siempre la tarjeta entera, aunque tengan una sola emisora
 let catalog = null;
@@ -157,7 +158,7 @@ async function readCatalogFile([path, byRegion]) {
     const json = await res.json();
     return (json.chains || []).filter(c => c && typeof c.name === 'string' && Array.isArray(c.urls)).map(c => ({
       n: c.name.trim(), a: '', k: 'neo', r: byRegion, short: c.short || '', t: c.group === 'musical' ? 'musical' : 'general', c: c.color || '',
-      o: c.urls.filter(u => u && /^https?:\/\//i.test(u.url)).map(u => ({ f: u.kind === 'hls' ? 'm3u8' : String(u.kind || 'mp3').toLowerCase(), u: u.url, l: String(u.label || '').trim() })),
+      o: c.urls.filter(u => u && /^https?:\/\//i.test(u.url)).map(u => ({ f: u.kind === 'hls' ? 'm3u8' : String(u.kind || 'mp3').toLowerCase(), u: u.url, l: String(u.label || '').trim(), alt: Array.isArray(u.alt) ? u.alt.filter(a => typeof a === 'string') : [] })),
     })).filter(c => c.o.length);
   } catch (_) { return []; }
 }
@@ -227,12 +228,12 @@ export function optionName(ch, i) {
 
 
 // Quita de las listas de TDTChannels las opciones cuyo enlace ya está en el catálogo interno (o en otra opción anterior): cada enlace sale una sola vez,
-// en el primer apartado donde está. Un canal que se queda sin opciones desaparece. El enlace se compara sin http/https, sin www., sin barra final y sin el parámetro ?dist=…
+// en el primer apartado donde está (o es un enlace `alt` de una emisora de Neo). Un canal que se queda sin opciones desaparece. El enlace se compara sin http/https, sin www., sin barra final y sin el parámetro ?dist=…
 const urlKey = u => String(u || '').trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/#.*$/, '')
   .replace(/([?&])dist=[^&]*&?/, '$1').replace(/[?&]$/, '').replace(/\/+$/, '');   // el parámetro ?dist=… (de dónde viene la petición) no cambia el stream
 export function dedupe(catalogItems, tdtItems) {
   const seen = new Set();
-  for (const c of catalogItems) for (const o of c.o) seen.add(urlKey(o.u));
+  for (const c of catalogItems) for (const o of c.o) { seen.add(urlKey(o.u)); for (const a of o.alt || []) seen.add(urlKey(a)); }   // el enlace de la emisora y los `alt` que Manu le asocia a mano
   const out = [];
   for (const c of tdtItems) {
     const o = c.o.filter(x => { const k = urlKey(x.u); if (seen.has(k)) return false; seen.add(k); return true; });
