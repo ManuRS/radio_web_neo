@@ -196,7 +196,7 @@ function drawSpectrum(w, h, c, levels) {
 // ==================
 // == VISTA RADIAL ==
 // ==================
-// Giro de las barras: se puede parar con el botón "Giro on/off" de debajo del reloj. Al pararlo, las barras siguen girando (frenando al final) hasta volver a su
+// Giro de las barras: se puede parar con el botón "Giro on/off" de debajo del reloj. Al pararlo, las barras siguen girando a su ritmo hasta volver a su
 // posición de reposo (graves abajo), y ahí se quedan.
 let spinOn = true, barRot = 0, radSpin = 0;
 try { spinOn = localStorage.getItem(SPIN_KEY) !== '0'; } catch (_) {}
@@ -214,8 +214,8 @@ function turnBars(dt) {
   radSpin = spin;
   if (spinOn) { barRot = (barRot + ds) % TAU; return; }
   if (barRot === 0) return;
-  const left = TAU - barRot, v = Math.max(ds / Math.max(dt, 1e-3), 0.6) * Math.min(1, 0.15 + left / 0.7);   // al menos 0,6 rad/s para no tardar minutos; frena al llegar
-  barRot += v * dt;
+  const left = TAU - barRot;
+  barRot += ds * Math.min(1, 0.3 + left / 0.12);   // sigue a su ritmo de siempre (no acelera) y solo frena un poco en el último tramo
   if (barRot >= TAU - 0.002) barRot = 0;
 }
 
@@ -457,7 +457,7 @@ const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra
 const wvS = new Float32Array(N), wvQ = new Float32Array(N);   // niveles normalizados lento y rápido
 const wvEs = new Float32Array(WV_NS + 1), wvEf = new Float32Array(WV_NS + 1);   // espectro a lo ancho de la cinta que se dibuja: lento y rápido
 const wvA = new Float32Array(WV_NS + 1), wvBo = new Float32Array(WV_NS + 1), wvBe = new Float32Array(WV_NS + 1);   // borde A, borde B y barriga de la cinta que se dibuja
-let wvE = 0, wvK = 0;                 // energía y golpe suavizados
+let wvE = 0, wvK = 0, wvL = 0;         // energía y golpe suavizados; wvL: luz de fondo (sube y baja despacio)
 // cintas: dos bordes con dos senos compartidos (desfasados, para que la cinta se retuerza) y uno propio, una barriga, mezcla rápida/lenta y respuesta al golpe (todo determinista)
 const wvRib = WV_RIB.map((rb, ri) => {
   let sd = 7 + ri * 13;
@@ -489,14 +489,15 @@ function drawWave(w, h, dt) {
   gl.addColorStop(1, pal(0, 60, 40, 0));
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
-  const lit = Math.max(wvK, 0.8 * pulse);   // golpe de graves (subida sobre su media o golpe detectado)
-  if (lit > 0.01) {   // cada golpe de graves enciende el fondo detrás de las cintas: un resplandor ancho y aplastado que sube rápido y se apaga suave
+  const lt = Math.max(wvK, 0.8 * pulse);   // golpe de graves (subida sobre su media o golpe detectado)
+  wvL += (lt - wvL) * Math.min(1, dt * (lt > wvL ? 5 : 1.6));   // la luz sube y baja de forma gradual
+  {   // luz de fondo detrás de las cintas: algo de luz siempre, y cada golpe de graves la sube de graves enciende el fondo detrás de las cintas: un resplandor ancho y aplastado que sube rápido y se apaga suave
     ctx.save();
     ctx.translate(w / 2, cy);
     ctx.scale(1, 0.55);
     const gk = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.62);
-    gk.addColorStop(0, pal(0, 75, 58, (0.45 * lit).toFixed(3)));
-    gk.addColorStop(0.5, pal(25, 70, 48, (0.18 * lit).toFixed(3)));
+    gk.addColorStop(0, pal(0, 75, 58, (0.09 + 0.36 * wvL).toFixed(3)));
+    gk.addColorStop(0.5, pal(25, 70, 48, (0.035 + 0.15 * wvL).toFixed(3)));
     gk.addColorStop(1, pal(25, 70, 45, 0));
     ctx.fillStyle = gk;
     ctx.fillRect(-w, -h * 2.5, w * 2, h * 5);
@@ -525,7 +526,7 @@ function drawWave(w, h, dt) {
     }
     for (let j = 0; j <= WV_NS; j++) {
       const u = j / WV_NS, tap = 0.3 + 0.7 * Math.pow(Math.sin(Math.PI * u), 0.8);
-      const env = es[j] * (1 - rb.m) + ef[j] * rb.m, amp = H * rb.g * tap * (0.25 + 1.9 * env) * kick;
+      const env = es[j] * (1 - rb.m) + ef[j] * rb.m, amp = H * rb.g * tap * (0.25 + 1.9 * Math.pow(Math.min(1, env), 1.7)) * kick;   // curva: el nivel medio da poca altura y solo los niveles altos llegan al máximo (más rango)
       let sa = 0, sb = 0;
       for (const c of rb.A) sa += c.a * Math.sin(T * c.f * u + c.ph);
       for (const c of rb.B) sb += c.a * Math.sin(T * c.f * u + c.ph);
