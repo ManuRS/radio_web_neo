@@ -221,7 +221,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 @media (max-width: 599.98px) { .pres[data-mode="0"] .pres-info { top: 14vh; } }
 .pres[data-mode="1"] .pres-info { top: 50%; transform: translateY(-50%); gap: .6vmin; }
 .pres[data-mode="1"] .pres-ps { max-width: 34vmin; font-size: 5.6vmin; white-space: normal; overflow-wrap: break-word; text-overflow: clip; }   /* en el Radial el nombre no se desplaza: se reparte en varias líneas dentro del círculo */
-.pres[data-mode="1"] .pres-ps > span { white-space: normal; }
+.pres[data-mode="1"] .pres-ps > span { white-space: pre-line; }   /* respeta el salto de línea que pone info() */
 .pres[data-mode="1"] .pres[data-mode="1"] .pres-clock { margin-top: .4vmin; font-size: 2.6vmin; }
 .pres[data-mode="1"] .pres-qual { flex-direction: column; align-items: center; gap: .15em; max-width: 34vmin; font-size: 1.5vmin; }
 .pres[data-mode="2"] .pres-ps, .pres[data-mode="2"] .pres-qual, .pres[data-mode="2"] .pres-clock { text-shadow: 0 0 .35em #000, 0 0 .1em #000; }

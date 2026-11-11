@@ -148,14 +148,24 @@ function drawRadial(w, h, c, lv) {
   const cx = w / 2, cy = h / 2, m = Math.min(w, h), R = m * 0.19, maxLen = m * 0.26, lw = Math.max(3, 2 * Math.PI * R / (2 * N) * 0.55);
   halo(w, h, cx, cy, m * 0.62, c);
   drawParticles(c);
-  // anillo interior que late y anillo exterior de puntos que gira
-  const rr = R * (1 + 0.05 * pulse);
+  // círculo interior: respira con los graves en todo momento (no solo con los golpes), se llena de luz y suelta una onda con cada golpe
+  const kb = Math.min(1, bass * 1.7), rr = R * (1 + 0.13 * kb + 0.07 * pulse);
+  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
+  core.addColorStop(0, rgba(c, 0.03 + 0.16 * kb + 0.14 * pulse));
+  core.addColorStop(1, rgba(c, 0.1 + 0.34 * kb + 0.2 * pulse));
+  ctx.fillStyle = core;
+  ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.fill();
+  if (pulse > 0.02) {   // onda que sale del círculo y se apaga
+    ctx.strokeStyle = rgba(c, 0.5 * pulse);
+    ctx.lineWidth = 2 + 4 * pulse;
+    ctx.beginPath(); ctx.arc(cx, cy, rr * (1 + (1 - pulse) * 0.55), 0, 6.2832); ctx.stroke();
+  }
   ctx.lineCap = 'round';
-  ctx.strokeStyle = rgba(c, 0.14 + 0.2 * pulse);
-  ctx.lineWidth = lw * 2.4;
+  ctx.strokeStyle = rgba(c, 0.14 + 0.2 * kb + 0.2 * pulse);
+  ctx.lineWidth = lw * (2.4 + 1.2 * kb);
   ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.stroke();
-  ctx.strokeStyle = rgba(c, 0.55);
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = rgba(c, 0.5 + 0.4 * kb);
+  ctx.lineWidth = 2 + 2 * kb;
   ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.stroke();
   ctx.save();
   ctx.setLineDash([1, 15]);
@@ -277,24 +287,25 @@ function drawVortex(w, h, dt, dpr) {
 // =================
 // Sin barras ni destellos: cada cinta de luz representa una franja de frecuencias (graves abajo, agudos arriba) y ondula con su propio ritmo.
 // El nivel de cada franja sube enseguida y se mantiene arriba un buen rato antes de bajar despacio, para que el movimiento sea calmado.
-const SILK = 9, SILK_HOLD_S = 0.55;
-const sk = new Float32Array(SILK), skHold = new Float32Array(SILK);
+const SILK = 9;
+const sk = new Float32Array(SILK);   // nivel suavizado de cada cinta
 let skT = 0, skAvg = 0, stars = null;
 
 function drawSilk(w, h, dt) {
   const lv = viz.levels, per = N / SILK;
   let sum = 0;
+  // Cada cinta sigue a su banda como un muelle amortiguado: sube rápido (más reactiva) y baja a un ritmo propio y continuo, sin mesetas
+  // ni cortes; así responde a cada golpe pero el movimiento no da trompicones
   for (let j = 0; j < SILK; j++) {
     let v = 0;
     for (let i = 0; i < per; i++) v += lv[Math.floor(j * per) + i];
     v /= per;
-    if (v >= sk[j]) { sk[j] += (v - sk[j]) * Math.min(1, dt * 11.5); skHold[j] = SILK_HOLD_S; }
-    else if (skHold[j] > 0) skHold[j] -= dt;
-    else sk[j] -= sk[j] * Math.min(1, dt * 0.85);
+    sk[j] += (v - sk[j]) * Math.min(1, dt * (v > sk[j] ? 14 : 3.6));
     sum += sk[j];
   }
-  skAvg += (sum / SILK - skAvg) * Math.min(1, dt * 1.5);
-  skT += dt * (0.2 + skAvg * 0.7);
+  const kick = (sk[0] + sk[1]) / 2;   // los graves, suavizados
+  skAvg += (sum / SILK - skAvg) * Math.min(1, dt * 2.5);
+  skT += dt * (0.22 + skAvg * 1.0);
   const hue = 225 + 40 * Math.sin(skT * 0.09), cy = h * 0.62, amp = Math.min(h * 0.17, w * 0.3);
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, '#070a12');
@@ -302,7 +313,7 @@ function drawSilk(w, h, dt) {
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
   const gl = ctx.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.6);
-  gl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ', 70%, 55%, ' + (0.08 + 0.3 * (sk[0] + sk[1]) / 2).toFixed(3) + ')');
+  gl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ', 70%, 55%, ' + (0.08 + 0.4 * kick).toFixed(3) + ')');
   gl.addColorStop(1, 'hsla(' + hue.toFixed(0) + ', 70%, 55%, 0)');
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
@@ -319,11 +330,11 @@ function drawSilk(w, h, dt) {
   ctx.lineJoin = ctx.lineCap = 'round';
   const steps = Math.max(24, Math.round(w / 12));
   for (let j = 0; j < SILK; j++) {
-    const f = j / (SILK - 1), a = Math.min(1, sk[j] * 1.3), off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
+    const f = j / (SILK - 1), a = Math.min(1, Math.pow(sk[j], 0.8) * 1.5), off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
     ctx.beginPath();
     for (let i = 0; i <= steps; i++) {
       const u = i / steps, t = Math.pow(Math.sin(u * Math.PI), 1.2);
-      const y = cy + t * (off + amp * (1 + 0.075 * pulse) * (0.1 + 0.9 * a) * (0.75 * Math.sin(u * k1 + skT * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - skT * 1.1 + j * 1.1)));
+      const y = cy + t * (off + amp * (1 + 0.3 * kick + 0.08 * pulse) * (0.1 + 0.9 * a) * (0.75 * Math.sin(u * k1 + skT * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - skT * 1.1 + j * 1.1)));
       if (i) ctx.lineTo(u * w, y); else ctx.moveTo(0, y);
     }
     const hh = (hue + j * 5).toFixed(0), b = 0.175 + 0.55 * a;
@@ -412,14 +423,25 @@ function syncStrip() {
 
 // Nombre que no cabe (con nombres largos, en los modos que no son el Radial): va de un lado a otro, con una pausa en cada extremo. En el Radial se reparte en varias líneas
 let fitKey = '';
+const measure = document.createElement('canvas').getContext('2d');
 function fitName() {
-  const key = presPsText.textContent + '|' + presPs.clientWidth + '|' + mode;
+  const key = presPsText.textContent + '|' + presPs.clientWidth + '|' + mode + '|' + innerWidth + 'x' + innerHeight;
   if (key === fitKey) return;
   fitKey = key;
   const cs = getComputedStyle(presPs);
+  if (mode === 1) {
+    // Radial: sin marquesina; el tamaño se ajusta para que cada línea quepa dentro del círculo (con un mínimo legible)
+    presPs.classList.remove('marquee');
+    measure.font = cs.fontWeight + ' 100px ' + cs.fontFamily;
+    const wide = Math.max(...presPsText.textContent.split('\n').map(l => measure.measureText(l).width + l.length * 6));   // 6 = letter-spacing .06em a 100px
+    const vmin = Math.min(innerWidth, innerHeight), box = parseFloat(cs.maxWidth) || vmin * 0.34;
+    presPs.style.fontSize = Math.max(vmin * 0.034, Math.min(vmin * 0.056, box * 100 / wide * 0.96)).toFixed(1) + 'px';
+    return;
+  }
+  presPs.style.fontSize = '';
   const avail = presPs.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
   const over = presPsText.offsetWidth - avail;
-  if (mode !== 1 && over > 1) {
+  if (over > 1) {
     presPs.style.setProperty('--dx', -Math.ceil(over) + 'px');
     presPs.style.setProperty('--dur', Math.max(6, over / 35 + 5).toFixed(1) + 's');
     presPs.classList.add('marquee');
@@ -427,9 +449,23 @@ function fitName() {
 }
 
 // En pantalla completa se ve el nombre de la emisora que suena (Radio Madrid); si no tiene uno propio, el nombre corto de la cadena (SER) o el nombre
+// En el Radial el nombre se parte en dos líneas desde que tiene unas pocas letras: casi siempre la marca arriba ("LOS40") y la emisora debajo ("Andalucía").
+// Se parte por un espacio, buscando líneas parecidas pero con preferencia por dejar la primera palabra sola; si aun así una línea no cabe, el navegador la sigue repartiendo
+function twoLines(name) {
+  const words = name.match(/\([^)]*\)|\S+/g) || [name];   // un paréntesis ("(Las Pedroñeras)") no se parte
+  if (words.length < 2 || name.length < 9) return name;
+  let best = 1, bestScore = Infinity;
+  for (let k = 1; k < words.length; k++) {
+    const score = Math.max(words.slice(0, k).join(' ').length, words.slice(k).join(' ').length) - (k === 1 ? 3 : 0);
+    if (score < bestScore) { bestScore = score; best = k; }
+  }
+  return words.slice(0, best).join(' ') + '\n' + words.slice(best).join(' ');
+}
+
 function info() {
   const st = shownStation();
-  setText(presPsText, st ? emisoraName(st, shownVariant(), true) : '—');
+  const name = st ? emisoraName(st, shownVariant(), true) : '—';
+  setText(presPsText, mode === 1 ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
   setText(presQual, S.current ? [S.quality, S.degraded ? 'sin EQ' : ''].filter(Boolean).join(' • ') : '');
