@@ -107,9 +107,9 @@ function drawParticles(c) {
   ctx.globalAlpha = 1;
 }
 
-function halo(w, h, cx, cy, radius, c) {
+function halo(w, h, cx, cy, radius, c, soft = 1) {   // soft < 1: la luz golpea menos (solo el brillo que late; el de reposo se queda)
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-  g.addColorStop(0, rgba(c, 0.08 + 0.3 * bass + 0.22 * pulse));
+  g.addColorStop(0, rgba(c, 0.08 + (0.3 * bass + 0.22 * pulse) * soft));
   g.addColorStop(1, rgba(c, 0));
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
@@ -161,7 +161,7 @@ function drawSpectrum(w, h, c, levels) {
   const narrow = w < NARROW_PX, n = narrow ? N / 3 : N, lv = n === N ? levels : group(levels, n), pk = n === N ? peaks : group(peaks, n);
   const base = h * 0.8, maxH = h * (narrow ? 0.4 : 0.5), margin = w * 0.06, usable = w - margin * 2;
   const gap = usable / n * 0.28, bw = (usable - gap * (n - 1)) / n;
-  halo(w, h, w / 2, base, Math.max(w, h) * (0.45 + 0.1 * pulse), c);
+  halo(w, h, w / 2, base, Math.max(w, h) * (0.45 + 0.05 * pulse), c, 0.4);
   drawParticles(c);
   // brillo bajo las barras: las mismas, algo más anchas y casi transparentes
   ctx.fillStyle = rgba(c, 0.13 + 0.2 * pulse);
@@ -197,16 +197,7 @@ function drawSpectrum(w, h, c, levels) {
 // ==================
 function drawRadial(w, h, c, lv) {
   const cx = w / 2, cy = h / 2, m = Math.min(w, h), R = m * 0.19, maxLen = m * 0.26, lw = Math.max(3, 2 * Math.PI * R / (2 * N) * 0.55);
-  // luz de fondo como siempre (late con graves y golpes), pero estirada hacia los lados: una elipse más ancha que alta
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.scale(1.6, 1);
-  const hg = ctx.createRadialGradient(0, 0, 0, 0, 0, m * 0.62);
-  hg.addColorStop(0, rgba(c, 0.08 + 0.3 * bass + 0.22 * pulse));
-  hg.addColorStop(1, rgba(c, 0));
-  ctx.fillStyle = hg;
-  ctx.fillRect(-w, -h, w * 2, h * 2);
-  ctx.restore();
+  halo(w, h, cx, cy, m * 0.62, c);
   drawParticles(c);
   // círculo interior: reacciona a cada subida de los graves por encima de su nivel reciente (no a su nivel, que con música densa es alto siempre), así late con cada
   // golpe y entre golpes vuelve a quedarse en reposo, sin color de fondo permanente; en cada golpe fuerte suelta además una onda
@@ -413,16 +404,43 @@ function drawSilk(w, h, dt) {
 // ================
 // == VISTA ONDA ==
 // ================
-// El espectro con los extremos de las barras unidos por una curva lisa: cada barra es un punto (graves a la izquierda, agudos a la derecha, igual que en el Espectro) y la curva pasa por todos.
-// Se dibuja en espejo respecto a una línea central y con una decena de hebras de luz entre la curva de arriba y la de abajo, de modo que donde no suena nada se cierran en una sola línea y
-// donde suena fuerte se abren en una cinta. Sin ondulación propia: la forma es solo la del sonido. El color va del cálido al frío de un lado a otro, con la paleta compartida.
-const WV_S = 11;                      // hebras (la central es la línea de en medio)
+// Un haz de hebras de luz en varios planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Cada hebra tiene sus propias ondulaciones permanentes, con frecuencia, fase y
+// velocidad distintas, así que siempre se cruzan unas con otras y por donde se cruzan la luz se suma y brilla. La música lo altera todo: el nivel de cada zona del espectro (graves a la izquierda,
+// agudos a la derecha, la misma disposición que el Espectro) fija cuánto se abre el haz en ese punto, la energía acelera las ondulaciones y los agudos añaden rizado fino, y cada golpe da un tirón.
+// Los extremos se cierran en un punto. Cada hebra se dibuja con un halo ancho casi transparente y una línea fina encima; el color va de cálido a frío con la paleta compartida.
+const WV_PLANES = [{ n: 7, amp: 0.7, w: 0.8, a: 0.5, v: 0.7, dy: -0.012 }, { n: 7, amp: 0.9, w: 1.05, a: 0.75, v: 1, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, v: 1.3, dy: 0 }];
+const WV_NS = 128;                    // muestras a lo ancho de cada hebra
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra
+const wvHi = new Float32Array(N);     // lo mismo, solo para el rizado fino
+const wvStrands = [];                 // hebras: parámetros fijos (se reparten con un generador determinista) y fases que avanzan
+{
+  let sd = 7;
+  const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+  WV_PLANES.forEach((pl, pi) => {
+    for (let k = 0; k < pl.n; k++) {
+      wvStrands.push({
+        pi, f1: 0.8 + 1.4 * rnd(), f2: 2 + 2.4 * rnd(), f3: 6 + 5 * rnd(), s1: (0.5 + rnd()) * (rnd() < 0.5 ? -1 : 1), s2: (0.7 + 1.2 * rnd()) * (rnd() < 0.5 ? -1 : 1),
+        p1: rnd() * 6.28, p2: rnd() * 6.28, p3: rnd() * 6.28, a: 0.7 + 0.3 * rnd(), al: 0.55 + 0.45 * rnd(),
+      });
+    }
+  });
+}
+const wvEnv = new Float32Array(WV_NS + 1), wvTap = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1);
 
 function drawWave(w, h, dt) {
-  const lv = viz.levels, cy = h * 0.58, maxH = Math.min(h * 0.32, w * 0.3), margin = w * 0.06, usable = w - margin * 2;
-  for (let i = 0; i < N; i++) wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 22 : 7));
-  const kick = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
+  const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.3, w * 0.3), margin = w * 0.05, usable = w - margin * 2;
+  for (let i = 0; i < N; i++) {
+    wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 22 : 7));
+    wvHi[i] += (lv[i] * (i / (N - 1)) - wvHi[i]) * Math.min(1, dt * 16);
+  }
+  const kick = Math.min(1, Math.max(0, bass - bassAvg) * 2.8), speed = 1 + 2.6 * energy + 2.2 * kick;
+  // envolvente a lo ancho: nivel del espectro en cada punto (interpolado entre barras), más un mínimo para que siempre haya ondulación
+  for (let j = 0; j <= WV_NS; j++) {
+    const xn = j / WV_NS, f = xn * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
+    wvEnv[j] = 0.26 + 1.3 * ease(wvB[i0] + (wvB[i0 + 1] - wvB[i0]) * sm);
+    wvFine[j] = wvHi[i0] + (wvHi[i0 + 1] - wvHi[i0]) * sm;
+    wvTap[j] = Math.pow(Math.sin(Math.PI * xn), 0.7);   // se cierra en los extremos
+  }
   ctx.fillStyle = '#04040e';
   ctx.fillRect(0, 0, w, h);
   const gl = ctx.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.55);
@@ -430,32 +448,38 @@ function drawWave(w, h, dt) {
   gl.addColorStop(1, pal(0, 60, 40, 0));
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
-  // puntos de la curva: un cierre en cada extremo (altura 0) y luego una por barra
-  const px = new Float32Array(N + 2), ph = new Float32Array(N + 2);
-  px[0] = margin * 0.4; ph[0] = 0;
-  for (let i = 0; i < N; i++) { px[i + 1] = margin + usable * i / (N - 1); ph[i + 1] = ease(wvB[i]) * maxH * (1 + 0.15 * kick); }
-  px[N + 1] = w - margin * 0.4; ph[N + 1] = 0;
   ctx.globalCompositeOperation = 'lighter';
   ctx.lineJoin = ctx.lineCap = 'round';
-  const grad = ctx.createLinearGradient(0, 0, w, 0);
+  const grad = ctx.createLinearGradient(margin, 0, w - margin, 0);
   grad.addColorStop(0, pal(-65, 90, 60, 1));
   grad.addColorStop(0.3, pal(-25, 90, 66, 1));
-  grad.addColorStop(0.5, pal(0, 40, 86, 1));
+  grad.addColorStop(0.5, pal(0, 45, 84, 1));
   grad.addColorStop(0.7, pal(35, 90, 66, 1));
   grad.addColorStop(1, pal(80, 90, 60, 1));
   ctx.strokeStyle = grad;
-  for (let s = 0; s < WV_S; s++) {
-    const c = 1 - 2 * s / (WV_S - 1), edge = Math.abs(c);   // c: 1 (curva de arriba) … 0 (línea central) … -1 (curva de abajo)
+  const px = new Float32Array(WV_NS + 1), py = new Float32Array(WV_NS + 1);
+  for (const st of wvStrands) {
+    const pl = WV_PLANES[st.pi], vs = dt * speed * pl.v;
+    st.p1 += vs * st.s1; st.p2 += vs * st.s2; st.p3 += vs * 5;
+    if (beatNow) { st.p1 += 0.9 * st.s1; st.p2 += 0.7 * st.s2; }   // tirón con cada golpe
+    const amp = maxH * pl.amp * st.a * (1 + 0.3 * kick), oy = cy + h * pl.dy;
+    for (let j = 0; j <= WV_NS; j++) {
+      const xn = j / WV_NS, ph = xn * 6.2832;
+      const v = 0.7 * Math.sin(ph * st.f1 + st.p1) + 0.45 * Math.sin(ph * st.f2 + st.p2) + 0.6 * wvFine[j] * Math.sin(ph * st.f3 + st.p3);
+      px[j] = margin + usable * xn;
+      py[j] = oy - amp * wvEnv[j] * wvTap[j] * v;
+    }
     ctx.beginPath();
-    // curva que pasa por todos los puntos (Catmull-Rom convertida a Bézier)
-    const n = N + 2, X = i => px[Math.max(0, Math.min(n - 1, i))], Y = i => cy - c * ph[Math.max(0, Math.min(n - 1, i))];
-    ctx.moveTo(X(0), Y(0));
-    for (let i = 0; i < n - 1; i++) ctx.bezierCurveTo(X(i) + (X(i + 1) - X(i - 1)) / 6, Y(i) + (Y(i + 1) - Y(i - 1)) / 6, X(i + 1) - (X(i + 2) - X(i)) / 6, Y(i + 1) - (Y(i + 2) - Y(i)) / 6, X(i + 1), Y(i + 1));
-    ctx.globalAlpha = 0.06 + 0.06 * edge + 0.05 * kick;
-    ctx.lineWidth = 9;
+    ctx.moveTo(px[0], py[0]);
+    for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], py[j]);
+    ctx.globalAlpha = (0.05 + 0.05 * kick) * pl.a * st.al;
+    ctx.lineWidth = 11 * pl.w;
     ctx.stroke();
-    ctx.globalAlpha = 0.3 + 0.5 * edge;
-    ctx.lineWidth = edge > 0.99 ? 2.2 : 1.2;
+    ctx.globalAlpha = 0.1 * pl.a * st.al;
+    ctx.lineWidth = 4.5 * pl.w;
+    ctx.stroke();
+    ctx.globalAlpha = (0.35 + 0.4 * st.al) * pl.a;
+    ctx.lineWidth = pl.w;
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
@@ -475,6 +499,7 @@ const O_DH = [0, 52, -52, 115], O_KINDS = 5;   // desviación de tono de cada cl
 const oSprites = [];   // [clase][desenfoque] → lienzo con un punto (se repintan cada fotograma con el tono actual)
 const oFronts = [];    // frentes de ola lanzados por los golpes: { p: posición (profundidad), a: altura }
 let oT = 0, oKick = 0, oSwell = 0;
+const oB = new Float32Array(N);   // nivel suavizado de cada barra: la cresta de la ola sube o baja según la zona del espectro que tiene encima
 
 // Puntos con tres grados de desenfoque (0 nítido, 1 suave, 2 muy suave), uno por cada clase de color
 function oPaintSprites() {
@@ -497,53 +522,57 @@ function drawOcean(w, h, dt) {
   oT += dt;
   // impulso del beat: sube de golpe y cae; con cada golpe sale además un frente de ola desde el fondo
   if (beatNow) {
-    oKick = Math.min(1.25, oKick + 0.7 + 0.5 * Math.min(1, bass * 1.3));
-    oFronts.push({ p: O_ZFAR, a: 0.45 + 0.6 * Math.min(1, bass * 1.3) });
+    oKick = Math.min(2, oKick + 1.1 + 0.8 * Math.min(1, bass * 1.3));
+    oFronts.push({ p: O_ZFAR, a: 0.8 + 1.1 * Math.min(1, bass * 1.3) });
     if (oFronts.length > 9) oFronts.shift();
   }
-  oKick = Math.max(0, oKick - dt * 2.4);
-  oSwell += (bass - oSwell) * Math.min(1, dt * 5);
+  oKick = Math.max(0, oKick - dt * 3.2);
+  oSwell += (bass - oSwell) * Math.min(1, dt * 8);
+  for (let i = 0; i < N; i++) oB[i] += (lv[i] - oB[i]) * Math.min(1, dt * (lv[i] > oB[i] ? 20 : 6));
   for (let f = oFronts.length - 1; f >= 0; f--) {
     const fr = oFronts[f];
-    fr.p -= dt * 6.5; fr.a *= 1 - dt * 0.5;
+    fr.p -= dt * 7.5; fr.a *= 1 - dt * 0.4;
     if (fr.p < 0.2) oFronts.splice(f, 1);
   }
   let hi = 0;
   for (let i = 18; i < N; i++) hi += lv[i];
   hi /= N - 18;
   oPaintSprites();
-  const cx = w / 2, cy = h / 2, horizon = h * 0.4, F = h * 0.95;
+  const k0 = Math.min(1.4, oKick), cx = w / 2, cy = h / 2, horizon = h * (0.4 - 0.025 * k0), F = h * 0.95 * (1 + 0.08 * k0);   // con el golpe la cámara se aprieta contra la ola
   const yaw = 0.62 + 0.1 * Math.sin(oT * 0.07), ca = Math.cos(yaw), sa = Math.sin(yaw);
-  const roll = 0.07 + 0.04 * Math.sin(oT * 0.11 + 1);
-  const swell = 0.4 + 0.55 * oSwell + 0.6 * Math.min(1, oKick), zc = 5.4 + 0.7 * Math.sin(oT * 0.25);   // altura y posición de la ola grande
+  const roll = 0.07 + 0.04 * Math.sin(oT * 0.11 + 1) + 0.03 * Math.sin(oT * 9) * k0;
+  const swell = 0.3 + 1.0 * oSwell + 1.3 * oKick, zc = 5.4 + 0.7 * Math.sin(oT * 0.25);   // altura y posición de la ola grande
   ctx.save();
   ctx.translate(cx, cy); ctx.rotate(roll); ctx.translate(-cx, -cy);
   // fondo oscuro con un leve velo de color hacia el horizonte (se enciende con el impulso)
   const bg = ctx.createLinearGradient(0, 0, 0, h * 1.1);
   bg.addColorStop(0, '#02030a');
-  bg.addColorStop(0.4, pal(0, 55, (6 + 5 * oSwell + 4 * Math.min(1, oKick)).toFixed(1), 1));
+  bg.addColorStop(0.4, pal(0, 55, (6 + 6 * oSwell + 7 * Math.min(1, oKick)).toFixed(1), 1));
   bg.addColorStop(1, '#03040b');
   ctx.fillStyle = bg;
   ctx.fillRect(-w, -h, w * 3, h * 3);
   // los puntos suman luz: el orden no importa
   ctx.globalCompositeOperation = 'lighter';
-  const half = O_M / 2, unit = 0.026 * F, zr = O_ZFAR - O_ZNEAR, k1 = Math.min(1, oKick);
+  const half = O_M / 2, unit = 0.026 * F, zr = O_ZFAR - O_ZNEAR, k1 = Math.min(1.4, oKick);
   for (let j = 0; j <= O_M; j++) {
     const v = (j - half) * O_STEP;
     for (let i = 0; i <= O_M; i++) {
       const u = (i - half) * O_STEP, x = u * ca - v * sa, z = O_ZC + u * sa + v * ca;
       if (z < O_ZNEAR || z > O_ZFAR || x > z * 1.45 + 0.8 || x < -z * 1.45 - 0.8) continue;
       const far = 1 - 0.8 * (z - O_ZNEAR) / zr, sd = z + O_TILT * x;   // sd: posición a lo largo de la ola (la cresta es la línea sd constante, en diagonal)
-      let y = 0.05 * Math.sin(x * 0.6 + z * 0.4 + oT * 0.7) + 0.09 * hi * far * Math.sin(x * 5 + z * 4 + oT * 5);
-      y += swell * Math.exp(-((sd - zc) * (sd - zc)) / 5.3);
-      for (let f = 0; f < oFronts.length; f++) { const dd = sd - oFronts[f].p; if (dd > -2.6 && dd < 2.6) y += oFronts[f].a * Math.exp(-dd * dd / 0.9); }
-      y = 1.3 * Math.tanh(y / 1.3);
-      const sx = cx + x / z * F, sy = horizon + (O_HC - y) / z * F;
-      if (sy < horizon - 4 || sx < -60 || sx > w + 60 || sy > h + 60) continue;
-      const crest = Math.max(0, Math.min(1, y * 0.8)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.8 ? 0 : blur < 1.4 ? 1 : 2;
-      const r = Math.min(20, Math.max(0.9, unit / z * (0.6 + 1.2 * crest + 0.45 * k1 * crest))) * 1.45;
+      const sx = cx + x / z * F;
+      if (sx < -60 || sx > w + 60) continue;
+      const bi = Math.min(N - 1, Math.floor(Math.abs(sx / w - 0.5) * 2 * N)), spec = 0.4 + 1.7 * ease(oB[bi]);   // graves en el centro, agudos hacia los lados
+      let y = 0.06 * Math.sin(x * 0.6 + z * 0.4 + oT * 0.7) + 0.2 * hi * far * Math.sin(x * 5 + z * 4 + oT * 5);
+      y += swell * spec * Math.exp(-((sd - zc) * (sd - zc)) / 5.3);
+      for (let f = 0; f < oFronts.length; f++) { const dd = sd - oFronts[f].p; if (dd > -2.6 && dd < 2.6) y += oFronts[f].a * (0.5 + 0.9 * ease(oB[bi])) * Math.exp(-dd * dd / 0.9); }
+      y = 2.2 * Math.tanh(y / 2.2);
+      const sy = horizon + (O_HC - y) / z * F;
+      if (sy < horizon - 4 || sy > h + 60) continue;
+      const crest = Math.max(0, Math.min(1, y * 0.6)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.8 ? 0 : blur < 1.4 ? 1 : 2;
+      const r = Math.min(20, Math.max(0.9, unit / z * (0.6 + 1.2 * crest + 0.8 * k1 * crest))) * 1.45;
       const kind = (i * 7 + j * 13 + ((i * j) >> 3)) % O_KINDS, fog = Math.pow(1 - (z - O_ZNEAR) / zr, 0.9);
-      ctx.globalAlpha = Math.min(1, (0.14 + 0.8 * fog) * (0.3 + 0.7 * crest + 0.2 * k1 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
+      ctx.globalAlpha = Math.min(1, (0.14 + 0.8 * fog) * (0.3 + 0.7 * crest + 0.35 * k1 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
       ctx.drawImage(oSprites[kind][lvl], sx - r, sy - r, r * 2, r * 2);
     }
   }
