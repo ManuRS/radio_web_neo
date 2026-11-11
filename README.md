@@ -22,7 +22,7 @@ Las presintonias de Neo funciona como CADENAS/GRUPOS, es decir, pueden almacenar
 
 - Además es posible reordenar las presintonías arrastrándolas a la posición deseada.
 
-### Añadir cadenas y emisoras: búsqueda
+## Añadir cadenas y emisoras: búsqueda
 
 La manera más facil de añadir una emisora es pulsando en la barra de búsqueda y escribiendo parte de su nombre. Aparecerá un menú en el que seleccionar una opción de catálogo disponible. Tras hacer elegir una opción:
 
@@ -30,7 +30,7 @@ La manera más facil de añadir una emisora es pulsando en la barra de búsqueda
 
 - Puedes crear una nueva presintonia (un nuevo panel): En este caso debes elegir el nombre de la presintonía, su nombre corto, su tipo (generalista o musical), su color de énfasis y el nombre de la emisora con la que nacerá (por defecto es el nombre del stream que has seleccionado)
 
-### Añadir cadenas y emisoras: url
+## Añadir cadenas y emisoras: url
 
 Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación:
 
@@ -38,24 +38,16 @@ Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación
 
 - Para añadirlo a una nueva presintonía: 1. Pulsar sobre el reloj para mostrar los ajustes / 2. Pulsar en la pestaña de Cadena / 3. Rellenar los datos solicitados
 
-### Exportar configuración
-
-Es posible usar tu lista y ajustes en varios dispositivos.
+## Exportar configuración
 
 En el origen:
 
 1. Pulsa sobre el reloj para mostrar los ajustes
-
 2. Pulsa en la pestaña de Configuración
-
 3. Copia el texto del cuadro de edición y guardaló en un archivo
 
-En el destino
+En el destino:
 
 1. Abre de nuevo los ajustes y la configuración
-
 2. Pega el texto con tu configuración
-
 3. Aprieta guardar
-
-
