@@ -464,7 +464,7 @@ function twoLines(name) {
 
 function info() {
   const st = shownStation();
-  const name = st ? emisoraName(st, shownVariant(), true) : '—';
+  const name = st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';   // en pantalla completa, "SER Web" es "SER": el Web sobra
   setText(presPsText, mode === 1 ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
