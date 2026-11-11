@@ -1,10 +1,10 @@
 // =======================
 // == MODO PRESENTACIÓN ==
 // =======================
-// Pantalla completa con las barras como protagonistas (botón en la esquina del visualizador). Cuatro vistas, que se cambian tocando la pantalla:
+// Pantalla completa con las barras como protagonistas (botón en la esquina del visualizador). Cinco vistas, que se cambian tocando la pantalla:
 // "Espectro" (barras grandes con reflejo, picos que caen, halo que late con los graves y partículas), "Radial" (las barras en círculo
 // alrededor de la emisora) y "Vórtice" (sin barras: la forma de onda real del audio dibujada en anillo y con realimentación, que la convierte
-// en un túnel que gira y se dispara con los golpes) y "Seda" (cintas de luz finas que ondulan despacio, la vista tranquila). Lee los niveles del visualizador normal (viz.levels) y no toca el audio. Con el ratón arriba a la izquierda aparece el
+// en un túnel que gira y se dispara con los golpes) y "Seda" (cintas de luz finas que ondulan despacio, la vista tranquila) y "Océano" (la superficie de un mar de luz en diagonal, sin malla, con olas hechas con el sonido que viajan hacia ti). Todas comparten una paleta de colores suaves que va cambiando de tono, más deprisa cuanto más rápido es el tempo. Lee los niveles del visualizador normal (viz.levels) y no toca el audio. Con el ratón arriba a la izquierda aparece el
 // control (reproducir, volúmenes y boletines) y abajo las emisoras; en pantallas táctiles, ambos al tocar. Son copias de los controles de la
 // página, que se mantienen al día con ellos.
 
@@ -21,7 +21,8 @@ import { emisoraName } from './utils.js';
 import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
-const MODES = ['Espectro', 'Radial', 'Vórtice', 'Seda'];
+const MODES = ['Espectro', 'Océano', 'Radial', 'Vórtice', 'Seda'];
+const [SPECTRUM, OCEAN, RADIAL, VORTEX, SILK_MODE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
 const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
@@ -32,7 +33,11 @@ const NARROW_PX = 600;      // por debajo de este ancho (móvil en vertical) el 
 
 const ctx = presCanvas.getContext('2d');
 let mode = 0;
-try { mode = Math.min(MODES.length - 1, Math.max(0, parseInt(localStorage.getItem(MODE_KEY), 10) || 0)); } catch (_) {}
+// Se guarda el nombre de la vista (antes, su número en el orden de entonces: 0 Espectro, 1 Radial, 2 Vórtice, 3 Seda)
+try {
+  const saved = localStorage.getItem(MODE_KEY), old = ['Espectro', 'Radial', 'Vórtice', 'Seda'];
+  mode = Math.max(0, MODES.indexOf(/^\d+$/.test(saved || '') ? old[+saved] : saved));
+} catch (_) {}
 let fsUsed = false, open = false, raf = 0, last = 0, infoAt = 0, wake = null, idleTimer = 0, modeTimer = 0;
 
 const rgba = (hex, a) => 'rgba(' + [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',') + ',' + a + ')';
@@ -54,10 +59,14 @@ function analyse(lv, dt, now) {
   energy += (e - energy) * Math.min(1, dt * 6);
   bass += (b - bass) * Math.min(1, dt * 11.5);
   // golpe: los graves superan con claridad su nivel medio reciente
+  const prevBeat = beatAt;
   if (b > bassAvg * 1.2 + 0.04 && b > 0.3 && now - beatAt > 170) { pulse = 1; beatAt = now; beatNow = true; }
+  if (beatNow && prevBeat) tempoBeat(now - prevBeat, now);
   bassAvg += (b - bassAvg) * Math.min(1, dt * 1.5);
   pulse = Math.max(0, pulse - dt * 3.2);
   spin += dt * (0.25 + energy * 2.5);
+  if (now - beatAt > 3000) tempo += (0 - tempo) * Math.min(1, dt * 0.2);   // sin golpes de graves, el tempo se olvida poco a poco
+  movePalette(dt);
   // picos: suben con la barra, se quedan un momento y caen acelerando
   for (let i = 0; i < N; i++) {
     if (lv[i] >= peaks[i]) { peaks[i] = lv[i]; hold[i] = PEAK_HOLD_S; fall[i] = 0; }
@@ -96,6 +105,39 @@ function halo(w, h, cx, cy, radius, c) {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 }
+
+// ======================
+// == PALETA COMPARTIDA ==
+// ======================
+// Todas las vistas comparten un tono que recorre despacio la rueda de colores (siempre suaves: poca saturación y luz alta, como los hilos de la Seda). Su velocidad sigue al tempo de la
+// música: cada golpe de graves da un intervalo, del que sale un tempo suavizado (plegado a 72-165 pulsos por minuto para que no salten las octavas); cuanto más rápido va, más deprisa
+// cambia el color. Cuando el tempo cambia de verdad (el tempo rápido se aparta del lento más de un 12%), el color acelera un rato y da un pequeño salto, que se reparte suavemente.
+let palHue = 215, palVel = 6, palPush = 0, palBoost = 0, tempo = 0, tempoSlow = 0, tempoAt = 0;
+const hslHex = (h, s, l) => {   // h en grados, s y l entre 0 y 1
+  const a = s * Math.min(l, 1 - l), f = n => { const k = (n + h / 30) % 12; return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))).toString(16).padStart(2, '0'); };
+  return '#' + f(0) + f(8) + f(4);
+};
+
+function tempoBeat(ms, now) {
+  if (ms > 2000) return;
+  let bpm = 60000 / ms;
+  while (bpm > 165) bpm /= 2;
+  while (bpm < 72) bpm *= 2;
+  tempo = tempo ? tempo + (bpm - tempo) * 0.18 : bpm;
+  tempoSlow = tempoSlow ? tempoSlow + (bpm - tempoSlow) * 0.04 : bpm;
+  if (Math.abs(tempo - tempoSlow) / tempoSlow > 0.12 && now - tempoAt > 4000) { tempoAt = now; palBoost = 1; palPush += 28; tempoSlow = tempo; }
+}
+
+function movePalette(dt) {
+  const tn = Math.min(1, Math.max(0, (tempo - 70) / 95));   // 0 = lento, 1 = rápido
+  palBoost = Math.max(0, palBoost - dt / 3.5);
+  palVel += (4 + 20 * tn + 10 * energy + 26 * palBoost - palVel) * Math.min(1, dt * 0.9);
+  const push = palPush * Math.min(1, dt * 1.6);
+  palPush -= push;
+  palHue = (palHue + palVel * dt + push) % 360;
+}
+const palColor = () => hslHex(palHue, 0.62, 0.66);   // "#rrggbb" del color de las barras y el círculo
+const pal = (dh, s, l, a) => 'hsla(' + ((palHue + dh + 360) % 360).toFixed(0) + ', ' + s + '%, ' + l + '%, ' + a + ')';   // para pintar con el tono compartido (dh = desplazamiento de tono)
 
 // ====================
 // == VISTA ESPECTRO ==
@@ -150,7 +192,7 @@ function drawRadial(w, h, c, lv) {
   drawParticles(c);
   // círculo interior: reacciona a cada subida de los graves por encima de su nivel reciente (no a su nivel, que con música densa es alto siempre), así late con cada
   // golpe y entre golpes vuelve a quedarse en reposo, sin color de fondo permanente; en cada golpe fuerte suelta además una onda
-  const kb = Math.min(1, Math.max(0, bass - bassAvg) * 2.8), rr = R * (1 + 0.12 * kb + 0.06 * pulse);
+  const kb = Math.min(1, Math.max(0, bass - bassAvg) * 2.8), rr = R * (1 + 0.36 * kb + 0.14 * pulse);   // recorrido amplio: en un golpe fuerte el círculo crece más de un tercio
   if (kb > 0.02 || pulse > 0.02) {
     const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
     core.addColorStop(0, rgba(c, 0.18 * kb + 0.1 * pulse));
@@ -161,7 +203,7 @@ function drawRadial(w, h, c, lv) {
   if (pulse > 0.02) {
     ctx.strokeStyle = rgba(c, 0.5 * pulse);
     ctx.lineWidth = 2 + 4 * pulse;
-    ctx.beginPath(); ctx.arc(cx, cy, rr * (1 + (1 - pulse) * 0.55), 0, 6.2832); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx, cy, rr * (1 + (1 - pulse) * 0.45), 0, 6.2832); ctx.stroke();
   }
   ctx.lineCap = 'round';
   ctx.strokeStyle = rgba(c, 0.14 + 0.2 * kb + 0.1 * pulse);
@@ -185,7 +227,7 @@ function drawRadial(w, h, c, lv) {
     ctx.strokeStyle = mix(dark, '#ffffff', l * 0.6);
     ctx.beginPath();
     for (const s of [1, -1]) {
-      const t = Math.PI / 2 - s * a, cos = Math.cos(t), sin = Math.sin(t), r0 = rr + lw;
+      const t = Math.PI / 2 - s * a, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.4 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
       ctx.moveTo(cx + cos * r0, cy + sin * r0);
       ctx.lineTo(cx + cos * (r0 + len), cy + sin * (r0 + len));
     }
@@ -211,9 +253,9 @@ function drawRadial(w, h, c, lv) {
 // ===================
 // Cada fotograma parte del anterior, ampliado y girado un poco y algo más oscuro (así lo dibujado se aleja en espiral y deja estela), y sobre él se
 // dibuja con luz sumada: un anillo con la forma de onda real, un bucle de fase (la señal frente a ella misma unos instantes después) y, con cada
-// golpe de graves, un estallido de rayos y un destello. El color da vueltas solo y salta con los golpes; el giro se invierte de vez en cuando.
+// golpe de graves, un estallido de rayos y un destello. El color es el de la paleta compartida; el giro se invierte de vez en cuando.
 const TAU = 6.2832, RING = 256;
-let wave = new Float32Array(2048), env = 0.1, wgain = 3, hue = 200, dir = 1, beats = 0, drawn = -1;
+let wave = new Float32Array(2048), env = 0.1, wgain = 3, dir = 1, beats = 0, drawn = -1;
 
 function drawVortex(w, h, dt, dpr) {
   const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = presCanvas.width, ch = presCanvas.height;
@@ -235,12 +277,11 @@ function drawVortex(w, h, dt, dpr) {
   } else wave.fill(0);
   env = Math.max(mx, env - dt * 0.25);
   wgain += (Math.min(8, 0.9 / Math.max(env, 0.04)) - wgain) * Math.min(1, dt * 3);
-  if (beatNow) { beats++; hue += 28; if (beats % 7 === 0) dir = -dir; }
-  hue = (hue + dt * (14 + energy * 110)) % 360;
+  if (beatNow) { beats++; if (beats % 7 === 0) dir = -dir; }
   // realimentación: el fotograma anterior, ampliado, girado y apagado un poco
   ctx.globalCompositeOperation = 'source-over';
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (drawn !== 2) { ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, cw, ch); }   // al entrar en esta vista se parte de fondo limpio
+  if (drawn !== VORTEX) { ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, cw, ch); }   // al entrar en esta vista se parte de fondo limpio
   ctx.translate(cw / 2, ch / 2);
   ctx.rotate(dir * dt * (0.08 + energy * 0.7 + pulse * 0.5));
   const zoom = 1 + dt * (0.3 + bass * 1.7 + pulse * 1.3);
@@ -254,8 +295,8 @@ function drawVortex(w, h, dt, dpr) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.globalCompositeOperation = 'lighter';
   ctx.lineJoin = ctx.lineCap = 'round';
-  const R = m * (0.11 + 0.07 * bass + 0.05 * pulse), amp = m * 0.13, step = Math.floor(wave.length / RING), light = 55 + pulse * 20;
-  ctx.strokeStyle = 'hsl(' + hue.toFixed(0) + ', 100%, ' + light.toFixed(0) + '%)';
+  const R = m * (0.11 + 0.07 * bass + 0.05 * pulse), amp = m * 0.13, step = Math.floor(wave.length / RING), light = 62 + pulse * 14;
+  ctx.strokeStyle = pal(0, 75, light, 1);
   ctx.lineWidth = 1.5 + bass * 5 + pulse * 4;
   ctx.beginPath();
   for (let i = 0; i <= RING; i++) {
@@ -264,7 +305,7 @@ function drawVortex(w, h, dt, dpr) {
   }
   ctx.stroke();
   const d = 6 + Math.floor(energy * 40), q = -spin * 0.9, cq = Math.cos(q), sq = Math.sin(q), R2 = m * 0.17;
-  ctx.strokeStyle = 'hsl(' + ((hue + 160) % 360).toFixed(0) + ', 100%, 60%)';
+  ctx.strokeStyle = pal(150, 70, 66, 1);
   ctx.lineWidth = 1.2 + energy * 3;
   ctx.beginPath();
   for (let i = 0; i < RING; i++) {
@@ -276,10 +317,10 @@ function drawVortex(w, h, dt, dpr) {
     ctx.lineWidth = 2 + bass * 4;
     for (let i = 0; i < 18; i++) {
       const a = Math.random() * TAU, r0 = R * 1.1, r1 = R + m * (0.08 + Math.random() * 0.22);
-      ctx.strokeStyle = 'hsl(' + ((hue + Math.random() * 70) % 360).toFixed(0) + ', 100%, 70%)';
+      ctx.strokeStyle = pal(Math.random() * 70, 75, 72, 1);
       ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); ctx.stroke();
     }
-    ctx.fillStyle = 'hsla(' + hue.toFixed(0) + ', 100%, 60%, 0.07)';
+    ctx.fillStyle = pal(0, 75, 64, 0.06);
     ctx.fillRect(0, 0, w, h);
   }
   ctx.globalCompositeOperation = 'source-over';
@@ -309,7 +350,7 @@ function drawSilk(w, h, dt) {
   const kick = (sk[0] + sk[1]) / 2;   // los graves, suavizados
   skAvg += (sum / SILK - skAvg) * Math.min(1, dt * 2.5);
   skT += dt * (0.22 + skAvg * 1.0);
-  const hue = 225 + 40 * Math.sin(skT * 0.09), cy = h * 0.62, amp = Math.min(h * 0.17, w * 0.3);
+  const hue = palHue, cy = h * 0.62, amp = Math.min(h * 0.17, w * 0.3);
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, '#070a12');
   bg.addColorStop(1, 'hsl(' + hue.toFixed(0) + ', 40%, 11%)');
@@ -351,6 +392,99 @@ function drawSilk(w, h, dt) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// ==================
+// == VISTA OCÉANO ==
+// ==================
+// La superficie de un mar de luz vista en diagonal y con la cámara algo ladeada, sin líneas ni malla: solo color. Se pinta en franjas de lejos a cerca; el color de cada punto sale de cómo
+// está inclinada la ola (las caras que miran hacia ti se iluminan, las crestas más) y se apaga con la distancia hasta el brillo del horizonte, en el tono de la paleta compartida. Las olas nacen
+// lejos con el sonido de ese instante y viajan hacia ti: lo cercano es lo que sonó hace un momento. Los graves levantan marejadas largas y lentas, los medios olas medianas y los agudos rizado fino,
+// cada grupo con su propia dirección (por eso las crestas van en diagonal).
+const O_ROWS = 58, O_COLS = 64, O_ZFAR = 14, O_HC = 1.5, O_SPEED = 4.2, O_HIST = 110, O_RATE = 32;   // franjas, columnas, lejanía visible, altura de la cámara, velocidad de las olas, historial (32 muestras/s)
+const oHist = [new Float32Array(O_HIST), new Float32Array(O_HIST), new Float32Array(O_HIST)], oLv = new Float32Array(3);
+const oSY = new Float32Array((O_ROWS + 1) * (O_COLS + 1)), oHt = new Float32Array((O_ROWS + 1) * (O_COLS + 1)), oRowZ = new Float32Array(O_ROWS + 1), oRowFlat = new Float32Array(O_ROWS + 1);
+let oHead = 0, oAcc = 0, oT = 0, oStars = null;
+const O_WAVES = [   // [dirección x, z, número de onda, velocidad relativa, alcance]
+  [0.375, 0.927, 1.1, 1, 0.95], [-0.469, 0.883, 2.6, 1.12, 0.5], [0.766, 0.643, 6, 1.3, 0.2], [-0.82, 0.57, 9, 1.4, 0.12]
+];
+
+function oSample(g, d) {   // nivel del grupo g hace d muestras (interpolado)
+  const f = Math.floor(d), r = d - f, hs = oHist[g];
+  return hs[(oHead - f + O_HIST * 2) % O_HIST] * (1 - r) + hs[(oHead - f - 1 + O_HIST * 2) % O_HIST] * r;
+}
+
+function drawOcean(w, h, dt) {
+  const lv = viz.levels;
+  oT += dt;
+  // tres grupos de bandas, suavizados, que entran en el historial a 32 muestras por segundo
+  const groups = [[0, 6], [6, 18], [18, N]];
+  for (let g = 0; g < 3; g++) {
+    let v = 0;
+    for (let i = groups[g][0]; i < groups[g][1]; i++) v += lv[i];
+    v = ease(v / (groups[g][1] - groups[g][0]));
+    oLv[g] += (v - oLv[g]) * Math.min(1, dt * 12);
+  }
+  oAcc += dt;
+  while (oAcc >= 1 / O_RATE) { oAcc -= 1 / O_RATE; oHead = (oHead + 1) % O_HIST; for (let g = 0; g < 3; g++) oHist[g][oHead] = oLv[g]; }
+  const glow = Math.min(1, bass * 1.4), kick = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
+  const cx = w / 2, cy = h / 2, horizon = h * 0.4, F = h * 0.95, x0 = -w * 0.25, span = w * 1.5;
+  const roll = 0.07 + 0.04 * Math.sin(oT * 0.11 + 1), hl = 14 + 9 * glow + 5 * kick;   // hl: brillo del horizonte
+  // franjas: separadas por igual en pantalla (con el agua en reposo); z es la profundidad de cada una
+  const yFar = horizon + F * O_HC / O_ZFAR, yNear = h * 1.02, W1 = O_COLS + 1;
+  for (let k = 0; k <= O_ROWS; k++) {
+    const yf = yFar + (yNear - yFar) * k / O_ROWS, z = F * O_HC / (yf - horizon), d = (O_ZFAR - z) / O_SPEED * O_RATE;
+    oRowZ[k] = z; oRowFlat[k] = yf;
+    const a0 = oSample(0, d) * O_WAVES[0][4], a1 = oSample(1, d) * O_WAVES[1][4], a2 = oSample(2, d), a3 = a2 * O_WAVES[3][4], A = [a0, a1, a2 * O_WAVES[2][4], a3];
+    for (let j = 0; j <= O_COLS; j++) {
+      const x = (x0 + span * j / O_COLS - cx) / F * z;
+      let y = 0.05 * Math.sin(x * 0.7 + z * 0.5 + oT * 0.6);
+      for (let q = 0; q < 4; q++) { const wv = O_WAVES[q]; y += A[q] * Math.sin(wv[2] * (x * wv[0] + z * wv[1]) + wv[2] * O_SPEED * wv[3] * oT + q * 1.7); }
+      y = Math.min(1.25, y);
+      oHt[k * W1 + j] = y;
+      oSY[k * W1 + j] = horizon + (O_HC - y) / z * F;
+    }
+  }
+  ctx.save();
+  ctx.translate(cx, cy); ctx.rotate(roll); ctx.translate(-cx, -cy);
+  // cielo y, bajo el horizonte, el brillo lejano al que se apaga el agua
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, '#02040a');
+  sky.addColorStop(1, pal(0, 55, hl, 1));
+  ctx.fillStyle = sky;
+  ctx.fillRect(-w, -h, w * 3, horizon + h);
+  ctx.fillStyle = pal(0, 55, hl * 0.92, 1);
+  ctx.fillRect(-w, horizon, w * 3, h * 1.5);
+  if (!oStars) { oStars = []; for (let i = 0; i < 45; i++) oStars.push({ x: Math.random(), y: Math.random() * 0.85, r: 0.5 + Math.random() * 1.1, ph: Math.random() * 6.28 }); }
+  ctx.fillStyle = '#e6eeff';
+  for (const s of oStars) {
+    ctx.globalAlpha = 0.1 + 0.22 * (0.5 + 0.5 * Math.sin(oT * 0.8 + s.ph));
+    ctx.beginPath(); ctx.arc(s.x * w, s.y * horizon, s.r, 0, TAU); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  ctx.lineJoin = 'round';
+  // el agua, de lejos a cerca: cada franja va entre su perfil y el de la siguiente, con un degradado horizontal calculado de la inclinación de la ola en cada columna
+  const base = 11 + 7 * glow + 5 * kick;
+  for (let k = 0; k < O_ROWS; k++) {
+    const z = oRowZ[k], dz = z - oRowZ[k + 1], zn = Math.min(1, Math.max(0, (z - 1.5) / (O_ZFAR - 1.5)));
+    const fog = Math.pow(zn, 1.5), dh = 24 * zn - 8;   // el tono se desvía un poco con la distancia
+    const gr = ctx.createLinearGradient(x0, 0, x0 + span, 0);
+    for (let j = 0; j <= O_COLS; j++) {
+      const hf = oHt[k * W1 + j], hn = oHt[(k + 1) * W1 + j], slope = (hn - hf) / dz, lit = Math.max(-0.4, Math.min(1, -slope * 1.7)), crest = Math.max(0, Math.min(1, (hf + hn) * 0.5 * 0.95));
+      const L = base + 30 * Math.max(0, lit) + 8 * Math.min(0, lit) + 22 * crest * crest, Lf = L + (hl - L) * fog, S = 50 + 8 * crest;
+      gr.addColorStop(j / O_COLS, pal(dh, S.toFixed(0), Math.max(3, Lf).toFixed(1), 1));
+    }
+    ctx.fillStyle = ctx.strokeStyle = gr;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let j = 0; j <= O_COLS; j++) { const x = x0 + span * j / O_COLS; if (j) ctx.lineTo(x, oSY[k * W1 + j]); else ctx.moveTo(x, oSY[k * W1 + j]); }
+    if (k === O_ROWS - 1) { ctx.lineTo(x0 + span, h * 1.4); ctx.lineTo(x0, h * 1.4); }
+    else for (let j = O_COLS; j >= 0; j--) ctx.lineTo(x0 + span * j / O_COLS, oSY[(k + 1) * W1 + j]);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();   // el contorno, del mismo color, tapa la costura entre franjas
+  }
+  ctx.restore();
+}
+
 // ===========
 // == BUCLE ==
 // ===========
@@ -368,15 +502,17 @@ function frame(now) {
   raf = requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
   last = now;
-  const { w, h, dpr } = size(), lv = viz.levels, c = viz.accent;
+  const { w, h, dpr } = size(), lv = viz.levels;
   analyse(lv, dt, now);
-  if (mode === 2) drawVortex(w, h, dt, dpr);
-  else if (mode === 3) drawSilk(w, h, dt);
+  const c = palColor();
+  if (mode === VORTEX) drawVortex(w, h, dt, dpr);
+  else if (mode === SILK_MODE) drawSilk(w, h, dt);
+  else if (mode === OCEAN) drawOcean(w, h, dt);
   else {
     moveParticles(w, h, dt);
     ctx.fillStyle = '#0a0d12';
     ctx.fillRect(0, 0, w, h);
-    if (mode === 0) drawSpectrum(w, h, c, lv); else drawRadial(w, h, c, lv);
+    if (mode === SPECTRUM) drawSpectrum(w, h, c, lv); else drawRadial(w, h, c, lv);
   }
   drawn = mode;
   if (now - infoAt > 250) { infoAt = now; info(); }
@@ -432,7 +568,7 @@ function fitName() {
   if (key === fitKey) return;
   fitKey = key;
   const cs = getComputedStyle(presPs);
-  if (mode === 1) {
+  if (mode === RADIAL) {
     // Radial: sin marquesina; el tamaño se ajusta para que cada línea quepa dentro del círculo (con un mínimo legible)
     presPs.classList.remove('marquee');
     measure.font = cs.fontWeight + ' 100px ' + cs.fontFamily;
@@ -468,7 +604,7 @@ function twoLines(name) {
 function info() {
   const st = shownStation();
   const name = st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';   // en pantalla completa, "SER Web" es "SER": el Web sobra
-  setText(presPsText, mode === 1 ? twoLines(name) : name);
+  setText(presPsText, mode === RADIAL ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
   setText(presQual, S.current ? [S.quality, S.degraded ? 'sin EQ' : ''].filter(Boolean).join(' • ') : '');
@@ -543,7 +679,7 @@ function poke(e) {
 
 function setMode(m) {
   mode = (m + MODES.length) % MODES.length;
-  try { localStorage.setItem(MODE_KEY, String(mode)); } catch (_) {}
+  try { localStorage.setItem(MODE_KEY, MODES[mode]); } catch (_) {}
   presEl.dataset.mode = String(mode);
   presMode.textContent = MODES[mode];
   presMode.classList.add('show');
