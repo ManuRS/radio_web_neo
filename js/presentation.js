@@ -230,20 +230,20 @@ function drawRadial(w, h, c, lv) {
   ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.stroke();
   ctx.save();
   ctx.setLineDash([1, 15]);
-  ctx.lineDashOffset = -spin * 40;
+  ctx.lineDashOffset = spin * 40;   // los puntos giran en sentido antihorario
   ctx.strokeStyle = rgba(c, 0.5);
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(cx, cy, R + maxLen * 1.12, 0, 6.2832); ctx.stroke();
   ctx.restore();
   // barras en círculo: graves abajo, agudos arriba, iguales a izquierda y derecha
   ctx.lineWidth = lw;
-  const dark = shade(c, 0.7);
+  const rot = spin * 0.1, dark = shade(c, 0.7);   // rot: giro de las barras en sentido horario (0,025-0,28 rad/s según la energía)
   for (let i = 0; i < N; i++) {
-    const l = ease(lv[i]), len = 3 + l * maxLen, a = i / (N - 1) * Math.PI;
+    const l = ease(lv[i]), len = 3 + l * maxLen, a = i / (N - 1) * Math.PI;   // las barras giran despacio en sentido horario (rot)
     ctx.strokeStyle = mix(dark, '#ffffff', l * 0.6);
     ctx.beginPath();
     for (const s of [1, -1]) {
-      const t = Math.PI / 2 - s * a, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.3 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
+      const t = Math.PI / 2 - s * a + rot, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.3 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
       ctx.moveTo(cx + cos * r0, cy + sin * r0);
       ctx.lineTo(cx + cos * (r0 + len), cy + sin * (r0 + len));
     }
@@ -256,7 +256,7 @@ function drawRadial(w, h, c, lv) {
     if (peaks[i] <= 0.03) continue;
     const a = i / (N - 1) * Math.PI, d = rr + lw + 3 + ease(peaks[i]) * maxLen + lw;
     for (const s of [1, -1]) {
-      const t = Math.PI / 2 - s * a;
+      const t = Math.PI / 2 - s * a + rot;
       ctx.moveTo(cx + Math.cos(t) * d + lw / 3, cy + Math.sin(t) * d);
       ctx.arc(cx + Math.cos(t) * d, cy + Math.sin(t) * d, lw / 3, 0, 6.2832);
     }
@@ -413,8 +413,8 @@ function drawSilk(w, h, dt) {
 // ================
 // Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Cada hebra va desplazada de las demás con separaciones desiguales,
 // avanza muy despacio a su propia velocidad y reacciona a la música a su manera: las alturas están normalizadas solo a medias por frecuencia (mezcla del nivel real y del medido contra el máximo reciente de cada banda: los graves siguen pesando algo
-// más que los agudos, pero menos que en el espectro normal) y cada hebra tiene su factor fijo por zona, su contraste (cuánto baja y sube), su mezcla de respuesta rápida y lenta y su velocidad de avance. Algunas hebras no cubren
-// todo el ancho. Los extremos de cada hebra se cierran en un punto. Cada hebra lleva una sombra (casi negra, desplazada hacia abajo, que oscurece lo que tiene detrás), un halo suave y una línea fina; el
+// más que los agudos, pero menos que en el espectro normal) y cada hebra tiene su factor fijo por zona, su contraste (cuánto baja y sube), su mezcla de respuesta rápida y lenta y su velocidad de avance. Todas las hebras nacen y mueren en el punto de cada extremo, pero muchas tienen
+// un tramo "muerto" (plano sobre la línea central) antes de empezar a vivir y después de acabar. Cada hebra reacciona con una sensibilidad distinta (la mínima es la de siempre). Cada hebra lleva una sombra (casi negra, desplazada hacia abajo, que oscurece lo que tiene detrás), un halo suave y una línea fina; el
 // color va de cálido a frío con la paleta compartida, en un abanico estrecho para que no dé saltos.
 const WV_PLANES = [{ n: 7, amp: 0.75, w: 0.8, a: 0.5, ph: 0, dy: -0.012 }, { n: 7, amp: 0.95, w: 1.05, a: 0.75, ph: 1.3, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, ph: 2.6, dy: 0 }];
 const WV_NS = 240;                    // muestras a lo ancho de cada hebra
@@ -434,10 +434,10 @@ const wvStr = WV_PLANES.map((pl, pi) => {
   let acc = 0;
   const cs = [-1, ...gaps.map(v => (acc += v, -1 + 2 * acc / tot))];
   return cs.map(c => {
-    const part = rnd() < 0.55, j0 = part ? Math.floor(rnd() * 0.3 * WV_NS) : 0, j1 = part ? WV_NS - Math.floor(rnd() * 0.3 * WV_NS) : WV_NS;
+    const xs = rnd() < 0.7 ? 0.04 + 0.26 * rnd() : 0, xe = rnd() < 0.7 ? 1 - 0.04 - 0.26 * rnd() : 1;   // tramo vivo de la hebra: antes y después va "muerta" (plana sobre la línea central)
     const kn = Array.from({ length: 10 }, () => 0.35 + 1.15 * rnd()), g = new Float32Array(WV_NS + 1);   // factor por zona: 10 nudos suavizados
     for (let j = 0; j <= WV_NS; j++) { const f = j / WV_NS * 9, i0 = Math.min(8, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t); g[j] = kn[i0] + (kn[i0 + 1] - kn[i0]) * sm; }
-    return { c, j0, j1, g, v: 0.7 + 0.6 * rnd(), p: 0.7 + 1.2 * rnd(), m: rnd(), sp: 0.04 + 0.18 * rnd(), ph: rnd() * 6.28 };
+    return { c, xs, xe, g, v: 0.7 + 0.6 * rnd(), p: 0.7 + 1.2 * rnd(), m: rnd(), r: 1 + 1.5 * rnd() * rnd() + 0.4 * rnd(), sp: 0.08 + 0.36 * rnd(), ph: rnd() * 6.28 };
   });
 });
 
@@ -481,17 +481,17 @@ function drawWave(w, h, dt) {
   ctx.lineJoin = ctx.lineCap = 'round';
   const px = new Float32Array(WV_NS + 1);
   for (let j = 0; j <= WV_NS; j++) px[j] = margin + usable * j / WV_NS;
-  const path = (st, py, oy) => { ctx.beginPath(); ctx.moveTo(px[st.j0], oy + py[st.j0]); for (let j = st.j0 + 1; j <= st.j1; j++) ctx.lineTo(px[j], oy + py[j]); };
+  const path = (py, oy) => { ctx.beginPath(); ctx.moveTo(px[0], oy + py[0]); for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], oy + py[j]); };
   for (let pi = 0; pi < WV_PLANES.length; pi++) {   // del plano lejano al cercano: la sombra de cada plano oscurece al de detrás
     const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.2 * wvK), oy = cy + h * pl.dy;
     for (let k = 0; k < pl.n; k++) {
-      const st = strs[k], py = wvPts[k], span = st.j1 - st.j0;
+      const st = strs[k], py = wvPts[k];
       st.ph += dt * st.sp;   // avance muy lento, distinto en cada hebra
       const phs = pl.ph + st.ph;
-      for (let j = st.j0; j <= st.j1; j++) {
+      for (let j = 0; j <= WV_NS; j++) {
         const x2 = j / WV_NS * 6.2832, gj = st.g[j], lvl = wvEnv[j] * (1 - st.m) + wvEnvF[j] * st.m;   // lvl: respuesta de esta hebra (mezcla de rápida y lenta)
-        const e = 0.05 + 1.0 * Math.pow(Math.min(1.2, lvl), st.p) * gj, d = st.c * (0.9 + 1.2 * (0.2 + 0.85 * wvEnv[j] * gj));   // e: altura (contraste propio); d: desplazamiento respecto a las demás
-        const tap = Math.pow(Math.sin(Math.PI * (j - st.j0) / span), 0.7);   // cada hebra se cierra en sus propios extremos
+        const e = 0.05 + 1.0 * Math.pow(Math.min(1.3, lvl * st.r), st.p) * gj, d = st.c * (0.9 + 1.2 * (0.2 + 0.85 * wvEnv[j] * gj));   // e: altura (contraste propio); d: desplazamiento respecto a las demás
+        const xn = j / WV_NS, tap = xn <= st.xs || xn >= st.xe ? 0 : Math.pow(Math.sin(Math.PI * (xn - st.xs) / (st.xe - st.xs)), 0.7);   // fuera de su tramo vivo la hebra está muerta (0); todas nacen y mueren en los puntos de los extremos
         const v = 0.72 * Math.sin(x2 * 2.2 - phs + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * phs + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * phs + 2 * d + 0.6);
         py[j] = -amp * (1 - 0.16 * Math.abs(st.c)) * st.v * e * tap * v;
       }
@@ -500,7 +500,7 @@ function drawWave(w, h, dt) {
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = '#010106';
     for (let k = 0; k < pl.n; k++) {
-      path(strs[k], wvPts[k], oy + 5 * pl.w + 2);
+      path(wvPts[k], oy + 5 * pl.w + 2);
       ctx.globalAlpha = 0.22;
       ctx.lineWidth = 5 * pl.w;
       ctx.stroke();
@@ -510,7 +510,7 @@ function drawWave(w, h, dt) {
     ctx.strokeStyle = grad;
     for (let k = 0; k < pl.n; k++) {
       const st = strs[k], al = 0.7 + 0.3 * (1 - Math.abs(st.c)), pa = pl.a * al;
-      path(st, wvPts[k], oy);
+      path(wvPts[k], oy);
       ctx.globalAlpha = (0.03 + 0.012 * wvK) * pa; ctx.lineWidth = 7 * pl.w; ctx.stroke();
       ctx.globalAlpha = (0.35 + 0.4 * al) * pl.a; ctx.lineWidth = pl.w; ctx.stroke();
     }
