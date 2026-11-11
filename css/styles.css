@@ -208,7 +208,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres.idle:not(.show-top):not(.show-bottom) { cursor: none; }
 .pres canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 .pres-info { position: absolute; left: 0; right: 0; top: 7vh; display: flex; flex-direction: column; align-items: center; gap: .8vh; text-align: center; pointer-events: none; }
-.pres-ps > span { display: inline-block; white-space: nowrap; }
+.pres-ps > span { display: inline-block; white-space: pre; }   /* una línea, salvo el salto que pone info() a los nombres que no caben */
 /* Nombre que no cabe: se desplaza de un lado a otro (presentation.js calcula --dx y --dur) */
 .pres-ps.marquee { text-overflow: clip; }
 .pres-ps.marquee > span { animation: pres-marquee var(--dur, 10s) ease-in-out infinite; }

@@ -940,10 +940,21 @@ function twoLines(name) {
   return words.slice(0, best).join(' ') + '\n' + words.slice(best).join(' ');
 }
 
+// Fuera del Radial el nombre va en una línea; si no cabe (pasa sobre todo en el móvil: "LOS40 Barcelona") se parte en dos, y solo si aun así no cabe se desplaza
+function fitsOneLine(name) {
+  const cs = getComputedStyle(presPs), fs = parseFloat(cs.fontSize);
+  measure.font = cs.fontWeight + ' ' + fs + 'px ' + cs.fontFamily;
+  const box = presPs.parentElement, cb = getComputedStyle(box);
+  let avail = parseFloat(cs.maxWidth) || innerWidth;
+  if (cb.maxWidth !== 'none') avail = Math.min(avail, parseFloat(cb.maxWidth) - parseFloat(cb.paddingLeft) - parseFloat(cb.paddingRight));   // Océano: la ventana de cristal
+  avail -= parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  return measure.measureText(name).width + name.length * fs * 0.06 <= avail;   // 0,06 = letter-spacing
+}
+
 function info() {
   const st = shownStation();
   const name = st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';   // en pantalla completa, "SER Web" es "SER": el Web sobra
-  setText(presPsText, mode === RADIAL ? twoLines(name) : name);
+  setText(presPsText, mode === RADIAL || !fitsOneLine(name) ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
   setText(presQual, S.current ? [S.quality, S.degraded ? 'sin EQ' : ''].filter(Boolean).join(' • ') : '');
