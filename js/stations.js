@@ -6,7 +6,7 @@
 
 import { S, endNewsState } from './state.js';
 import { emisoraName, emisoraSub } from './utils.js';
-import { presetsBox, psValue } from './dom.js';
+import { presetsBox, psText, psValue } from './dom.js';
 import { applyAccent, setText } from './ui.js';
 import { switchStation } from './transitions.js';
 import { play, stopAll, wake } from './player.js';
@@ -556,11 +556,29 @@ let shown = null, shownV = 0;
 export const shownStation = () => shown;
 export const shownVariant = () => shownV;
 
+// Nombre que no cabe en el panel (nombres largos, o con el botón de grabar ocupando sitio): va de un lado a otro con una pausa en cada extremo,
+// como en pantalla completa. El panel nunca se ensancha por él
+let fitKey = '';
+function fitNow() {
+  const key = psText.textContent + '|' + psValue.clientWidth;
+  if (key === fitKey) return;
+  fitKey = key;
+  const cs = getComputedStyle(psValue);
+  const over = psText.offsetWidth - (psValue.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+  if (over > 1) {
+    psValue.style.setProperty('--dx', -Math.ceil(over) + 'px');
+    psValue.style.setProperty('--dur', Math.max(6, over / 35 + 5).toFixed(1) + 's');
+    psValue.classList.add('marquee');
+  } else psValue.classList.remove('marquee');
+}
+if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitNow).observe(psValue);
+
 export function refreshNow() {
   if (!S.pending) { shown = S.current || S.lastStation; shownV = S.current ? S.variant : S.lastVariant; }
   psValue.classList.toggle('idle', !S.current && !S.pending);
   psValue.classList.toggle('pending', S.pending);
-  setText(psValue, shown ? emisoraName(shown, shownV) : '—');   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
+  setText(psText, shown ? emisoraName(shown, shownV) : '—');   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
+  fitNow();
 }
 
 export function refreshStations() {

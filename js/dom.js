@@ -11,6 +11,7 @@ export const logBox = document.getElementById('log');
 export const volume = document.getElementById('volume');
 export const volValue = document.getElementById('volValue');
 export const psValue = document.getElementById('psValue');
+export const psText = document.getElementById('psText');   // texto del nombre (dentro de psValue, para poder desplazarlo si no cabe)
 export const presetsBox = document.getElementById('presets');   // contenedor de los grupos de emisoras
 export const newsBox = document.getElementById('news');
 export const copyBtn = document.getElementById('copyLog');
