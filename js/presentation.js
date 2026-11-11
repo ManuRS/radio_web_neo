@@ -27,7 +27,7 @@ const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, e
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
 const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
 const MAX_PIXELS = 2.6e6;   // tope de píxeles del canvas en pantallas grandes
-const PEAK_HOLD_S = 0.2;    // tiempo que se queda cada pico arriba antes de caer
+const PEAK_HOLD_S = 0.35;   // tiempo que se queda cada pico arriba antes de caer
 const N = viz.levels.length;
 const WIDE = 15;            // bandas (de las 36) que cuentan para el bote del círculo del Radial: graves y medios bajos
 const NARROW_PX = 600;      // por debajo de este ancho (móvil en vertical) el espectro lleva menos barras
@@ -80,7 +80,7 @@ function analyse(lv, dt, now) {
   for (let i = 0; i < N; i++) {
     if (lv[i] >= peaks[i]) { peaks[i] = lv[i]; hold[i] = PEAK_HOLD_S; fall[i] = 0; }
     else if (hold[i] > 0) hold[i] -= dt;
-    else { fall[i] += dt * 6;   peaks[i] = Math.max(lv[i], peaks[i] - fall[i] * dt); }
+    else { fall[i] += dt * 2.4; peaks[i] = Math.max(lv[i], peaks[i] - fall[i] * dt); }
   }
 }
 
@@ -159,8 +159,7 @@ function group(src, n) {
 }
 function drawSpectrum(w, h, c, levels) {
   const narrow = w < NARROW_PX, n = narrow ? N / 3 : N, lv = n === N ? levels : group(levels, n), pk = n === N ? peaks : group(peaks, n);
-  const tall = h > w * 1.3, base = h * (tall ? 0.82 : 0.8), maxH = h * (tall ? 0.48 : narrow ? 0.4 : 0.45),   // en vertical, más alto (había mucho hueco); en horizontal deja aire bajo la hora
-        margin = w * 0.06, usable = w - margin * 2;
+  const base = h * 0.8, maxH = h * (narrow ? 0.4 : 0.5), margin = w * 0.06, usable = w - margin * 2;
   const gap = usable / n * 0.28, bw = (usable - gap * (n - 1)) / n;
   halo(w, h, w / 2, base, Math.max(w, h) * (0.45 + 0.05 * pulse), c, 0.4);
   drawParticles(c);
@@ -357,7 +356,6 @@ function drawVortex(w, h, dt, dpr) {
 // El nivel de cada franja sube enseguida y se mantiene arriba un buen rato antes de bajar despacio, para que el movimiento sea calmado.
 const SILK = 9;
 const sk = new Float32Array(SILK);   // nivel suavizado de cada cinta
-const skP = new Float32Array(SILK), skV = Float32Array.from({ length: SILK }, (_, j) => 0.7 + 0.6 * ((j * 5) % SILK) / (SILK - 1));   // fase y velocidad propias de cada cinta
 let skT = 0, skAvg = 0, stars = null;
 
 function drawSilk(w, h, dt) {
@@ -370,7 +368,6 @@ function drawSilk(w, h, dt) {
     for (let i = 0; i < per; i++) v += lv[Math.floor(j * per) + i];
     v /= per;
     sk[j] += (v - sk[j]) * Math.min(1, dt * (v > sk[j] ? 14 : 3.6));
-    skP[j] += dt * skV[j] * (0.22 + sk[j] * 1.4);   // cada cinta avanza a su ritmo y más deprisa cuanto más suena su banda
     sum += sk[j];
   }
   const kick = (sk[0] + sk[1]) / 2;   // los graves, suavizados
@@ -379,12 +376,12 @@ function drawSilk(w, h, dt) {
   const hue = palHue, cy = h * 0.62, amp = Math.min(h * 0.17, w * 0.3);
   const bg = ctx.createLinearGradient(0, 0, 0, h);
   bg.addColorStop(0, '#070a12');
-  bg.addColorStop(1, 'hsl(' + hue.toFixed(0) + ', 25%, 6%)');
+  bg.addColorStop(1, 'hsl(' + hue.toFixed(0) + ', 40%, 7%)');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, w, h);
   const gl = ctx.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.6);
-  gl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ', 50%, 50%, ' + (0.02 + 0.06 * kick).toFixed(3) + ')');
-  gl.addColorStop(1, 'hsla(' + hue.toFixed(0) + ', 50%, 50%, 0)');
+  gl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ', 70%, 55%, ' + (0.03 + 0.11 * kick).toFixed(3) + ')');
+  gl.addColorStop(1, 'hsla(' + hue.toFixed(0) + ', 70%, 55%, 0)');
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
   if (!stars) { stars = []; for (let i = 0; i < 40; i++) stars.push({ x: Math.random(), y: Math.random() * 0.5, r: 0.6 + Math.random() * 1.2, ph: Math.random() * 6.28 }); }
@@ -400,11 +397,11 @@ function drawSilk(w, h, dt) {
   ctx.lineJoin = ctx.lineCap = 'round';
   const steps = Math.max(24, Math.round(w / 12));
   for (let j = 0; j < SILK; j++) {
-    const f = j / (SILK - 1), a = Math.min(1, Math.pow(sk[j], 1.1) * 1.8), ph = skP[j], off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
+    const f = j / (SILK - 1), a = Math.min(1, Math.pow(sk[j], 0.8) * 1.5), off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
     ctx.beginPath();
     for (let i = 0; i <= steps; i++) {
       const u = i / steps, t = Math.pow(Math.sin(u * Math.PI), 1.2);
-      const y = cy + t * (off + amp * (1 + 0.35 * kick + 0.3 * pulse) * (0.1 + 0.9 * a) * (0.75 * Math.sin(u * k1 + ph * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - ph * 1.1 + j * 1.1)));   // pulse: empujón suave con el golpe
+      const y = cy + t * (off + amp * (1 + 0.3 * kick + 0.08 * pulse) * (0.1 + 0.9 * a) * (0.75 * Math.sin(u * k1 + skT * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - skT * 1.1 + j * 1.1)));
       if (i) ctx.lineTo(u * w, y); else ctx.moveTo(0, y);
     }
     const hh = (hue + j * 5).toFixed(0), b = 0.175 + 0.55 * a;
@@ -423,17 +420,17 @@ function drawSilk(w, h, dt) {
 // ================
 // Cintas de malla, como la imagen de referencia de Manu: cada cinta son muchas líneas finas tendidas entre dos bordes que ondulan por separado. Cuando los bordes se cruzan
 // la cinta se retuerce y, donde se ve de canto, las líneas se juntan y dan más luz (eso hace el volumen). Cada borde es una suma de senos lentos que avanzan a velocidades
-// distintas; su altura sigue al espectro, que cada cinta reparte a su manera (graves a la izquierda, a la derecha o en el centro), con normalización a medias, y crece con
+// distintas; su altura sigue al espectro, que cada cinta reparte a su manera y que se va desplazando despacio a lo largo de ella (onda interna: cada frecuencia viaja por la cinta), con normalización a medias, y crece con
 // el golpe. Sin topes ni potencias: las formas son siempre colinas y valles suaves. Las líneas suman luz; cada cinta tiene su tono dentro de la paleta compartida y pasa de
 // un tono a otro de un borde al otro.
 const WV_NS = 150;                    // muestras a lo ancho
 const WV_L = 40;                      // líneas por cinta
-const WV_RIB = [{ dh: -55, y: -0.015, map: 0 }, { dh: 35, y: 0.02, map: 1 }, { dh: 95, y: 0.004, map: 2 }, { dh: -10, y: 0.03, map: 0 }];
+const WV_RIB = [{ dh: -55, y: -0.015, k: 0.5, sv: 0.045 }, { dh: 35, y: 0.02, k: 0.5, sv: -0.06 }, { dh: 95, y: 0.004, k: 1, sv: 0.035 }, { dh: -10, y: 0.03, k: 0.75, sv: -0.08 }];   // k: cuántas veces recorre el espectro a lo ancho; sv: velocidad con que las frecuencias se desplazan por la cinta (ciclos/s)
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra (respuesta lenta)
 const wvF = new Float32Array(N);      // lo mismo con respuesta rápida
 const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra (para normalizar)
 const wvS = new Float32Array(N), wvQ = new Float32Array(N);   // niveles normalizados lento y rápido
-const wvEnv = [0, 1, 2].map(() => [new Float32Array(WV_NS + 1), new Float32Array(WV_NS + 1)]);   // por reparto (izquierda, derecha, centro): lento y rápido a lo ancho
+const wvEs = new Float32Array(WV_NS + 1), wvEf = new Float32Array(WV_NS + 1);   // espectro a lo ancho de la cinta que se dibuja: lento y rápido
 const wvA = new Float32Array(WV_NS + 1), wvBo = new Float32Array(WV_NS + 1), wvBe = new Float32Array(WV_NS + 1);   // borde A, borde B y barriga de la cinta que se dibuja
 let wvE = 0, wvK = 0;                 // energía y golpe suavizados
 // cintas: dos bordes con dos senos compartidos (desfasados, para que la cinta se retuerza) y uno propio, una barriga, mezcla rápida/lenta y respuesta al golpe (todo determinista)
@@ -445,14 +442,14 @@ const wvRib = WV_RIB.map((rb, ri) => {
   const sh = [comp(), comp()];
   const A = norm([...sh.map(c => ({ ...c })), comp()]);
   const B = norm([...sh.map(c => ({ ...c, ph: c.ph + 0.8 + 1.8 * rnd(), a: c.a * (0.6 + 0.6 * rnd()) })), comp()]);
-  return { ...rb, A, B, bel: comp(), m: 0.3 + 0.6 * rnd(), kw: 0.5 + rnd(), g: 0.85 + 0.3 * rnd() };
+  return { ...rb, A, B, bel: comp(), m: 0.55 + 0.45 * rnd(), kw: 0.6 + rnd(), g: 0.85 + 0.3 * rnd(), off: rnd() };
 });
 
 function drawWave(w, h, dt) {
-  const lv = viz.levels, cy = h * 0.56, H = Math.min(h * 0.2, w * 0.22);
+  const lv = viz.levels, cy = h * 0.56, H = Math.min(h * 0.19, w * 0.22);
   for (let i = 0; i < N; i++) {
     wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 9 : 2.8));
-    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 26 : 8));
+    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 32 : 10));
     wvPk[i] = Math.max(wvF[i], wvPk[i] - dt * 0.1, 0.08);
     wvS[i] = wvB[i] * (0.55 + 0.45 / wvPk[i]);   // normalización a medias: los graves siguen pesando algo más
     wvQ[i] = wvF[i] * (0.55 + 0.45 / wvPk[i]);
@@ -460,20 +457,6 @@ function drawWave(w, h, dt) {
   const kk = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
   wvK += (kk - wvK) * Math.min(1, dt * (kk > wvK ? 12 : 3.5));
   wvE += (energy - wvE) * Math.min(1, dt * 1.5);
-  // espectro repartido a lo ancho de tres maneras, interpolado y suavizado
-  for (let mp = 0; mp < 3; mp++) {
-    const [es, ef] = wvEnv[mp];
-    for (let j = 0; j <= WV_NS; j++) {
-      const u = j / WV_NS, fr = mp === 0 ? u : mp === 1 ? 1 - u : Math.abs(2 * u - 1);
-      const f = fr * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
-      es[j] = wvS[i0] + (wvS[i0 + 1] - wvS[i0]) * sm;
-      ef[j] = wvQ[i0] + (wvQ[i0 + 1] - wvQ[i0]) * sm;
-    }
-    for (const arr of [es, ef]) for (let pass = 0; pass < 6; pass++) {
-      let prev = arr[0];
-      for (let j = 1; j < WV_NS; j++) { const cur = arr[j]; arr[j] = (prev + 2 * cur + arr[j + 1]) / 4; prev = cur; }
-    }
-  }
   ctx.fillStyle = '#04040e';
   ctx.fillRect(0, 0, w, h);
   const gl = ctx.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.5);
@@ -489,10 +472,22 @@ function drawWave(w, h, dt) {
     for (const c of rb.A) c.ph += dt * c.sp * sp;
     for (const c of rb.B) c.ph += dt * c.sp * sp;
     rb.bel.ph += dt * rb.bel.sp * sp;
-    const [es, ef] = wvEnv[rb.map], oy = cy + h * rb.y, kick = 1 + 0.4 * rb.kw * wvK;
+    // onda interna: las frecuencias se desplazan poco a poco por la cinta (el espectro se recorre en triángulo, graves → agudos → graves, así no hay saltos)
+    rb.off = (rb.off + dt * rb.sv * (0.7 + 0.8 * wvE) + 1) % 1;
+    const es = wvEs, ef = wvEf, oy = cy + h * rb.y, kick = 1 + 0.6 * rb.kw * wvK;
+    for (let j = 0; j <= WV_NS; j++) {
+      const x = j / WV_NS * rb.k + rb.off, fr = 1 - Math.abs(2 * (x - Math.floor(x)) - 1);
+      const f = fr * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
+      es[j] = wvS[i0] + (wvS[i0 + 1] - wvS[i0]) * sm;
+      ef[j] = wvQ[i0] + (wvQ[i0 + 1] - wvQ[i0]) * sm;
+    }
+    for (const arr of [es, ef]) for (let pass = 0; pass < 6; pass++) {
+      let prev = arr[0];
+      for (let j = 1; j < WV_NS; j++) { const cur = arr[j]; arr[j] = (prev + 2 * cur + arr[j + 1]) / 4; prev = cur; }
+    }
     for (let j = 0; j <= WV_NS; j++) {
       const u = j / WV_NS, tap = 0.3 + 0.7 * Math.pow(Math.sin(Math.PI * u), 0.8);
-      const env = es[j] * (1 - rb.m) + ef[j] * rb.m, amp = H * rb.g * tap * (0.3 + 1.5 * env) * kick;
+      const env = es[j] * (1 - rb.m) + ef[j] * rb.m, amp = H * rb.g * tap * (0.25 + 1.9 * env) * kick;
       let sa = 0, sb = 0;
       for (const c of rb.A) sa += c.a * Math.sin(T * c.f * u + c.ph);
       for (const c of rb.B) sb += c.a * Math.sin(T * c.f * u + c.ph);
@@ -531,7 +526,7 @@ function drawWave(w, h, dt) {
 // profundidad (nítidos a media distancia, difusos solo los muy cercanos) da volumen. Los colores salen de la paleta compartida y se reparten entre los puntos (tono base, dos vecinos, uno lejano
 // y blanco suave). Sin líneas ni malla.
 const O_M = 150, O_STEP = 0.2, O_ZC = 13, O_ZNEAR = 0.5, O_ZFAR = 15, O_ZFOCUS = 5.5;   // puntos por lado, separación, centro de la malla, límites visibles, distancia a la que todo está nítido
-const O_HC = 2.3, O_SPR = 64, O_TILT = 0.45;   // altura de la cámara, lado de los sprites, inclinación de la ola respecto a la pantalla (la cresta va en diagonal)
+const O_HC = 1.5, O_SPR = 64, O_TILT = 0.45;   // altura de la cámara, lado de los sprites, inclinación de la ola respecto a la pantalla (la cresta va en diagonal)
 const O_DH = [0, 52, -52, 115], O_KINDS = 5;   // desviación de tono de cada clase de punto (la quinta es casi blanca)
 const oSprites = [];   // [clase][desenfoque] → lienzo con un punto (se repintan cada fotograma con el tono actual)
 const oFronts = [];    // frentes de ola lanzados por los golpes: { p: posición (profundidad), a: altura }
@@ -576,10 +571,10 @@ function drawOcean(w, h, dt) {
   for (let i = 18; i < N; i++) hi += lv[i];
   hi /= N - 18;
   oPaintSprites();
-  const k0 = Math.min(1.4, oK), cx = w / 2, cy = h / 2, horizon = h * (0.3 - 0.01 * k0), F = h * 0.95 * (1 + 0.04 * k0);   // con el golpe la cámara se acerca un poco
+  const k0 = Math.min(1.4, oK), cx = w / 2, cy = h / 2, horizon = h * (0.4 - 0.01 * k0), F = h * 0.95 * (1 + 0.04 * k0);   // con el golpe la cámara se acerca un poco
   const yaw = 0.62 + 0.1 * Math.sin(oT * 0.07), ca = Math.cos(yaw), sa = Math.sin(yaw);
   const roll = 0.07 + 0.04 * Math.sin(oT * 0.11 + 1);
-  const swell = 0.28 + 0.55 * oSwell + 0.5 * k0, zc = 5.4 + 0.7 * Math.sin(oT * 0.25);   // altura y posición de la ola grande
+  const swell = 0.3 + 0.7 * oSwell + 0.7 * k0, zc = 5.4 + 0.7 * Math.sin(oT * 0.25);   // altura y posición de la ola grande
   ctx.save();
   ctx.translate(cx, cy); ctx.rotate(roll); ctx.translate(-cx, -cy);
   // fondo oscuro con un leve velo de color hacia el horizonte (se enciende con el impulso)
@@ -600,17 +595,17 @@ function drawOcean(w, h, dt) {
       const far = 1 - 0.8 * (z - O_ZNEAR) / zr, sd = z + O_TILT * x;   // sd: posición a lo largo de la ola (la cresta es la línea sd constante, en diagonal)
       const sx = cx + x / z * F;
       if (sx < -60 || sx > w + 60) continue;
-      const bi = Math.min(N - 1, Math.floor(Math.abs(sx / w - 0.5) * 2 * N)), spec = 0.55 + 0.95 * ease(oB[bi]);   // graves en el centro, agudos hacia los lados
+      const bi = Math.min(N - 1, Math.floor(Math.abs(sx / w - 0.5) * 2 * N)), spec = 0.5 + 1.2 * ease(oB[bi]);   // graves en el centro, agudos hacia los lados
       let y = 0.06 * Math.sin(x * 0.6 + z * 0.4 + oT * 0.7) + 0.09 * hi * (1 - far * 0.8) * Math.sin(x * 2.6 + z * 2.2 + oT * 3);   // rizado de los agudos: suave y más en el fondo que cerca (cerca hacía muelles)
       y += swell * spec * Math.exp(-((sd - zc) * (sd - zc)) / 5.3);
-      for (let f = 0; f < oFronts.length; f++) { const dd = sd - oFronts[f].p; if (dd > -2.6 && dd < 2.6) y += oFronts[f].a * Math.min(1, (O_ZFAR - oFronts[f].p) / 3, oFronts[f].p / 1.5) * (0.5 + 0.6 * ease(oB[bi])) * Math.exp(-dd * dd / 0.9); }
-      y = 1.9 * Math.tanh(y / 1.9);   // tope por debajo de la cámara (O_HC): si la cresta la supera se ve la cara de detrás cruzando la de delante y salen "muelles"
+      for (let f = 0; f < oFronts.length; f++) { const dd = sd - oFronts[f].p; if (dd > -2.6 && dd < 2.6) y += oFronts[f].a * Math.min(1, (O_ZFAR - oFronts[f].p) / 3, oFronts[f].p / 1.5) * (0.5 + 0.8 * ease(oB[bi])) * Math.exp(-dd * dd / 0.9); }
+      y = 2.2 * Math.tanh(y / 2.2);
       const sy = horizon + (O_HC - y) / z * F;
       if (sy < horizon - 4 || sy > h + 60) continue;
       const crest = Math.max(0, Math.min(1, y * 0.6)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.8 ? 0 : blur < 1.4 ? 1 : 2;
-      const r = Math.min(20, Math.max(0.9, unit / z * (0.6 + 0.8 * crest + 0.4 * k1 * crest))) * 1.45;
+      const r = Math.min(20, Math.max(0.9, unit / z * (0.6 + 1.2 * crest + 0.8 * k1 * crest))) * 1.45;
       const kind = (i * 7 + j * 13 + ((i * j) >> 3)) % O_KINDS, fog = Math.pow(1 - (z - O_ZNEAR) / zr, 0.9);
-      ctx.globalAlpha = Math.min(1, (0.14 + 0.8 * fog) * (0.3 + 0.55 * crest + 0.15 * k1 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
+      ctx.globalAlpha = Math.min(1, (0.14 + 0.8 * fog) * (0.3 + 0.7 * crest + 0.35 * k1 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
       ctx.drawImage(oSprites[kind][lvl], sx - r, sy - r, r * 2, r * 2);
     }
   }
