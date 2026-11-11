@@ -1,10 +1,10 @@
 // =======================
 // == MODO PRESENTACIÓN ==
 // =======================
-// Pantalla completa con las barras como protagonistas (botón en la esquina del visualizador). Cinco vistas, que se cambian tocando la pantalla:
+// Pantalla completa con las barras como protagonistas (botón en la esquina del visualizador). Seis vistas, que se cambian tocando la pantalla:
 // "Espectro" (barras grandes con reflejo, picos que caen, halo que late con los graves y partículas), "Radial" (las barras en círculo
 // alrededor de la emisora) y "Vórtice" (sin barras: la forma de onda real del audio dibujada en anillo y con realimentación, que la convierte
-// en un túnel que gira y se dispara con los golpes) y "Seda" (cintas de luz finas que ondulan despacio, la vista tranquila) y "Océano" (un mar de puntos de luz con desenfoque de profundidad, en diagonal, con olas hechas con el sonido que viajan hacia ti). Todas comparten una paleta de colores suaves que va cambiando de tono, más deprisa cuanto más rápido es el tempo. Lee los niveles del visualizador normal (viz.levels) y no toca el audio. Con el ratón arriba a la izquierda aparece el
+// en un túnel que gira y se dispara con los golpes) y "Seda" (cintas de luz finas que ondulan despacio, la vista tranquila) y "Onda" (una cinta de hilos de luz como la forma de onda de una voz) y "Océano" (un mar de puntos de luz con desenfoque de profundidad, en diagonal, con olas hechas con el sonido que viajan hacia ti). Todas comparten una paleta de colores suaves que va cambiando de tono, más deprisa cuanto más rápido es el tempo. Lee los niveles del visualizador normal (viz.levels) y no toca el audio. Con el ratón arriba a la izquierda aparece el
 // control (reproducir, volúmenes y boletines) y abajo las emisoras; en pantallas táctiles, ambos al tocar. Son copias de los controles de la
 // página, que se mantienen al día con ellos.
 
@@ -21,8 +21,8 @@ import { emisoraName } from './utils.js';
 import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
-const MODES = ['Espectro', 'Océano', 'Radial', 'Vórtice', 'Seda'];
-const [SPECTRUM, OCEAN, RADIAL, VORTEX, SILK_MODE] = MODES.map((_, i) => i);
+const MODES = ['Espectro', 'Onda', 'Océano', 'Radial', 'Vórtice', 'Seda'];
+const [SPECTRUM, WAVE, OCEAN, RADIAL, VORTEX, SILK_MODE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
 const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
@@ -70,7 +70,7 @@ function analyse(lv, dt, now) {
   for (let i = 0; i < WIDE; i++) wv += lv[i];
   wv /= WIDE;
   wide += (wv - wide) * Math.min(1, dt * 14);
-  punch = Math.min(1, Math.max(0, (b - bassAvg) * 2.8, (wide - wideAvg) * 3.4));
+  punch = Math.min(1, Math.max(0, (b - bassAvg) * 4.6, (wide - wideAvg) * 3.4));   // el bombo pesa más que el resto de la banda
   wideAvg += (wide - wideAvg) * Math.min(1, dt * 2.2);
   pulse = Math.max(0, pulse - dt * 3.2);
   spin += dt * (0.25 + energy * 2.5);
@@ -197,11 +197,16 @@ function drawSpectrum(w, h, c, levels) {
 // ==================
 function drawRadial(w, h, c, lv) {
   const cx = w / 2, cy = h / 2, m = Math.min(w, h), R = m * 0.19, maxLen = m * 0.26, lw = Math.max(3, 2 * Math.PI * R / (2 * N) * 0.55);
-  halo(w, h, cx, cy, m * 0.62, c);
+  // luz de fondo: late con cada golpe (el mismo `punch` que el círculo) y además se ensancha, así que se nota bien entre golpes y con cada uno
+  const hg = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(w, h) * (0.5 + 0.28 * punch + 0.12 * pulse));   // radio sobre el lado largo: en pantallas anchas la luz llega hasta los bordes
+  hg.addColorStop(0, rgba(c, Math.min(0.5, 0.04 + 0.34 * punch + 0.18 * pulse + 0.08 * bass)));
+  hg.addColorStop(1, rgba(c, 0));
+  ctx.fillStyle = hg;
+  ctx.fillRect(0, 0, w, h);
   drawParticles(c);
   // círculo interior: reacciona a cada subida de los graves por encima de su nivel reciente (no a su nivel, que con música densa es alto siempre), así late con cada
   // golpe y entre golpes vuelve a quedarse en reposo, sin color de fondo permanente; en cada golpe fuerte suelta además una onda
-  const kb = punch, rr = R * (1 + 0.36 * kb + 0.14 * pulse);   // recorrido amplio: en un golpe fuerte el círculo crece más de un tercio
+  const kb = punch, rr = R * (1 + 0.5 * kb + 0.2 * pulse);   // recorrido amplio: en un golpe fuerte el círculo crece hasta un 70%
   if (kb > 0.02 || pulse > 0.02) {
     const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
     core.addColorStop(0, rgba(c, 0.18 * kb + 0.1 * pulse));
@@ -236,7 +241,7 @@ function drawRadial(w, h, c, lv) {
     ctx.strokeStyle = mix(dark, '#ffffff', l * 0.6);
     ctx.beginPath();
     for (const s of [1, -1]) {
-      const t = Math.PI / 2 - s * a, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.4 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
+      const t = Math.PI / 2 - s * a, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.3 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
       ctx.moveTo(cx + cos * r0, cy + sin * r0);
       ctx.lineTo(cx + cos * (r0 + len), cy + sin * (r0 + len));
     }
@@ -401,6 +406,78 @@ function drawSilk(w, h, dt) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// ================
+// == VISTA ONDA ==
+// ================
+// Una cinta de hilos de luz en el centro, como la forma de onda de una voz: una decena de hebras que ondulan casi a la vez pero desfasadas, así que se abren y se cruzan formando una
+// cinta retorcida que brilla donde se juntan. Su altura en cada punto sale del espectro (los graves en el centro y los agudos hacia los extremos, donde se afina hasta cerrarse) y el color
+// va del cálido al frío de un lado a otro, con la paleta compartida, y casi blanco en el centro.
+const WV_S = 10, WV_E = 9, WV_K = 17;   // hebras, bandas del espectro que forman la altura, puntos de control a lo ancho
+const wvB = new Float32Array(WV_E);      // nivel suavizado de cada banda
+let wvT = 0, wvPh = 0;
+const WV_EDGES = [0, 2, 4, 6, 9, 12, 16, 22, 36];   // reparto de las 36 barras en WV_E bandas (más fino en graves)
+
+function drawWave(w, h, dt) {
+  const lv = viz.levels;
+  // cada banda sube rápido y baja más despacio
+  for (let g = 0; g < WV_E; g++) {
+    let v = 0;
+    for (let i = WV_EDGES[g]; i < WV_EDGES[g + 1]; i++) v += lv[i];
+    v = ease(v / (WV_EDGES[g + 1] - WV_EDGES[g]));
+    wvB[g] += (v - wvB[g]) * Math.min(1, dt * (v > wvB[g] ? 16 : 4.2));
+  }
+  wvT += dt;
+  wvPh += dt * (0.9 + energy * 2.2 + pulse * 1.2);
+  const cy = h * 0.58, A = Math.min(h * 0.34, w * 0.3), kick = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
+  // fondo: azul casi negro con un velo de color detrás de la cinta
+  ctx.fillStyle = '#04040e';
+  ctx.fillRect(0, 0, w, h);
+  const gl = ctx.createRadialGradient(w / 2, cy, 0, w / 2, cy, Math.max(w, h) * 0.55);
+  gl.addColorStop(0, pal(0, 60, 40, (0.1 + 0.3 * energy + 0.25 * kick).toFixed(3)));
+  gl.addColorStop(1, pal(0, 60, 40, 0));
+  ctx.fillStyle = gl;
+  ctx.fillRect(0, 0, w, h);
+  // altura en los puntos de control: centro = graves; a la derecha se usa otra mezcla de bandas, para que la cinta no sea simétrica
+  const ctl = new Float32Array(WV_K), mid = (WV_K - 1) / 2;
+  for (let k = 0; k < WV_K; k++) {
+    const d = Math.abs(k - mid) / mid, bpos = Math.min(WV_E - 1, d * (WV_E - 1) * (k < mid ? 1 : 0.86) + (k < mid ? 0 : 0.4)), b0 = Math.floor(bpos), f = bpos - b0;
+    ctl[k] = wvB[b0] * (1 - f) + wvB[Math.min(WV_E - 1, b0 + 1)] * f;
+  }
+  const steps = Math.max(40, Math.round(w / 5)), env = new Float32Array(steps + 1), ph1 = new Float32Array(steps + 1), ph2 = new Float32Array(steps + 1);
+  for (let i = 0; i <= steps; i++) {
+    const u = i / steps, kf = u * (WV_K - 1), k0 = Math.min(WV_K - 2, Math.floor(kf)), t = kf - k0, sm = t * t * (3 - 2 * t);
+    const lvl = ctl[k0] * (1 - sm) + ctl[k0 + 1] * sm, win = Math.pow(Math.sin(u * Math.PI), 1.3);
+    env[i] = Math.min(1, 0.05 + 1.6 * lvl) * win * (1 + 0.22 * pulse);
+    ph1[i] = u * 6.2832 * 3.1 + wvPh + 0.8 * Math.sin(u * 5 + wvT * 0.3);
+    ph2[i] = u * 6.2832 * 7.3 - wvPh * 1.4;
+  }
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineJoin = ctx.lineCap = 'round';
+  const grad = ctx.createLinearGradient(0, 0, w, 0);
+  grad.addColorStop(0, pal(-65, 90, 60, 1));
+  grad.addColorStop(0.3, pal(-25, 90, 66, 1));
+  grad.addColorStop(0.5, pal(0, 35, 88, 1));
+  grad.addColorStop(0.7, pal(35, 90, 66, 1));
+  grad.addColorStop(1, pal(80, 90, 60, 1));
+  ctx.strokeStyle = grad;
+  for (let s = 0; s < WV_S; s++) {
+    const c = (s - (WV_S - 1) / 2) / ((WV_S - 1) / 2), dl = c * 1.05, k = 1 - 0.35 * Math.abs(c);   // c: -1 .. 1 a lo ancho de la cinta
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const y = cy - A * env[i] * (0.85 * Math.sin(ph1[i] + dl) + 0.18 * Math.sin(ph2[i] + dl * 1.7) * (0.4 + Math.abs(c)));
+      if (i) ctx.lineTo(i / steps * w, y); else ctx.moveTo(0, y);
+    }
+    ctx.globalAlpha = 0.07 * k + 0.05 * kick;
+    ctx.lineWidth = 9;
+    ctx.stroke();
+    ctx.globalAlpha = (0.38 + 0.45 * k) * (0.8 + 0.2 * energy);
+    ctx.lineWidth = 1.3;
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 // ==================
 // == VISTA OCÉANO ==
 // ==================
@@ -409,7 +486,7 @@ function drawSilk(w, h, dt) {
 // salen de la paleta compartida y se reparten entre los puntos (el tono base, dos vecinos, uno más lejano y blanco suave). Las olas nacen lejos con el sonido de ese instante y viajan hacia ti
 // (lo cercano es lo que sonó hace un momento): los graves levantan marejadas largas y lentas, los medios olas medianas y los agudos rizado fino; los puntos de las crestas crecen y brillan.
 const O_M = 150, O_STEP = 0.2, O_ZC = 13, O_ZNEAR = 0.5, O_ZFAR = 15, O_ZFOCUS = 5.5;   // puntos por lado, separación, centro de la malla, límites visibles, distancia a la que todo está nítido
-const O_HIST = 110, O_RATE = 32, O_SPEED = 4.2, O_HC = 1.5, O_SPR = 64;                  // historial del sonido (32 muestras/s), velocidad de las olas, altura de la cámara, lado de los sprites
+const O_HIST = 110, O_RATE = 32, O_SPEED = 9, O_PHASE = 4.2, O_HC = 1.5, O_SPR = 64;   // historial del sonido (32 muestras/s), velocidad a la que el sonido viaja hacia ti, velocidad de las crestas, altura de la cámara, lado de los sprites
 const O_DH = [0, 52, -52, 115], O_KINDS = 5;   // desviación de tono de cada clase de punto (la quinta es casi blanca)
 const oHist = [new Float32Array(O_HIST), new Float32Array(O_HIST), new Float32Array(O_HIST)], oLv = new Float32Array(3);
 const oSprites = [];   // [clase][desenfoque] → lienzo con un punto (se repintan cada fotograma con el tono actual)
@@ -425,13 +502,13 @@ function oSample(g, d) {   // nivel del grupo g hace d muestras (interpolado)
 
 // Puntos con tres grados de desenfoque (0 nítido, 1 suave, 2 muy suave), uno por cada clase de color
 function oPaintSprites() {
-  const R = O_SPR / 2, prof = [[1, 0.92, 0.5, 0.22, 0], [0.7, 0.55, 0.32, 0.12, 0], [0.45, 0.34, 0.2, 0.07, 0]];   // opacidad en 0, .3, .5, .7 y 1 del radio
+  const R = O_SPR / 2, prof = [[1, 1, 0.95, 0.35, 0], [0.9, 0.75, 0.45, 0.14, 0], [0.65, 0.5, 0.28, 0.08, 0]];   // opacidad en 0, .35, .55, .7 y 1 del radio
   for (let k = 0; k < O_KINDS; k++) {
     if (!oSprites[k]) oSprites[k] = [0, 1, 2].map(() => { const c = document.createElement('canvas'); c.width = c.height = O_SPR; return c; });
     const hue = palHue + (k < 4 ? O_DH[k] : 0), sat = k < 4 ? 78 : 25, lig = k < 4 ? 70 : 90;
     for (let b = 0; b < 3; b++) {
       const g2 = oSprites[k][b].getContext('2d'), gr = g2.createRadialGradient(R, R, 0, R, R, R), pr = prof[b];
-      [0, 0.3, 0.5, 0.7, 1].forEach((st, i) => gr.addColorStop(st, 'hsla(' + (((hue % 360) + 360) % 360).toFixed(0) + ', ' + sat + '%, ' + (i === 0 ? Math.min(92, lig + 14) : lig) + '%, ' + pr[i] + ')'));
+      [0, 0.35, 0.55, 0.7, 1].forEach((st, i) => gr.addColorStop(st, 'hsla(' + (((hue % 360) + 360) % 360).toFixed(0) + ', ' + sat + '%, ' + (i === 0 ? Math.min(92, lig + 14) : lig) + '%, ' + pr[i] + ')'));
       g2.clearRect(0, 0, O_SPR, O_SPR);
       g2.fillStyle = gr;
       g2.fillRect(0, 0, O_SPR, O_SPR);
@@ -468,25 +545,27 @@ function drawOcean(w, h, dt) {
   ctx.fillRect(-w, -h, w * 3, h * 3);
   // los puntos suman luz: el orden no importa
   ctx.globalCompositeOperation = 'lighter';
-  const half = O_M / 2, unit = 0.026 * F, zr = O_ZFAR - O_ZNEAR;
+  const half = O_M / 2, unit = 0.026 * F, zr = O_ZFAR - O_ZNEAR, lift = 1 + 0.6 * kick;   // lift: todo el mar se levanta un poco con cada golpe de bombo
   for (let j = 0; j <= O_M; j++) {
     const v = (j - half) * O_STEP;
     for (let i = 0; i <= O_M; i++) {
       const u = (i - half) * O_STEP, x = u * ca - v * sa, z = O_ZC + u * sa + v * ca;
       if (z < O_ZNEAR || z > O_ZFAR || x > z * 1.45 + 0.8 || x < -z * 1.45 - 0.8) continue;
-      const d = (O_ZFAR - z) / O_SPEED * O_RATE, far = 1 - 0.8 * (z - O_ZNEAR) / zr;
-      let y = 0.05 * Math.sin(x * 0.7 + z * 0.5 + oT * 0.6);
+      const d = Math.min((O_ZFAR - z) / O_SPEED * O_RATE, O_HIST - 2), far = 1 - 0.8 * (z - O_ZNEAR) / zr;
+      const a0 = oSample(0, d), a1 = oSample(1, d), a2 = oSample(2, d), A = [a0, a1, a2, a2];   // lo que sonó en ese punto cuando salió de lejos
+      let y = 0.03 * Math.sin(x * 0.7 + z * 0.5 + oT * 0.6);
       for (let q = 0; q < 4; q++) {
         const wv = O_WAVES[q];
-        y += oSample(q < 3 ? q : 2, Math.min(d, O_HIST - 2)) * wv[4] * (q > 1 ? far : 1) * Math.sin(wv[2] * (x * wv[0] + z * wv[1]) + wv[2] * O_SPEED * wv[3] * oT + q * 1.7);
+        y += A[q] * wv[4] * (q > 1 ? 1.0 * far : 1.7) * Math.sin(wv[2] * (x * wv[0] + z * wv[1]) + wv[2] * O_PHASE * wv[3] * oT + q * 1.7);
       }
-      y = 1.1 * Math.tanh(y / 1.1);
+      y = 1.15 * Math.tanh(y * lift / 1.15);
       const sx = cx + x / z * F, sy = horizon + (O_HC - y) / z * F;
       if (sy < horizon - 4 || sx < -60 || sx > w + 60 || sy > h + 60) continue;
-      const crest = Math.max(0, Math.min(1, y * 0.9 + 0.15)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.45 ? 0 : blur < 0.95 ? 1 : 2;
-      const r = Math.min(26, Math.max(1.1, unit / z * (0.8 + 0.7 * crest + 0.5 * glow))) * 1.7;
+      const loud = Math.min(1, (a0 * 0.9 + a1 * 0.8 + a2 * 0.6) * 0.9), crest = Math.max(0, Math.min(1, y * 0.9 + 0.15)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.8 ? 0 : blur < 1.4 ? 1 : 2;
+      // el tamaño y el brillo de cada punto siguen a lo que suena ahí: donde pasa un golpe, los puntos crecen y se encienden; en los silencios, el mar se queda pequeño y tenue
+      const r = Math.min(20, Math.max(0.9, unit / z * (0.7 + 0.8 * loud + 0.4 * crest + 0.3 * kick))) * 1.45;
       const kind = (i * 7 + j * 13 + ((i * j) >> 3)) % O_KINDS, fog = Math.pow(1 - (z - O_ZNEAR) / zr, 0.9);
-      ctx.globalAlpha = Math.min(1, (0.2 + 0.75 * fog) * (0.55 + 0.6 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
+      ctx.globalAlpha = Math.min(1, (0.12 + 0.8 * fog) * (0.3 + 0.8 * loud + 0.3 * crest) * (lvl === 2 ? 0.8 : 1) * (z < 1.1 ? (z - O_ZNEAR) / 0.6 : 1));
       ctx.drawImage(oSprites[kind][lvl], sx - r, sy - r, r * 2, r * 2);
     }
   }
@@ -518,6 +597,7 @@ function frame(now) {
   if (mode === VORTEX) drawVortex(w, h, dt, dpr);
   else if (mode === SILK_MODE) drawSilk(w, h, dt);
   else if (mode === OCEAN) drawOcean(w, h, dt);
+  else if (mode === WAVE) drawWave(w, h, dt);
   else {
     moveParticles(w, h, dt);
     ctx.fillStyle = '#0a0d12';
