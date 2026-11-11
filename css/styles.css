@@ -224,7 +224,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres[data-mode="2"] .pres-ps > span { white-space: pre-line; }   /* respeta el salto de línea que pone info() */
 .pres[data-mode="2"] .pres[data-mode="2"] .pres-clock { margin-top: .4vmin; font-size: 2.6vmin; }
 .pres[data-mode="2"] .pres-qual { flex-direction: column; align-items: center; gap: .15em; max-width: 34vmin; font-size: 1.5vmin; }
-.pres[data-mode="3"] .pres-ps, .pres[data-mode="3"] .pres-qual, .pres[data-mode="3"] .pres-clock { text-shadow: 0 0 .35em #000, 0 0 .1em #000; }
+.pres[data-mode="3"] .pres-info { display: none; }   /* Vórtice: vista limpia, sin nombre ni hora */
 .pres-mode { position: absolute; left: 0; right: 0; bottom: 4vh; text-align: center; font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #8c98a8; opacity: 0; transition: opacity .4s; pointer-events: none; }
 .pres-mode.show { opacity: 1; }
 .pres-close { position: absolute; top: max(10px, env(safe-area-inset-top)); right: 12px; flex: none; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #cbd5e1; font-size: 1.1rem; transition: opacity .4s; }

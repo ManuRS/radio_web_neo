@@ -339,12 +339,6 @@ function drawVortex(w, h, dt, dpr) {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = 'rgba(3, 4, 8, 0.11)';   // la estela se apaga antes: si se acumula mucho, los tonos que van pasando se mezclan en un gris blanquecino
   ctx.fillRect(0, 0, cw, ch);
-  const tg = ctx.createLinearGradient(0, 0, 0, ch * 0.38);   // y más deprisa bajo el nombre y la hora, para que los rayos no ensucien el texto
-  tg.addColorStop(0, 'rgba(3, 4, 8, 0.22)');
-  tg.addColorStop(0.75, 'rgba(3, 4, 8, 0.12)');
-  tg.addColorStop(1, 'rgba(3, 4, 8, 0)');
-  ctx.fillStyle = tg;
-  ctx.fillRect(0, 0, cw, ch * 0.38);
   // luz nueva, sumada a lo que ya hay
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.globalCompositeOperation = 'lighter';
