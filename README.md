@@ -4,9 +4,9 @@ Reproductor de radio *vibecodeado*. Es una versión renovada de [Radio Web Fast]
 
 - Tiene una interfaz distinta: Más compacta y centrada en el texto
 
-- Menos sencilla pero con más opciones: Se pueden añadir ecualizaciones personalizadas y emisoras a través de un buscador
+- Menor sencillez, mayores opciones: Soporta ecualizaciones y buscar emisoras
 
-- Incluye un visualizador musical real con 7 efectos de ondas diferentes
+- Incluye un visualizador del sonido en tiempo real con 7 efectos diferentes
 
 ## Guía de uso
 
@@ -36,7 +36,7 @@ Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación
 
 - Para añadirlo a una presintonía existente: 1. Sobre el panel deseado, hacer clic derecho en PC o mantener pulsado en el movil / 2. Seleccionar añadir emisora / 3. Indicar la URL y el nombre deseado
 
-- Para añadirlo a una nueva presintonía: 1. Pulsar sobre el reloj para mostrar los ajustes / 2. Pulsar en la pestaña de Cadena / 3. Rellenar los datos solicitados
+- Para añadirlo creando una nueva presintonía: 1. Pulsar sobre el reloj para mostrar los ajustes / 2. Pulsar en la pestaña de Cadena / 3. Rellenar los datos solicitados
 
 ## Exportar configuración
 
