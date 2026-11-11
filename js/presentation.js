@@ -22,8 +22,8 @@ import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
 const SPIN_KEY = 'rn_giro';   // Radial: '0' = barras sin girar
-const MODES = ['Espectro', 'Onda', 'Océano', 'Radial', 'Vórtice', 'Seda'];
-const [SPECTRUM, WAVE, OCEAN, RADIAL, VORTEX, SILK_MODE] = MODES.map((_, i) => i);
+const MODES = ['Espectro', 'Océano', 'Radial', 'Vórtice', 'Seda', 'Onda', 'Onda de seda'];   // (las reglas CSS por vista usan este orden: Radial = 2, Vórtice = 3)
+const [SPECTRUM, OCEAN, RADIAL, VORTEX, SILK_MODE, WAVE, SILK_WAVE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
 const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
@@ -298,6 +298,7 @@ function drawRadial(w, h, c, lv, dt) {
 // golpe de graves, un estallido de rayos y un destello. El color es el de la paleta compartida; el giro se invierte de vez en cuando.
 const TAU = 6.2832, RING = 256;
 let wave = new Float32Array(2048), env = 0.1, wgain = 3, dir = 1, beats = 0, drawn = -1;
+let vHit = 0, vHitAt = 0, vHitNow = false;   // golpe propio del Vórtice: salta con graves y medios bajos (punch), más a menudo que el golpe de graves
 
 function drawVortex(w, h, dt, dpr) {
   const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = presCanvas.width, ch = presCanvas.height;
@@ -320,13 +321,18 @@ function drawVortex(w, h, dt, dpr) {
   env = Math.max(mx, env - dt * 0.25);
   wgain += (Math.min(8, 0.9 / Math.max(env, 0.04)) - wgain) * Math.min(1, dt * 3);
   if (beatNow) { beats++; if (beats % 7 === 0) dir = -dir; }
+  // golpe del Vórtice: cada subida clara de graves o de la banda ancha (graves y medios bajos), con al menos 140 ms entre golpes; fuerza según lo que suba
+  const nowMs = performance.now();
+  vHitNow = false;
+  if ((punch > 0.3 || beatNow) && nowMs - vHitAt > 140) { vHit = Math.max(vHit, Math.min(1, 0.45 + punch * 0.8 + (beatNow ? 0.3 : 0))); vHitAt = nowMs; vHitNow = true; }
+  vHit = Math.max(0, vHit - dt * 3.2);
   // realimentación: el fotograma anterior, ampliado, girado y apagado un poco
   ctx.globalCompositeOperation = 'source-over';
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   if (drawn !== VORTEX) { ctx.fillStyle = '#030408'; ctx.fillRect(0, 0, cw, ch); }   // al entrar en esta vista se parte de fondo limpio
   ctx.translate(cw / 2, ch / 2);
-  ctx.rotate(dir * dt * (0.08 + energy * 0.7 + pulse * 0.5));
-  const zoom = 1 + dt * (0.3 + bass * 1.7 + pulse * 1.3);
+  ctx.rotate(dir * dt * (0.08 + energy * 0.7 + pulse * 0.5 + vHit * 0.9));
+  const zoom = 1 + dt * (0.3 + bass * 1.7 + pulse * 1.3 + vHit * 2.6);   // con cada golpe la estela se lanza hacia fuera
   ctx.scale(zoom, zoom);
   ctx.translate(-cw / 2, -ch / 2);
   ctx.drawImage(presCanvas, 0, 0);
@@ -343,9 +349,9 @@ function drawVortex(w, h, dt, dpr) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.globalCompositeOperation = 'lighter';
   ctx.lineJoin = ctx.lineCap = 'round';
-  const R = m * (0.11 + 0.07 * bass + 0.05 * pulse), amp = m * 0.13, step = Math.floor(wave.length / RING), light = 60 + pulse * 10, calm = Math.max(0, 1 - energy * 5);   // calm: en silencio el anillo sigue ondulando un poco
+  const R = m * (0.11 + 0.07 * bass + 0.05 * pulse + 0.06 * vHit), amp = m * (0.13 + 0.05 * vHit), step = Math.floor(wave.length / RING), light = 60 + pulse * 10 + vHit * 12, calm = Math.max(0, 1 - energy * 5);   // calm: en silencio el anillo sigue ondulando un poco
   ctx.strokeStyle = pal(0, 85, light, 1);
-  ctx.lineWidth = 1.5 + bass * 3.5 + pulse * 3;
+  ctx.lineWidth = 1.5 + bass * 3.5 + pulse * 3 + vHit * 4;
   ctx.beginPath();
   for (let i = 0; i <= RING; i++) {
     const k = i % RING, a = k / RING * TAU + spin * 0.6, r = R + wave[k * step] * wgain * amp + calm * m * (0.012 * Math.sin(3 * a + spin * 2.2) + 0.007 * Math.sin(5 * a - spin * 3.1));
@@ -361,10 +367,19 @@ function drawVortex(w, h, dt, dpr) {
     if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
   }
   ctx.stroke();
-  if (beatNow) {
-    ctx.lineWidth = 2 + bass * 4;
-    for (let i = 0; i < 18; i++) {
-      const a = Math.random() * TAU, r0 = R * 1.1, r1 = R + m * (0.06 + Math.random() * 0.14);
+  if (vHit > 0.02) {   // el fondo se enciende con cada golpe: un fogonazo redondo desde el centro que se apaga enseguida
+    const fl = ctx.createRadialGradient(cx, cy, R * 1.05, cx, cy, Math.max(w, h) * 0.75);   // empieza fuera del anillo: el centro sigue negro
+    fl.addColorStop(0, pal(0, 80, 60, 0));
+    fl.addColorStop(0.06, pal(0, 80, 60, (0.13 * vHit).toFixed(3)));
+    fl.addColorStop(0.45, pal(30, 75, 50, (0.05 * vHit).toFixed(3)));
+    fl.addColorStop(1, pal(30, 75, 50, 0));
+    ctx.fillStyle = fl;
+    ctx.fillRect(0, 0, w, h);
+  }
+  if (vHitNow) {
+    ctx.lineWidth = 2 + bass * 4 + vHit * 2;
+    for (let i = 0; i < 14 + Math.round(vHit * 14); i++) {
+      const a = Math.random() * TAU, r0 = R * 1.1, r1 = R + m * (0.06 + Math.random() * (0.1 + 0.12 * vHit));
       ctx.strokeStyle = pal(Math.random() * 70, 75, 72, 1);
       ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); ctx.lineTo(cx + Math.cos(a) * r1, cy + Math.sin(a) * r1); ctx.stroke();
     }
@@ -588,6 +603,81 @@ function drawWave(w, h, dt) {
   ctx.globalCompositeOperation = 'source-over';
 }
 
+// ==========================
+// == VISTA ONDA DE SEDA ==
+// ==========================
+// Las reglas de la Seda (una cinta por franja de frecuencias, graves abajo y agudos arriba, que sigue a su banda como un muelle, ondula a su ritmo y se junta con
+// las demás en los extremos) con la estética de la Onda: cada cinta es una malla de líneas finas tendidas entre dos bordes que ondulan algo desfasados (así se
+// retuerce), con luz sumada, tonos de la paleta repartidos entre las cintas y la luz de fondo que sube con los golpes de graves.
+const SW_L = 22;                      // líneas por cinta
+const swk = new Float32Array(SILK);   // nivel suavizado de cada cinta (como en la Seda)
+let swT = 0, swAvg = 0, swL = 0;
+
+function drawSilkWave(w, h, dt) {
+  const lv = viz.levels, per = N / SILK;
+  let sum = 0;
+  for (let j = 0; j < SILK; j++) {
+    let v = 0;
+    for (let i = 0; i < per; i++) v += lv[Math.floor(j * per) + i];
+    v /= per;
+    swk[j] += (v - swk[j]) * Math.min(1, dt * (v > swk[j] ? 14 : 3.6));
+    sum += swk[j];
+  }
+  const kick = (swk[0] + swk[1]) / 2;
+  swAvg += (sum / SILK - swAvg) * Math.min(1, dt * 2.5);
+  swT += dt * (0.22 + swAvg * 1.0);
+  const cy = h * 0.62, amp = Math.min(h * 0.17, w * 0.3);
+  // fondo y luz de fondo como en la Onda
+  ctx.fillStyle = '#04040e';
+  ctx.fillRect(0, 0, w, h);
+  const lt = Math.max(Math.min(1, Math.max(0, bass - bassAvg) * 2.8), 0.8 * pulse);
+  swL += (lt - swL) * Math.min(1, dt * (lt > swL ? 5 : 1.6));
+  ctx.save();
+  ctx.translate(w / 2, cy);
+  ctx.scale(1, 0.55);
+  const gk = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.62);
+  gk.addColorStop(0, pal(0, 75, 58, (0.09 + 0.36 * swL).toFixed(3)));
+  gk.addColorStop(0.5, pal(25, 70, 48, (0.035 + 0.15 * swL).toFixed(3)));
+  gk.addColorStop(1, pal(25, 70, 48, 0));
+  ctx.fillStyle = gk;
+  ctx.fillRect(-w, -h * 2.5, w * 2, h * 5);
+  ctx.restore();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.lineJoin = ctx.lineCap = 'round';
+  ctx.lineWidth = 0.75;
+  const steps = Math.max(24, Math.round(w / 10)), ya = new Float32Array(steps + 1), yb = new Float32Array(steps + 1);
+  for (let j = 0; j < SILK; j++) {
+    const f = j / (SILK - 1), a = Math.min(1, Math.pow(swk[j], 0.8) * 1.5), off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
+    const A = amp * (1 + 0.3 * kick + 0.08 * pulse) * (0.1 + 0.9 * a);
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps, t = Math.pow(Math.sin(u * Math.PI), 1.2);
+      ya[i] = cy + t * (off + A * (0.75 * Math.sin(u * k1 + swT * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - swT * 1.1 + j * 1.1)));
+      yb[i] = cy + t * (off + A * 0.85 * (0.75 * Math.sin(u * k1 + swT * 0.8 + j * 0.7 + 1.4) + 0.25 * Math.sin(u * k2 - swT * 1.1 + j * 1.1 + 2.1)));   // el otro borde, desfasado
+    }
+    const dh = (j - (SILK - 1) / 2) * 14;   // cada cinta con su tono, de un extremo al otro de la paleta
+    const grads = [0, 1, 2].map(q => {
+      const hue = dh + (q - 1) * 16, g = ctx.createLinearGradient(0, 0, w, 0);
+      g.addColorStop(0, pal(hue - 14, 75, 58, 1));
+      g.addColorStop(0.5, pal(hue, 80, 66, 1));
+      g.addColorStop(1, pal(hue + 14, 75, 58, 1));
+      return g;
+    });
+    for (let l = 0; l < SW_L; l++) {
+      const t = l / (SW_L - 1);
+      ctx.strokeStyle = grads[Math.min(2, Math.floor(t * 3))];
+      ctx.globalAlpha = (l === 0 || l === SW_L - 1 ? 0.55 : 0.22) * (0.55 + 0.45 * a);   // como en la Seda, la cinta que suena brilla más
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const x = i / steps * w, y = ya[i] + (yb[i] - ya[i]) * t;
+        if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+}
+
 // ==================
 // == VISTA OCÉANO ==
 // ==================
@@ -678,9 +768,8 @@ function drawOcean(w, h, dt) {
       y += mA * (0.25 + 0.35 * (1 - far)) * Math.sin(x * 0.9 - z * 0.55 + oMidP * 1.6) + hA * 0.16 * (1 - far * 0.75) * Math.sin(x * 2.1 + z * 1.7 - oHiP * 2.4);   // ondas de medios (anchas, cruzan el mar) y de agudos (más finas)
       y += swell * spec * Math.exp(-((sd - zc) * (sd - zc)) / 5.3);
       for (let f = 0; f < oFronts.length; f++) { const dd = sd - oFronts[f].p; if (dd > -2.6 && dd < 2.6) y += oFronts[f].a * Math.min(1, (O_ZFAR - oFronts[f].p) / 3, oFronts[f].p / 1.5) * (0.5 + 0.8 * ease(oB[bi])) * Math.exp(-dd * dd / 0.9); }
-      y = 2.2 * Math.tanh(y / 2.2);
       const sy = horizon + (O_HC - y) / z * F;
-      if (sy < horizon - 4 || sy > h + 60) continue;
+      if (sy < -60 || sy > h + 60) continue;   // sin techo: la ola puede subir por encima del horizonte (solo se descarta lo que cae fuera de la pantalla)
       const crest = Math.max(0, Math.min(1, y * 0.6)), blur = Math.abs(Math.log(z / O_ZFOCUS)), lvl = blur < 0.8 ? 0 : blur < 1.4 ? 1 : 2;
       const r = Math.min(20, Math.max(0.9, unit / z * (0.6 + 1.2 * crest + 0.8 * k1 * crest))) * 1.45;
       const kind = (i * 7 + j * 13 + ((i * j) >> 3)) % O_KINDS, fog = Math.pow(1 - (z - O_ZNEAR) / zr, 0.9);
@@ -717,6 +806,7 @@ function frame(now) {
   else if (mode === SILK_MODE) drawSilk(w, h, dt);
   else if (mode === OCEAN) drawOcean(w, h, dt);
   else if (mode === WAVE) drawWave(w, h, dt);
+  else if (mode === SILK_WAVE) drawSilkWave(w, h, dt);
   else {
     moveParticles(w, h, dt);
     ctx.fillStyle = '#0a0d12';
