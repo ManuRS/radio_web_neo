@@ -411,45 +411,55 @@ function drawSilk(w, h, dt) {
 // ================
 // == VISTA ONDA ==
 // ================
-// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Todas las hebras comparten la misma forma, que está quieta (como las
-// barras del Espectro: solo se mueve cuando suena); cada una va desplazada de las demás, de modo que se agrupan donde suena poco, se abren y se cruzan donde suena más, y la luz se suma y brilla en los cruces.
-// La música fija cuánto se abre la cinta en cada zona (graves a la izquierda, agudos a la derecha) con subidas y bajadas suaves, y los agudos añaden un rizado fino. Sin flujo ni movimientos propios.
-// Los extremos se cierran en un punto. Cada hebra lleva una sombra (más oscura y desplazada hacia abajo, que oscurece lo que tiene detrás y da profundidad), un halo ancho casi transparente y una línea fina.
+// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). La forma está quieta (como las barras del Espectro: solo cambia
+// cuando suena) y cada hebra va desplazada de las demás con separaciones desiguales. Las alturas están normalizadas por frecuencia (cada banda se mide contra su propio máximo reciente, así los graves no
+// mandan sobre los agudos como en el espectro normal) y cada hebra tiene además su propio factor aleatorio fijo en cada zona de frecuencias; algunas hebras no cubren todo el ancho (empiezan y acaban en
+// sitios distintos). Los extremos de cada hebra se cierran en un punto. Cada hebra lleva una sombra (casi negra, desplazada hacia abajo, que oscurece lo que tiene detrás) y una luz muy difusa:
+// varios halos anchos y casi transparentes sumados, más una línea fina; el color va de cálido a frío con la paleta compartida.
 const WV_PLANES = [{ n: 7, amp: 0.75, w: 0.8, a: 0.5, ph: 0, dy: -0.012 }, { n: 7, amp: 0.95, w: 1.05, a: 0.75, ph: 1.3, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, ph: 2.6, dy: 0 }];
 const WV_NS = 128;                    // muestras a lo ancho de cada hebra
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra
-const wvHi = new Float32Array(N);     // lo mismo, solo para el rizado fino
-const wvEnv = new Float32Array(WV_NS + 1), wvTap = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1), wvTmp = new Float32Array(WV_NS + 1);
+const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra (para normalizar)
+const wvHi = new Float32Array(N);     // nivel normalizado de cada barra, solo para el rizado fino
+const wvEnv = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1), wvTmp = new Float32Array(WV_NS + 1);
 const wvPts = Array.from({ length: 8 }, () => new Float32Array(WV_NS + 1));   // alturas de las hebras del plano que se está dibujando
 let wvE = 0, wvK = 0;                 // energía y golpe suavizados
-// posición de cada hebra dentro de su cinta (de -1 a 1): separaciones desiguales, fijas, para que no haya una distancia perfecta entre ellas
-const wvC = WV_PLANES.map((pl, pi) => {
+// hebras: posición en su cinta (de -1 a 1, con separaciones muy desiguales), tramo que cubren y factor aleatorio fijo por zona de frecuencias (todo determinista)
+const wvStr = WV_PLANES.map((pl, pi) => {
   let sd = 11 + pi * 7;
   const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
-  const g = Array.from({ length: pl.n - 1 }, () => 0.35 + 1.5 * rnd() * rnd() + 0.3 * rnd()), tot = g.reduce((a, b) => a + b, 0);
+  const gaps = Array.from({ length: pl.n - 1 }, () => 0.12 + 2.6 * rnd() * rnd() + 0.25 * rnd()), tot = gaps.reduce((x, y) => x + y, 0);
   let acc = 0;
-  return [-1, ...g.map(v => (acc += v, -1 + 2 * acc / tot))];
+  const cs = [-1, ...gaps.map(v => (acc += v, -1 + 2 * acc / tot))];
+  return cs.map(c => {
+    const part = rnd() < 0.55, j0 = part ? Math.floor(rnd() * 0.3 * WV_NS) : 0, j1 = part ? WV_NS - Math.floor(rnd() * 0.3 * WV_NS) : WV_NS;
+    const kn = Array.from({ length: 10 }, () => 0.7 + 0.5 * rnd()), g = new Float32Array(WV_NS + 1);   // factor por zona: 10 nudos suavizados
+    for (let j = 0; j <= WV_NS; j++) { const f = j / WV_NS * 9, i0 = Math.min(8, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t); g[j] = kn[i0] + (kn[i0 + 1] - kn[i0]) * sm; }
+    return { c, j0, j1, g, v: 0.85 + 0.3 * rnd() };
+  });
 });
 
 function drawWave(w, h, dt) {
-  const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.3, w * 0.3), margin = w * 0.05, usable = w - margin * 2;
+  const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.14, w * 0.14), margin = w * 0.05, usable = w - margin * 2;
   for (let i = 0; i < N; i++) {
     wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 9 : 2.8));
-    wvHi[i] += (lv[i] * (i / (N - 1)) - wvHi[i]) * Math.min(1, dt * 7);
+    wvPk[i] = Math.max(wvB[i], wvPk[i] - dt * 0.1, 0.08);
+    const nv = wvB[i] / wvPk[i];   // 0…1 respecto al máximo reciente de esa frecuencia
+    wvHi[i] += (nv * (i / (N - 1)) - wvHi[i]) * Math.min(1, dt * 7);
+    wvTmp[i] = nv;
   }
   const kk = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
   wvK += (kk - wvK) * Math.min(1, dt * (kk > wvK ? 10 : 3));
   wvE += (energy - wvE) * Math.min(1, dt * 1.5);
-  // envolvente a lo ancho: nivel del espectro en cada punto (interpolado entre barras y suavizado), más un mínimo para que siempre se vea la cinta
+  // nivel normalizado a lo ancho (interpolado entre barras y suavizado)
   for (let j = 0; j <= WV_NS; j++) {
-    const xn = j / WV_NS, f = xn * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
-    wvEnv[j] = 0.24 + 1.2 * ease(wvB[i0] + (wvB[i0 + 1] - wvB[i0]) * sm);
+    const f = j / WV_NS * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
+    wvEnv[j] = wvTmp[i0] + (wvTmp[i0 + 1] - wvTmp[i0]) * sm;
     wvFine[j] = wvHi[i0] + (wvHi[i0 + 1] - wvHi[i0]) * sm;
-    wvTap[j] = Math.pow(Math.sin(Math.PI * xn), 0.7);   // se cierra en los extremos
   }
   for (let pass = 0; pass < 3; pass++) {
-    wvTmp.set(wvEnv);
-    for (let j = 1; j < WV_NS; j++) wvEnv[j] = (wvTmp[j - 1] + 2 * wvTmp[j] + wvTmp[j + 1]) / 4;
+    const t2 = Float32Array.from(wvEnv);
+    for (let j = 1; j < WV_NS; j++) wvEnv[j] = (t2[j - 1] + 2 * t2[j] + t2[j + 1]) / 4;
   }
   ctx.fillStyle = '#04040e';
   ctx.fillRect(0, 0, w, h);
@@ -467,44 +477,38 @@ function drawWave(w, h, dt) {
   ctx.lineJoin = ctx.lineCap = 'round';
   const px = new Float32Array(WV_NS + 1);
   for (let j = 0; j <= WV_NS; j++) px[j] = margin + usable * j / WV_NS;
-  const path = (py, oy) => { ctx.beginPath(); ctx.moveTo(px[0], oy + py[0]); for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], oy + py[j]); };
+  const path = (st, py, oy) => { ctx.beginPath(); ctx.moveTo(px[st.j0], oy + py[st.j0]); for (let j = st.j0 + 1; j <= st.j1; j++) ctx.lineTo(px[j], oy + py[j]); };
   for (let pi = 0; pi < WV_PLANES.length; pi++) {   // del plano lejano al cercano: la sombra de cada plano oscurece al de detrás
-    const pl = WV_PLANES[pi], cs = wvC[pi], amp = maxH * pl.amp * (1 + 0.18 * wvK), oy = cy + h * pl.dy, ph = pl.ph;
+    const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.18 * wvK), oy = cy + h * pl.dy, ph = pl.ph;
     for (let k = 0; k < pl.n; k++) {
-      const c = cs[k], sc = 1 - 0.16 * Math.abs(c), py = wvPts[k];   // c: -1 … 1, posición de la hebra dentro de la cinta
-      for (let j = 0; j <= WV_NS; j++) {
-        const x2 = j / WV_NS * 6.2832, e = wvEnv[j], d = c * (0.5 + 1.1 * e);   // d: desplazamiento de esta hebra respecto a las demás; con poca música quedan juntas y con mucha se separan bastante
+      const st = strs[k], py = wvPts[k], span = st.j1 - st.j0;
+      for (let j = st.j0; j <= st.j1; j++) {
+        const x2 = j / WV_NS * 6.2832, e = 0.2 + 0.85 * wvEnv[j] * st.g[j], d = st.c * (0.8 + 1.5 * e);   // e: altura normalizada por frecuencia × factor propio de esta hebra; d: desplazamiento respecto a las demás
+        const tap = Math.pow(Math.sin(Math.PI * (j - st.j0) / span), 0.7);   // cada hebra se cierra en sus propios extremos
         const v = 0.72 * Math.sin(x2 * 2.2 - ph + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * ph + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * ph + 2 * d + 0.6);
-        py[j] = -amp * sc * e * wvTap[j] * v;
+        py[j] = -amp * (1 - 0.16 * Math.abs(st.c)) * st.v * e * tap * v;
       }
     }
-    // sombras: más oscuras y caídas hacia abajo
+    // sombras: casi negras y caídas hacia abajo
     ctx.globalCompositeOperation = 'source-over';
     ctx.strokeStyle = '#010106';
     for (let k = 0; k < pl.n; k++) {
-      path(wvPts[k], oy + 5 * pl.w + 2);
-      ctx.globalAlpha = 0.16;
-      ctx.lineWidth = 9 * pl.w;
-      ctx.stroke();
-      ctx.globalAlpha = 0.3;
-      ctx.lineWidth = 3.5 * pl.w;
+      path(strs[k], wvPts[k], oy + 5 * pl.w + 2);
+      ctx.globalAlpha = 0.22;
+      ctx.lineWidth = 6 * pl.w;
       ctx.stroke();
     }
-    // luz: halo ancho, halo medio y línea fina, sumados
+    // luz muy difusa: halos cada vez más anchos y tenues, sumados, y la línea fina encima
     ctx.globalCompositeOperation = 'lighter';
     ctx.strokeStyle = grad;
     for (let k = 0; k < pl.n; k++) {
-      const c = cs[k], al = 0.7 + 0.3 * (1 - Math.abs(c));
-      path(wvPts[k], oy);
-      ctx.globalAlpha = (0.05 + 0.04 * wvK) * pl.a * al;
-      ctx.lineWidth = 11 * pl.w;
-      ctx.stroke();
-      ctx.globalAlpha = 0.1 * pl.a * al;
-      ctx.lineWidth = 4.5 * pl.w;
-      ctx.stroke();
-      ctx.globalAlpha = (0.35 + 0.4 * al) * pl.a;
-      ctx.lineWidth = pl.w;
-      ctx.stroke();
+      const st = strs[k], al = 0.7 + 0.3 * (1 - Math.abs(st.c)), pa = pl.a * al;
+      path(st, wvPts[k], oy);
+      ctx.globalAlpha = (0.022 + 0.015 * wvK) * pa; ctx.lineWidth = 36 * pl.w; ctx.stroke();
+      ctx.globalAlpha = (0.034 + 0.02 * wvK) * pa; ctx.lineWidth = 20 * pl.w; ctx.stroke();
+      ctx.globalAlpha = 0.04 * pa; ctx.lineWidth = 10 * pl.w; ctx.stroke();
+      ctx.globalAlpha = 0.09 * pa; ctx.lineWidth = 4.5 * pl.w; ctx.stroke();
+      ctx.globalAlpha = (0.35 + 0.4 * al) * pl.a; ctx.lineWidth = pl.w; ctx.stroke();
     }
   }
   ctx.globalAlpha = 1;
