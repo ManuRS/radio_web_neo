@@ -209,6 +209,13 @@ function drawRadial(w, h, c, lv) {
     ctx.fillStyle = core;
     ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.fill();
   }
+  // oscurecimiento ligero y redondo detrás de los textos del centro, para que se lean sobre el color del círculo; no late (usa el radio fijo)
+  const dk = ctx.createRadialGradient(cx, cy, 0, cx, cy, R * 1.04);
+  dk.addColorStop(0, 'rgba(3, 5, 9, 0.5)');
+  dk.addColorStop(0.65, 'rgba(3, 5, 9, 0.4)');
+  dk.addColorStop(1, 'rgba(3, 5, 9, 0)');
+  ctx.fillStyle = dk;
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, 0, 6.2832); ctx.fill();
   if (pulse > 0.02) {
     ctx.strokeStyle = rgba(c, 0.5 * pulse);
     ctx.lineWidth = 2 + 4 * pulse;
@@ -404,16 +411,25 @@ function drawSilk(w, h, dt) {
 // ================
 // == VISTA ONDA ==
 // ================
-// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Todas las hebras siguen la misma onda, que fluye despacio de
-// izquierda a derecha; cada una va un poco desfasada de las demás, de modo que se agrupan donde suena poco, se abren y se cruzan donde suena más, y la luz se suma y brilla en los cruces. La música
-// solo cambia cuánto se abre la cinta en cada zona (graves a la izquierda, agudos a la derecha, como en el Espectro), con subidas y bajadas suaves; la energía acelera el flujo sin saltos y los agudos
-// añaden un rizado fino que viaja con él. Sin movimientos aleatorios ni tirones. Los extremos se cierran en un punto. Cada hebra lleva un halo ancho casi transparente y una línea fina encima.
-const WV_PLANES = [{ n: 7, amp: 0.75, w: 0.8, a: 0.5, v: 0.8, ph: 0, dy: -0.012 }, { n: 7, amp: 0.95, w: 1.05, a: 0.75, v: 1, ph: 1.3, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, v: 1.2, ph: 2.6, dy: 0 }];
+// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Todas las hebras comparten la misma forma, que está quieta (como las
+// barras del Espectro: solo se mueve cuando suena); cada una va desplazada de las demás, de modo que se agrupan donde suena poco, se abren y se cruzan donde suena más, y la luz se suma y brilla en los cruces.
+// La música fija cuánto se abre la cinta en cada zona (graves a la izquierda, agudos a la derecha) con subidas y bajadas suaves, y los agudos añaden un rizado fino. Sin flujo ni movimientos propios.
+// Los extremos se cierran en un punto. Cada hebra lleva una sombra (más oscura y desplazada hacia abajo, que oscurece lo que tiene detrás y da profundidad), un halo ancho casi transparente y una línea fina.
+const WV_PLANES = [{ n: 7, amp: 0.75, w: 0.8, a: 0.5, ph: 0, dy: -0.012 }, { n: 7, amp: 0.95, w: 1.05, a: 0.75, ph: 1.3, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, ph: 2.6, dy: 0 }];
 const WV_NS = 128;                    // muestras a lo ancho de cada hebra
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra
 const wvHi = new Float32Array(N);     // lo mismo, solo para el rizado fino
 const wvEnv = new Float32Array(WV_NS + 1), wvTap = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1), wvTmp = new Float32Array(WV_NS + 1);
-let wvPh = 0, wvE = 0, wvK = 0;      // fase del flujo, energía y golpe suavizados
+const wvPts = Array.from({ length: 8 }, () => new Float32Array(WV_NS + 1));   // alturas de las hebras del plano que se está dibujando
+let wvE = 0, wvK = 0;                 // energía y golpe suavizados
+// posición de cada hebra dentro de su cinta (de -1 a 1): separaciones desiguales, fijas, para que no haya una distancia perfecta entre ellas
+const wvC = WV_PLANES.map((pl, pi) => {
+  let sd = 11 + pi * 7;
+  const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
+  const g = Array.from({ length: pl.n - 1 }, () => 0.35 + 1.5 * rnd() * rnd() + 0.3 * rnd()), tot = g.reduce((a, b) => a + b, 0);
+  let acc = 0;
+  return [-1, ...g.map(v => (acc += v, -1 + 2 * acc / tot))];
+});
 
 function drawWave(w, h, dt) {
   const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.3, w * 0.3), margin = w * 0.05, usable = w - margin * 2;
@@ -424,8 +440,7 @@ function drawWave(w, h, dt) {
   const kk = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
   wvK += (kk - wvK) * Math.min(1, dt * (kk > wvK ? 10 : 3));
   wvE += (energy - wvE) * Math.min(1, dt * 1.5);
-  wvPh += dt * (0.9 + 1.4 * wvE);   // el flujo solo avanza: nunca salta ni retrocede
-  // envolvente a lo ancho: nivel del espectro en cada punto (interpolado entre barras y suavizado), más un mínimo para que siempre haya ondulación
+  // envolvente a lo ancho: nivel del espectro en cada punto (interpolado entre barras y suavizado), más un mínimo para que siempre se vea la cinta
   for (let j = 0; j <= WV_NS; j++) {
     const xn = j / WV_NS, f = xn * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
     wvEnv[j] = 0.24 + 1.2 * ease(wvB[i0] + (wvB[i0 + 1] - wvB[i0]) * sm);
@@ -443,30 +458,44 @@ function drawWave(w, h, dt) {
   gl.addColorStop(1, pal(0, 60, 40, 0));
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
-  ctx.globalCompositeOperation = 'lighter';
-  ctx.lineJoin = ctx.lineCap = 'round';
   const grad = ctx.createLinearGradient(margin, 0, w - margin, 0);
   grad.addColorStop(0, pal(-65, 90, 60, 1));
   grad.addColorStop(0.3, pal(-25, 90, 66, 1));
   grad.addColorStop(0.5, pal(0, 45, 84, 1));
   grad.addColorStop(0.7, pal(35, 90, 66, 1));
   grad.addColorStop(1, pal(80, 90, 60, 1));
-  ctx.strokeStyle = grad;
-  const px = new Float32Array(WV_NS + 1), py = new Float32Array(WV_NS + 1);
-  for (const pl of WV_PLANES) {
-    const amp = maxH * pl.amp * (1 + 0.18 * wvK), oy = cy + h * pl.dy, ph = wvPh * pl.v + pl.ph;
+  ctx.lineJoin = ctx.lineCap = 'round';
+  const px = new Float32Array(WV_NS + 1);
+  for (let j = 0; j <= WV_NS; j++) px[j] = margin + usable * j / WV_NS;
+  const path = (py, oy) => { ctx.beginPath(); ctx.moveTo(px[0], oy + py[0]); for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], oy + py[j]); };
+  for (let pi = 0; pi < WV_PLANES.length; pi++) {   // del plano lejano al cercano: la sombra de cada plano oscurece al de detrás
+    const pl = WV_PLANES[pi], cs = wvC[pi], amp = maxH * pl.amp * (1 + 0.18 * wvK), oy = cy + h * pl.dy, ph = pl.ph;
     for (let k = 0; k < pl.n; k++) {
-      const c = pl.n > 1 ? 2 * k / (pl.n - 1) - 1 : 0, sc = 1 - 0.16 * Math.abs(c);   // c: -1 … 1, posición de la hebra dentro de la cinta
+      const c = cs[k], sc = 1 - 0.16 * Math.abs(c), py = wvPts[k];   // c: -1 … 1, posición de la hebra dentro de la cinta
       for (let j = 0; j <= WV_NS; j++) {
-        const xn = j / WV_NS, x2 = xn * 6.2832, e = wvEnv[j], d = c * (0.12 + 0.4 * e);   // d: desfase de esta hebra; con poca música casi coinciden y con mucha se abren
+        const x2 = j / WV_NS * 6.2832, e = wvEnv[j], d = c * (0.5 + 1.1 * e);   // d: desplazamiento de esta hebra respecto a las demás; con poca música quedan juntas y con mucha se separan bastante
         const v = 0.72 * Math.sin(x2 * 2.2 - ph + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * ph + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * ph + 2 * d + 0.6);
-        px[j] = margin + usable * xn;
-        py[j] = oy - amp * sc * e * wvTap[j] * v;
+        py[j] = -amp * sc * e * wvTap[j] * v;
       }
-      ctx.beginPath();
-      ctx.moveTo(px[0], py[0]);
-      for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], py[j]);
-      const al = 0.7 + 0.3 * (1 - Math.abs(c));
+    }
+    // sombras: más oscuras y caídas hacia abajo
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = '#010106';
+    for (let k = 0; k < pl.n; k++) {
+      path(wvPts[k], oy + 5 * pl.w + 2);
+      ctx.globalAlpha = 0.16;
+      ctx.lineWidth = 9 * pl.w;
+      ctx.stroke();
+      ctx.globalAlpha = 0.3;
+      ctx.lineWidth = 3.5 * pl.w;
+      ctx.stroke();
+    }
+    // luz: halo ancho, halo medio y línea fina, sumados
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.strokeStyle = grad;
+    for (let k = 0; k < pl.n; k++) {
+      const c = cs[k], al = 0.7 + 0.3 * (1 - Math.abs(c));
+      path(wvPts[k], oy);
       ctx.globalAlpha = (0.05 + 0.04 * wvK) * pl.a * al;
       ctx.lineWidth = 11 * pl.w;
       ctx.stroke();
