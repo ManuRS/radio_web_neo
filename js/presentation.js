@@ -411,20 +411,22 @@ function drawSilk(w, h, dt) {
 // ================
 // == VISTA ONDA ==
 // ================
-// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). La forma está quieta (como las barras del Espectro: solo cambia
-// cuando suena) y cada hebra va desplazada de las demás con separaciones desiguales. Las alturas están normalizadas por frecuencia (cada banda se mide contra su propio máximo reciente, así los graves no
-// mandan sobre los agudos como en el espectro normal) y cada hebra tiene además su propio factor aleatorio fijo en cada zona de frecuencias; algunas hebras no cubren todo el ancho (empiezan y acaban en
-// sitios distintos). Los extremos de cada hebra se cierran en un punto. Cada hebra lleva una sombra (casi negra, desplazada hacia abajo, que oscurece lo que tiene detrás) y una luz muy difusa:
-// varios halos anchos y casi transparentes sumados, más una línea fina; el color va de cálido a frío con la paleta compartida.
+// Una cinta de luz hecha de muchas hebras, en tres planos superpuestos (lejano, medio y cercano: más fino, tenue y pequeño el lejano). Cada hebra va desplazada de las demás con separaciones desiguales,
+// avanza muy despacio a su propia velocidad y reacciona a la música a su manera: las alturas están normalizadas solo a medias por frecuencia (mezcla del nivel real y del medido contra el máximo reciente de cada banda: los graves siguen pesando algo
+// más que los agudos, pero menos que en el espectro normal) y cada hebra tiene su factor fijo por zona, su contraste (cuánto baja y sube), su mezcla de respuesta rápida y lenta y su velocidad de avance. Algunas hebras no cubren
+// todo el ancho. Los extremos de cada hebra se cierran en un punto. Cada hebra lleva una sombra (casi negra, desplazada hacia abajo, que oscurece lo que tiene detrás), un halo suave y una línea fina; el
+// color va de cálido a frío con la paleta compartida, en un abanico estrecho para que no dé saltos.
 const WV_PLANES = [{ n: 7, amp: 0.75, w: 0.8, a: 0.5, ph: 0, dy: -0.012 }, { n: 7, amp: 0.95, w: 1.05, a: 0.75, ph: 1.3, dy: 0.006 }, { n: 8, amp: 1.1, w: 1.4, a: 1, ph: 2.6, dy: 0 }];
-const WV_NS = 128;                    // muestras a lo ancho de cada hebra
-const wvB = new Float32Array(N);      // nivel suavizado de cada barra
+const WV_NS = 240;                    // muestras a lo ancho de cada hebra
+const wvB = new Float32Array(N);      // nivel suavizado de cada barra (respuesta lenta)
+const wvF = new Float32Array(N);      // lo mismo con respuesta rápida
 const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra (para normalizar)
 const wvHi = new Float32Array(N);     // nivel normalizado de cada barra, solo para el rizado fino
-const wvEnv = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1), wvTmp = new Float32Array(WV_NS + 1);
+const wvS = new Float32Array(N), wvQ = new Float32Array(N);   // niveles normalizados lento y rápido (provisionales)
+const wvEnv = new Float32Array(WV_NS + 1), wvEnvF = new Float32Array(WV_NS + 1), wvFine = new Float32Array(WV_NS + 1);
 const wvPts = Array.from({ length: 8 }, () => new Float32Array(WV_NS + 1));   // alturas de las hebras del plano que se está dibujando
 let wvE = 0, wvK = 0;                 // energía y golpe suavizados
-// hebras: posición en su cinta (de -1 a 1, con separaciones muy desiguales), tramo que cubren y factor aleatorio fijo por zona de frecuencias (todo determinista)
+// hebras: posición en su cinta (de -1 a 1, con separaciones muy desiguales), tramo que cubren, factor fijo por zona de frecuencias, contraste, mezcla rápida/lenta y velocidad de avance (todo determinista)
 const wvStr = WV_PLANES.map((pl, pi) => {
   let sd = 11 + pi * 7;
   const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
@@ -433,33 +435,35 @@ const wvStr = WV_PLANES.map((pl, pi) => {
   const cs = [-1, ...gaps.map(v => (acc += v, -1 + 2 * acc / tot))];
   return cs.map(c => {
     const part = rnd() < 0.55, j0 = part ? Math.floor(rnd() * 0.3 * WV_NS) : 0, j1 = part ? WV_NS - Math.floor(rnd() * 0.3 * WV_NS) : WV_NS;
-    const kn = Array.from({ length: 10 }, () => 0.7 + 0.5 * rnd()), g = new Float32Array(WV_NS + 1);   // factor por zona: 10 nudos suavizados
+    const kn = Array.from({ length: 10 }, () => 0.35 + 1.15 * rnd()), g = new Float32Array(WV_NS + 1);   // factor por zona: 10 nudos suavizados
     for (let j = 0; j <= WV_NS; j++) { const f = j / WV_NS * 9, i0 = Math.min(8, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t); g[j] = kn[i0] + (kn[i0 + 1] - kn[i0]) * sm; }
-    return { c, j0, j1, g, v: 0.85 + 0.3 * rnd() };
+    return { c, j0, j1, g, v: 0.7 + 0.6 * rnd(), p: 0.7 + 1.2 * rnd(), m: rnd(), sp: 0.04 + 0.18 * rnd(), ph: rnd() * 6.28 };
   });
 });
 
 function drawWave(w, h, dt) {
-  const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.14, w * 0.14), margin = w * 0.05, usable = w - margin * 2;
+  const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.23, w * 0.23), margin = w * 0.05, usable = w - margin * 2;
   for (let i = 0; i < N; i++) {
     wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 9 : 2.8));
-    wvPk[i] = Math.max(wvB[i], wvPk[i] - dt * 0.1, 0.08);
-    const nv = wvB[i] / wvPk[i];   // 0…1 respecto al máximo reciente de esa frecuencia
-    wvHi[i] += (nv * (i / (N - 1)) - wvHi[i]) * Math.min(1, dt * 7);
-    wvTmp[i] = nv;
+    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 24 : 7));
+    wvPk[i] = Math.max(wvF[i], wvPk[i] - dt * 0.1, 0.08);
+    wvS[i] = wvB[i] * (0.55 + 0.45 / wvPk[i]);   // normalización a medias: mezcla del nivel real y del nivel respecto al máximo reciente de esa frecuencia (los graves siguen pesando algo más)
+    wvQ[i] = wvF[i] * (0.55 + 0.45 / wvPk[i]);
+    wvHi[i] += (wvS[i] * (i / (N - 1)) - wvHi[i]) * Math.min(1, dt * 7);
   }
   const kk = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
   wvK += (kk - wvK) * Math.min(1, dt * (kk > wvK ? 10 : 3));
   wvE += (energy - wvE) * Math.min(1, dt * 1.5);
-  // nivel normalizado a lo ancho (interpolado entre barras y suavizado)
+  // niveles normalizados a lo ancho (interpolados entre barras y suavizados), lento y rápido
   for (let j = 0; j <= WV_NS; j++) {
     const f = j / WV_NS * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
-    wvEnv[j] = wvTmp[i0] + (wvTmp[i0 + 1] - wvTmp[i0]) * sm;
+    wvEnv[j] = wvS[i0] + (wvS[i0 + 1] - wvS[i0]) * sm;
+    wvEnvF[j] = wvQ[i0] + (wvQ[i0 + 1] - wvQ[i0]) * sm;
     wvFine[j] = wvHi[i0] + (wvHi[i0 + 1] - wvHi[i0]) * sm;
   }
-  for (let pass = 0; pass < 3; pass++) {
-    const t2 = Float32Array.from(wvEnv);
-    for (let j = 1; j < WV_NS; j++) wvEnv[j] = (t2[j - 1] + 2 * t2[j] + t2[j + 1]) / 4;
+  for (const arr of [wvEnv, wvEnvF]) for (let pass = 0; pass < 4; pass++) {
+    let prev = arr[0];
+    for (let j = 1; j < WV_NS; j++) { const cur = arr[j]; arr[j] = (prev + 2 * cur + arr[j + 1]) / 4; prev = cur; }
   }
   ctx.fillStyle = '#04040e';
   ctx.fillRect(0, 0, w, h);
@@ -468,24 +472,27 @@ function drawWave(w, h, dt) {
   gl.addColorStop(1, pal(0, 60, 40, 0));
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
-  const grad = ctx.createLinearGradient(margin, 0, w - margin, 0);
-  grad.addColorStop(0, pal(-65, 90, 60, 1));
-  grad.addColorStop(0.3, pal(-25, 90, 66, 1));
-  grad.addColorStop(0.5, pal(0, 45, 84, 1));
-  grad.addColorStop(0.7, pal(35, 90, 66, 1));
-  grad.addColorStop(1, pal(80, 90, 60, 1));
+  const grad = ctx.createLinearGradient(margin, 0, w - margin, 0);   // abanico de tonos estrecho: el color cambia poco de un lado a otro
+  grad.addColorStop(0, pal(-30, 80, 62, 1));
+  grad.addColorStop(0.35, pal(-12, 75, 70, 1));
+  grad.addColorStop(0.5, pal(0, 55, 80, 1));
+  grad.addColorStop(0.65, pal(14, 75, 70, 1));
+  grad.addColorStop(1, pal(32, 80, 62, 1));
   ctx.lineJoin = ctx.lineCap = 'round';
   const px = new Float32Array(WV_NS + 1);
   for (let j = 0; j <= WV_NS; j++) px[j] = margin + usable * j / WV_NS;
   const path = (st, py, oy) => { ctx.beginPath(); ctx.moveTo(px[st.j0], oy + py[st.j0]); for (let j = st.j0 + 1; j <= st.j1; j++) ctx.lineTo(px[j], oy + py[j]); };
   for (let pi = 0; pi < WV_PLANES.length; pi++) {   // del plano lejano al cercano: la sombra de cada plano oscurece al de detrás
-    const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.18 * wvK), oy = cy + h * pl.dy, ph = pl.ph;
+    const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.2 * wvK), oy = cy + h * pl.dy;
     for (let k = 0; k < pl.n; k++) {
       const st = strs[k], py = wvPts[k], span = st.j1 - st.j0;
+      st.ph += dt * st.sp;   // avance muy lento, distinto en cada hebra
+      const phs = pl.ph + st.ph;
       for (let j = st.j0; j <= st.j1; j++) {
-        const x2 = j / WV_NS * 6.2832, e = 0.2 + 0.85 * wvEnv[j] * st.g[j], d = st.c * (0.8 + 1.5 * e);   // e: altura normalizada por frecuencia × factor propio de esta hebra; d: desplazamiento respecto a las demás
+        const x2 = j / WV_NS * 6.2832, gj = st.g[j], lvl = wvEnv[j] * (1 - st.m) + wvEnvF[j] * st.m;   // lvl: respuesta de esta hebra (mezcla de rápida y lenta)
+        const e = 0.05 + 1.0 * Math.pow(Math.min(1.2, lvl), st.p) * gj, d = st.c * (0.9 + 1.2 * (0.2 + 0.85 * wvEnv[j] * gj));   // e: altura (contraste propio); d: desplazamiento respecto a las demás
         const tap = Math.pow(Math.sin(Math.PI * (j - st.j0) / span), 0.7);   // cada hebra se cierra en sus propios extremos
-        const v = 0.72 * Math.sin(x2 * 2.2 - ph + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * ph + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * ph + 2 * d + 0.6);
+        const v = 0.72 * Math.sin(x2 * 2.2 - phs + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * phs + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * phs + 2 * d + 0.6);
         py[j] = -amp * (1 - 0.16 * Math.abs(st.c)) * st.v * e * tap * v;
       }
     }
@@ -495,19 +502,16 @@ function drawWave(w, h, dt) {
     for (let k = 0; k < pl.n; k++) {
       path(strs[k], wvPts[k], oy + 5 * pl.w + 2);
       ctx.globalAlpha = 0.22;
-      ctx.lineWidth = 6 * pl.w;
+      ctx.lineWidth = 5 * pl.w;
       ctx.stroke();
     }
-    // luz muy difusa: halos cada vez más anchos y tenues, sumados, y la línea fina encima
+    // luz: un halo suave y la línea fina, sumados
     ctx.globalCompositeOperation = 'lighter';
     ctx.strokeStyle = grad;
     for (let k = 0; k < pl.n; k++) {
       const st = strs[k], al = 0.7 + 0.3 * (1 - Math.abs(st.c)), pa = pl.a * al;
       path(st, wvPts[k], oy);
-      ctx.globalAlpha = (0.022 + 0.015 * wvK) * pa; ctx.lineWidth = 36 * pl.w; ctx.stroke();
-      ctx.globalAlpha = (0.034 + 0.02 * wvK) * pa; ctx.lineWidth = 20 * pl.w; ctx.stroke();
-      ctx.globalAlpha = 0.04 * pa; ctx.lineWidth = 10 * pl.w; ctx.stroke();
-      ctx.globalAlpha = 0.09 * pa; ctx.lineWidth = 4.5 * pl.w; ctx.stroke();
+      ctx.globalAlpha = (0.03 + 0.012 * wvK) * pa; ctx.lineWidth = 7 * pl.w; ctx.stroke();
       ctx.globalAlpha = (0.35 + 0.4 * al) * pl.a; ctx.lineWidth = pl.w; ctx.stroke();
     }
   }
