@@ -81,6 +81,13 @@ function renderInfo() {
 }
 
 // Lo que se ve de una opción: su formato, con número si el canal tiene varias del mismo (AAC 1, AAC 2…)
+// Final del enlace, para distinguir las opciones de un canal de TDTChannels: ".../CADENASERAAC.aac" → "CADENASERAAC". Si el final no dice nada ("stream", "live"…), el servidor
+function urlTail(u) {
+  let x;
+  try { x = new URL(u); } catch { return String(u).slice(-24); }
+  const seg = decodeURIComponent(x.pathname.split('/').filter(Boolean).pop() || '').replace(/\.[a-z0-9]{2,5}$/i, '');
+  return !seg || /^(stream|live|listen|play|radio|index|audio|directo)$/i.test(seg) ? x.hostname.replace(/^www\./, '') : seg;
+}
 const fmtName = o => (o.f === 'm3u8' ? 'HLS' : o.f === 'stream' ? 'Directo' : o.f.toUpperCase());
 function optLabel(ch, i) {
   const o = ch.o[i];
@@ -125,8 +132,8 @@ function renderResults() {
       b.type = 'button';
       if (solo) b.appendChild(head);
       else if (ch.k === 'neo') b.appendChild(el('span', 'fmt', optLabel(ch, i)));
-      else {   // TDTChannels: varias opciones son varios tipos de stream del mismo canal: "Opción 1" y su formato en una burbuja
-        const f = el('span', 'fmt', 'Opción ' + (i + 1));
+      else {   // TDTChannels: varias opciones son varios enlaces del mismo canal: el final de cada enlace y su formato en una burbuja
+        const f = el('span', 'fmt', urlTail(o.u));
         f.appendChild(el('span', 'tag', fmtName(o)));
         b.appendChild(f);
       }
@@ -194,7 +201,7 @@ function pick(ch, i, btn) {
   btn.classList.add('sel');
   picked = { ch, i };
   const o = ch.o[i];
-  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + (ch.k === 'neo' ? optLabel(ch, i) : 'Opción ' + (i + 1) + ' (' + fmtName(ch.o[i]) + ')');
+  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + (ch.k === 'neo' ? optLabel(ch, i) : urlTail(ch.o[i].u) + ' (' + fmtName(ch.o[i]) + ')');
   labelIn.value = optionName(ch, i);
   // el catálogo interno ya trae el nombre corto, el tipo y el color de la cadena; las listas de TDTChannels, no
   nName.value = ch.n.slice(0, 40);

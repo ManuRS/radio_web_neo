@@ -117,7 +117,7 @@
    "color": "#ff4fa3",
    "cors": false,
    "urls": [
-    {"label": "HitFM Web", "url": "https://hitfm.kissfmradio.cires21.com/hitfm.mp3", "kind": "mp3"}
+    {"label": "HitFM Web", "url": "https://kissfm.kissfmradio.cires21.com/hitfm.mp3", "kind": "mp3"}
    ]
   },
   {
@@ -134,7 +134,7 @@
    "group": "musical",
    "color": "#4aa8ff",
    "urls": [
-    {"label": "Melodía FM Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MELODIA_FMAAC.aac", "kind": "aac"}
+    {"label": "Melodía FM Web", "url": "https://radio-atres-live.ondacero.es/api/livestream-redirect/MELODIA_FMAAC.aac", "kind": "aac"}
    ]
   },
   {

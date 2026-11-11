@@ -309,7 +309,7 @@
         },
         {
           "label": "LOS40 México",
-          "url": "https://26143.live.streamtheworld.com/LOS40_MEXICO.mp3",
+          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MEXICO.mp3",
           "kind": "mp3"
         },
         {
@@ -354,7 +354,7 @@
       "urls": [
         {
           "label": "HitFM Web",
-          "url": "https://hitfm.kissfmradio.cires21.com/hitfm.mp3",
+          "url": "https://kissfm.kissfmradio.cires21.com/hitfm.mp3",
           "kind": "mp3"
         }
       ],
@@ -382,7 +382,7 @@
       "urls": [
         {
           "label": "Melodía FM Web",
-          "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/MELODIA_FMAAC.aac",
+          "url": "https://radio-atres-live.ondacero.es/api/livestream-redirect/MELODIA_FMAAC.aac",
           "kind": "aac"
         }
       ],

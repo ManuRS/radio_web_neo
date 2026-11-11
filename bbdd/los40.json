@@ -207,7 +207,7 @@
    "color": "#ff6a2a",
    "urls": [
     {"label": "LOS40 Argentina", "url": "https://frontend.radiohdvivo.com/los40/live", "kind": "mp3"},
-    {"label": "LOS40 México", "url": "https://26143.live.streamtheworld.com/LOS40_MEXICO.mp3", "kind": "mp3"}
+    {"label": "LOS40 México", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_MEXICO.mp3", "kind": "mp3"}
    ]
   }
  ]

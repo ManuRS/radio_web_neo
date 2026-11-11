@@ -20,7 +20,7 @@
     {"label": "Radio Axarquía", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_AXARQUIA.mp3", "kind": "mp3"},
     {"label": "Radio Baza", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_BAZA.mp3", "kind": "mp3"},
     {"label": "Radio Cádiz", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CADIZ.mp3", "kind": "mp3"},
-    {"label": "Radio Coca (SER Ronda)", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_RONDA.mp3", "kind": "mp3"},
+    {"label": "Radio Coca SER Ronda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_RONDA.mp3", "kind": "mp3"},
     {"label": "Radio Córdoba", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CORDOBA.mp3", "kind": "mp3"},
     {"label": "Radio Granada", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_GRANADA.mp3", "kind": "mp3"},
     {"label": "Radio Guadix", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_GUADIX.mp3", "kind": "mp3"},
@@ -40,10 +40,12 @@
     {"label": "SER Antequera", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ANTEQUERA.mp3", "kind": "mp3"},
     {"label": "SER Arco Norte", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ARCO_NORTE.mp3", "kind": "mp3"},
     {"label": "SER Comarca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_COMARCA.mp3", "kind": "mp3"},
+    {"label": "SER Costa de la Luz", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_COSTA_LUZ.mp3", "kind": "mp3"},
     {"label": "SER La Janda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_LA_JANDA.mp3", "kind": "mp3"},
     {"label": "SER Levante", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_LEVANTE.mp3", "kind": "mp3"},
     {"label": "SER Lucena", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_LUCENA.mp3", "kind": "mp3"},
     {"label": "SER Málaga", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MALAGA.mp3", "kind": "mp3"},
+    {"label": "SER Marbella Costa del Sol", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MARBELLA_COSTA_SOL.mp3", "kind": "mp3"},
     {"label": "SER Níjar", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_NIJAR.mp3", "kind": "mp3"},
     {"label": "SER Poniente", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_PONIENTE.mp3", "kind": "mp3"},
     {"label": "SER Roquetas", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ROQUETAS.mp3", "kind": "mp3"},
@@ -90,6 +92,7 @@
    "group": "general",
    "color": "#ffc72c",
    "urls": [
+    {"label": "Radio Club Tenerife", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_TENERIFE.mp3", "kind": "mp3"},
     {"label": "Radio La Palma", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LA_PALMA.mp3", "kind": "mp3"},
     {"label": "SER Lanzarote", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LANZAROTE.mp3", "kind": "mp3"},
     {"label": "SER Las Palmas", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LAS_PALMAS.mp3", "kind": "mp3"}
@@ -126,6 +129,7 @@
     {"label": "Radio Valladolid", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_VALLADOLID.mp3", "kind": "mp3"},
     {"label": "Radio Zamora", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ZAMORA.mp3", "kind": "mp3"},
     {"label": "SER Ávila", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_AVILA.mp3", "kind": "mp3"},
+    {"label": "SER Miranda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MIRANDA_EBRO.mp3", "kind": "mp3"},
     {"label": "SER Soria", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_SORIA.mp3", "kind": "mp3"},
     {"label": "SER+ Valladolid", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MAS_VALLADOLID.mp3", "kind": "mp3"}
    ]
@@ -135,6 +139,7 @@
    "group": "general",
    "color": "#ffc72c",
    "urls": [
+    {"label": "Radio 90 Motilla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MOTILLA.mp3", "kind": "mp3"},
     {"label": "Radio Albacete", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ALBACETE.mp3", "kind": "mp3"},
     {"label": "Radio Azul (Las Pedroñeras)", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_AZUL.mp3", "kind": "mp3"},
     {"label": "Radio Puertollano", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_PUERTOLLANO.mp3", "kind": "mp3"},
@@ -160,7 +165,9 @@
     {"label": "Ràdio Lleida", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LLEIDA.mp3", "kind": "mp3"},
     {"label": "Ràdio Manresa", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MANRESA.mp3", "kind": "mp3"},
     {"label": "Ràdio Reus", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_REUS.mp3", "kind": "mp3"},
+    {"label": "Ràdio SER Principat d'Andorra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ANDORRA.mp3", "kind": "mp3"},
     {"label": "SER Catalunya", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CAT.mp3", "kind": "mp3"},
+    {"label": "SER Ebre", "url": "https://cadenaserebre.streaming-pro.com:6021/stream", "kind": "mp3"},
     {"label": "SER Penedès-Garraf", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_PENEDES_GARRAF.mp3", "kind": "mp3"},
     {"label": "SER Tarragona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_TARRAGONA.mp3", "kind": "mp3"}
    ]
@@ -186,6 +193,8 @@
     {"label": "Radio Elche", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ELCHE.mp3", "kind": "mp3"},
     {"label": "Radio Elda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ELDA.mp3", "kind": "mp3"},
     {"label": "Radio Gandia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_GANDIA.mp3", "kind": "mp3"},
+    {"label": "Radio La Vall d'Uixó", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_VALLDUIXO.mp3", "kind": "mp3"},
+    {"label": "Radio Ontinyent", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ONTIYENT.mp3", "kind": "mp3"},
     {"label": "Radio Orihuela", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ORIHUELA.mp3", "kind": "mp3"},
     {"label": "Radio Valencia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_VALENCIA.mp3", "kind": "mp3"},
     {"label": "Radio Villena", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_VILLENA.mp3", "kind": "mp3"},
@@ -204,6 +213,8 @@
     {"label": "SER Cáceres", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CACERES.mp3", "kind": "mp3"},
     {"label": "SER Mérida", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MERIDA.mp3", "kind": "mp3"},
     {"label": "SER Navalmoral", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_NAVALMORAL.mp3", "kind": "mp3"},
+    {"label": "SER Norte de Extremadura", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_NORTE_EXTREMADURA.mp3", "kind": "mp3"},
+    {"label": "SER Tierra de Barros", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ALMENDRALEJO.mp3", "kind": "mp3"},
     {"label": "SER Vegas Altas", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_VEGAS_ALTAS.mp3", "kind": "mp3"}
    ]
   },
@@ -222,6 +233,7 @@
     {"label": "Radio Ourense", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_OURENSE.mp3", "kind": "mp3"},
     {"label": "Radio Pontevedra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_PONTEVEDRA.mp3", "kind": "mp3"},
     {"label": "Radio Vigo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_VIGO.mp3", "kind": "mp3"},
+    {"label": "SER Baixo Miño", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_BAIXOMINO.mp3", "kind": "mp3"},
     {"label": "SER+ Pontevedra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MAS_PONTEVEDRA.mp3", "kind": "mp3"}
    ]
   },
@@ -241,6 +253,7 @@
    "color": "#ffc72c",
    "urls": [
     {"label": "Radio Calahorra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CALAHORRA.mp3", "kind": "mp3"},
+    {"label": "Radio Haro", "url": "https://streaming.radioharo.com/radioharo.mp3", "kind": "mp3"},
     {"label": "Radio Rioja", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_RIOJA.mp3", "kind": "mp3"}
    ]
   },
@@ -253,6 +266,7 @@
     {"label": "SER Henares", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_HENARES.mp3", "kind": "mp3"},
     {"label": "SER Madrid Norte", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MADRID_NORTE.mp3", "kind": "mp3"},
     {"label": "SER Madrid Oeste", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MADRID_OESTE.mp3", "kind": "mp3"},
+    {"label": "SER Madrid Sierra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MADSIERRA.mp3", "kind": "mp3"},
     {"label": "SER Madrid Sur", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MADRID_SUR.mp3", "kind": "mp3"},
     {"label": "SER+ Madrid", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MAS_MADRID.mp3", "kind": "mp3"}
    ]
