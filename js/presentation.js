@@ -148,24 +148,27 @@ function drawRadial(w, h, c, lv) {
   const cx = w / 2, cy = h / 2, m = Math.min(w, h), R = m * 0.19, maxLen = m * 0.26, lw = Math.max(3, 2 * Math.PI * R / (2 * N) * 0.55);
   halo(w, h, cx, cy, m * 0.62, c);
   drawParticles(c);
-  // círculo interior: respira con los graves en todo momento (no solo con los golpes), se llena de luz y suelta una onda con cada golpe
-  const kb = Math.min(1, bass * 1.7), rr = R * (1 + 0.13 * kb + 0.07 * pulse);
-  const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
-  core.addColorStop(0, rgba(c, 0.03 + 0.16 * kb + 0.14 * pulse));
-  core.addColorStop(1, rgba(c, 0.1 + 0.34 * kb + 0.2 * pulse));
-  ctx.fillStyle = core;
-  ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.fill();
-  if (pulse > 0.02) {   // onda que sale del círculo y se apaga
+  // círculo interior: reacciona a cada subida de los graves por encima de su nivel reciente (no a su nivel, que con música densa es alto siempre), así late con cada
+  // golpe y entre golpes vuelve a quedarse en reposo, sin color de fondo permanente; en cada golpe fuerte suelta además una onda
+  const kb = Math.min(1, Math.max(0, bass - bassAvg) * 2.8), rr = R * (1 + 0.12 * kb + 0.06 * pulse);
+  if (kb > 0.02 || pulse > 0.02) {
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, rr);
+    core.addColorStop(0, rgba(c, 0.18 * kb + 0.1 * pulse));
+    core.addColorStop(1, rgba(c, 0.4 * kb + 0.25 * pulse));
+    ctx.fillStyle = core;
+    ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.fill();
+  }
+  if (pulse > 0.02) {
     ctx.strokeStyle = rgba(c, 0.5 * pulse);
     ctx.lineWidth = 2 + 4 * pulse;
     ctx.beginPath(); ctx.arc(cx, cy, rr * (1 + (1 - pulse) * 0.55), 0, 6.2832); ctx.stroke();
   }
   ctx.lineCap = 'round';
-  ctx.strokeStyle = rgba(c, 0.14 + 0.2 * kb + 0.2 * pulse);
-  ctx.lineWidth = lw * (2.4 + 1.2 * kb);
+  ctx.strokeStyle = rgba(c, 0.14 + 0.2 * kb + 0.1 * pulse);
+  ctx.lineWidth = lw * (2.4 + 1.0 * kb);
   ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.stroke();
-  ctx.strokeStyle = rgba(c, 0.5 + 0.4 * kb);
-  ctx.lineWidth = 2 + 2 * kb;
+  ctx.strokeStyle = rgba(c, 0.55 + 0.35 * kb);
+  ctx.lineWidth = 2 + 1.5 * kb;
   ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 6.2832); ctx.stroke();
   ctx.save();
   ctx.setLineDash([1, 15]);
