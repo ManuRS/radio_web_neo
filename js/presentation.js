@@ -22,8 +22,8 @@ import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
 const SPIN_KEY = 'rn_giro';   // Radial: '0' = barras sin girar
-const MODES = ['Espectro', 'Océano', 'Radial', 'Vórtice', 'Seda', 'Onda', 'Onda de seda'];   // (las reglas CSS por vista usan este orden: Radial = 2, Vórtice = 3)
-const [SPECTRUM, OCEAN, RADIAL, VORTEX, SILK_MODE, WAVE, SILK_WAVE] = MODES.map((_, i) => i);
+const MODES = ['Espectro', 'Radial', 'Océano', 'Vórtice', 'Seda', 'Onda', 'Onda de seda'];   // (las reglas CSS por vista usan este orden: Radial = 1, Océano = 2, Vórtice = 3)
+const [SPECTRUM, RADIAL, OCEAN, VORTEX, SILK_MODE, WAVE, SILK_WAVE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
 const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
@@ -298,7 +298,17 @@ function drawRadial(w, h, c, lv, dt) {
 // golpe de graves, un estallido de rayos y un destello. El color es el de la paleta compartida; el giro se invierte de vez en cuando.
 const TAU = 6.2832, RING = 256;
 let wave = new Float32Array(2048), env = 0.1, wgain = 3, dir = 1, beats = 0, drawn = -1;
-let vHit = 0, vHitAt = 0, vHitNow = false;   // golpe propio del Vórtice: salta con graves y medios bajos (punch), más a menudo que el golpe de graves
+let vHit = 0, vHitAt = 0, vHitNow = false;
+// Variedad: el anillo y el bucle de fase cambian de figura cada pocos golpes (6-11, y al menos 5 s), con un fundido de un segundo entre la figura vieja y la nueva.
+// Figuras del anillo: 0 anillo, 1 simétrico (la onda repetida en espejo en 3-7 gajos), 2 doble (dos anillos que giran al revés), 3 pétalos, 4 espiral, 5 estrella.
+// El bucle de fase (la señal frente a ella misma un poco después) cambia de retardo, tamaño y número de copias giradas (caleidoscopio).
+const V_STYLES = 6;
+const vNewLook = old => {
+  let st;
+  do st = Math.floor(Math.random() * V_STYLES); while (old && st === old.st);
+  return { st, lobes: 3 + Math.floor(Math.random() * 5), copies: 1 + Math.floor(Math.random() * 4), delay: [3, 6, 12, 24][Math.floor(Math.random() * 4)], size: 0.14 + Math.random() * 0.08, mirror: Math.random() < 0.4 };
+};
+let vLook = { st: 0, lobes: 5, copies: 1, delay: 6, size: 0.17, mirror: false }, vOld = null, vFade = 1, vCount = 0, vNext = 8, vLookAt = 0;   // golpe propio del Vórtice: salta con graves y medios bajos (punch), más a menudo que el golpe de graves
 
 function drawVortex(w, h, dt, dpr) {
   const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = presCanvas.width, ch = presCanvas.height;
@@ -344,23 +354,52 @@ function drawVortex(w, h, dt, dpr) {
   ctx.globalCompositeOperation = 'lighter';
   ctx.lineJoin = ctx.lineCap = 'round';
   const R = m * (0.11 + 0.07 * bass + 0.05 * pulse + 0.06 * vHit), amp = m * (0.13 + 0.05 * vHit), step = Math.floor(wave.length / RING), light = 60 + pulse * 10 + vHit * 12, calm = Math.max(0, 1 - energy * 5);   // calm: en silencio el anillo sigue ondulando un poco
-  ctx.strokeStyle = pal(0, 85, light, 1);
-  ctx.lineWidth = 1.5 + bass * 3.5 + pulse * 3 + vHit * 4;
-  ctx.beginPath();
-  for (let i = 0; i <= RING; i++) {
-    const k = i % RING, a = k / RING * TAU + spin * 0.6, r = R + wave[k * step] * wgain * amp + calm * m * (0.012 * Math.sin(3 * a + spin * 2.2) + 0.007 * Math.sin(5 * a - spin * 3.1));
-    if (i) ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); else ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+  if (vHitNow && ++vCount >= vNext && nowMs - vLookAt > 5000) { vOld = vLook; vLook = vNewLook(vOld); vFade = 0; vCount = 0; vNext = 6 + Math.floor(Math.random() * 6); vLookAt = nowMs; }
+  vFade = Math.min(1, vFade + dt);
+  const g = wgain * amp, sample = k => wave[(((k % RING) + RING) % RING) * step] * g;
+  const looks = vFade < 1 && vOld ? [[vOld, 1 - vFade], [vLook, vFade]] : [[vLook, 1]];
+  for (const [lk, al] of looks) {
+    ctx.globalAlpha = al;
+    // anillo con la figura que toque
+    ctx.strokeStyle = pal(0, 85, light, 1);
+    ctx.lineWidth = 1.5 + bass * 3.5 + pulse * 3 + vHit * 4;
+    const idle = a => calm * m * (0.012 * Math.sin(3 * a + spin * 2.2) + 0.007 * Math.sin(5 * a - spin * 3.1));
+    const ring = (rad, rot, fr) => {   // fr(i, a): radio en cada punto
+      ctx.beginPath();
+      for (let i = 0; i <= RING; i++) {
+        const a = i / RING * TAU + rot, r = fr(i, a);
+        if (i) ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); else ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      }
+      ctx.stroke();
+    };
+    const L = lk.lobes;
+    if (lk.st === 0) ring(R, spin * 0.6, (i, a) => R + sample(i) + idle(a));
+    else if (lk.st === 1) ring(R, spin * 0.6, i => { const u = (i / RING * L) % 1, t = 1 - Math.abs(2 * u - 1); return R + sample(Math.floor(t * RING / 2)) * 1.2 + idle(i / RING * TAU); });   // gajos en espejo
+    else if (lk.st === 2) { ring(R * 0.72, spin * 0.6, (i, a) => R * 0.72 + sample(i) * 0.7 + idle(a)); ring(R * 1.32, -spin * 0.8, (i, a) => R * 1.32 + sample(i + RING / 2) * 0.9 + idle(a)); }
+    else if (lk.st === 3) ring(R, spin * 0.4, (i, a) => R * 0.8 + Math.abs(Math.sin(L * a / 2)) * (R * (0.35 + 0.6 * energy + 0.4 * vHit) + Math.abs(sample(i)) * 1.3));   // pétalos
+    else if (lk.st === 4) {   // espiral de dos vueltas
+      ctx.beginPath();
+      for (let i = 0; i <= RING * 2; i++) {
+        const a = i / RING * TAU + spin * 0.7, r = R * 0.45 + i / (RING * 2) * R * 1.25 + sample(i) * 0.6;
+        if (i) ctx.lineTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r); else ctx.moveTo(cx + Math.cos(a) * r, cy + Math.sin(a) * r);
+      }
+      ctx.stroke();
+    } else ring(R, spin * 0.5, (i, a) => R * (1 + 0.28 * Math.cos(L * a) * (0.35 + bass + 0.5 * vHit)) + sample(i) * 0.8 + idle(a));   // estrella
+    // bucle de fase, con su retardo, tamaño y copias giradas
+    const d = lk.delay + Math.floor(energy * 40), R2 = m * lk.size;
+    ctx.lineWidth = 1.2 + energy * 3;
+    for (let c = 0; c < lk.copies; c++) {
+      const q = -spin * 0.9 + c * TAU / lk.copies, cq = Math.cos(q), sq = Math.sin(q), sy = lk.mirror && c % 2 ? -1 : 1;
+      ctx.strokeStyle = pal(150 + c * 28, 80, 62, 1);
+      ctx.beginPath();
+      for (let i = 0; i < RING; i++) {
+        const j = i * step, x = wave[j] * wgain, y = sy * wave[(j + d) % wave.length] * wgain, px = cx + (x * cq - y * sq) * R2, py = cy + (x * sq + y * cq) * R2;
+        if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
+      }
+      ctx.stroke();
+    }
   }
-  ctx.stroke();
-  const d = 6 + Math.floor(energy * 40), q = -spin * 0.9, cq = Math.cos(q), sq = Math.sin(q), R2 = m * 0.17;
-  ctx.strokeStyle = pal(150, 80, 62, 1);
-  ctx.lineWidth = 1.2 + energy * 3;
-  ctx.beginPath();
-  for (let i = 0; i < RING; i++) {
-    const j = i * step, x = wave[j] * wgain, y = wave[(j + d) % wave.length] * wgain, px = cx + (x * cq - y * sq) * R2, py = cy + (x * sq + y * cq) * R2;
-    if (i) ctx.lineTo(px, py); else ctx.moveTo(px, py);
-  }
-  ctx.stroke();
+  ctx.globalAlpha = 1;
   if (vHit > 0.02) {   // el fondo se enciende con cada golpe: un fogonazo redondo desde el centro que se apaga enseguida
     const fl = ctx.createRadialGradient(cx, cy, R * 1.05, cx, cy, Math.max(w, h) * 0.75);   // empieza fuera del anillo: el centro sigue negro
     fl.addColorStop(0, pal(0, 80, 60, 0));
