@@ -288,7 +288,7 @@ export async function requestStop() {
   if (!rec) { stopAll(); return; }
   if (asking) return;
   asking = true;
-  const ok = await ask('Grabación en curso', 'Si detienes la radio, la grabación se para y se descarga.', 'Parar la grabación', 'Cancelar');
+  const ok = await ask('Grabación en curso', 'Si detienes la radio, la grabación se parará y se descargará.', 'Parar la grabación', 'Cancelar');
   asking = false;
   if (!ok) return;
   await stopRecording();
