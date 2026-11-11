@@ -445,17 +445,21 @@ function drawSilk(w, h, dt) {
 // ================
 // Cintas de malla, como la imagen de referencia de Manu: cada cinta son muchas líneas finas tendidas entre dos bordes que ondulan por separado. Cuando los bordes se cruzan
 // la cinta se retuerce y, donde se ve de canto, las líneas se juntan y dan más luz (eso hace el volumen). Cada borde es una suma de senos lentos que avanzan a velocidades
-// distintas; su altura sigue al espectro, que cada cinta reparte a su manera y que se va desplazando despacio a lo largo de ella (onda interna: cada frecuencia viaja por la cinta), con normalización a medias y un nivel lento
-// que va acumulando las subidas (sin golpes en las cintas: los golpes de graves solo encienden la luz del fondo). Sin topes: las formas son siempre colinas y valles suaves. Las líneas suman luz; cada cinta tiene su tono dentro de la paleta compartida y pasa de
+// distintas; su altura sigue al espectro, que cada cinta reparte a su manera y que se va desplazando despacio a lo largo de ella (onda interna: cada frecuencia viaja por la cinta), con normalización a medias. La altura mezcla dos respuestas: 2/3 la viva (sigue cada subida y crece con el golpe) y 1/3 una lenta que va acumulando las subidas
+// (sin golpes), para que haya menos "pum pum" en las cintas. Sin topes ni potencias: las formas son siempre colinas y valles suaves. Las líneas suman luz; cada cinta tiene su tono dentro de la paleta compartida y pasa de
 // un tono a otro de un borde al otro.
 const WV_NS = 150;                    // muestras a lo ancho
 const WV_L = 40;                      // líneas por cinta
 const WV_RIB = [{ dh: -55, y: -0.015, k: 0.5, sv: 0.11 }, { dh: 35, y: 0.02, k: 0.5, sv: -0.15 }, { dh: 95, y: 0.004, k: 1, sv: 0.09 }, { dh: -10, y: 0.03, k: 0.75, sv: -0.2 }];   // k: cuántas veces recorre el espectro a lo ancho; sv: velocidad con que las frecuencias se desplazan por la cinta (ciclos/s)
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra (respuesta lenta)
+const wvF = new Float32Array(N);      // lo mismo con respuesta rápida
 const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra (para normalizar)
-const wvS = new Float32Array(N);      // nivel lento normalizado
-const wvEs = new Float32Array(WV_NS + 1);   // espectro (lento) a lo ancho de la cinta que se dibuja
+const wvS = new Float32Array(N), wvQ = new Float32Array(N);   // niveles normalizados lento y rápido
+const wvAc = new Float32Array(N), wvPa = new Float32Array(N).fill(0.25), wvT = new Float32Array(N);   // respuesta acumulada (muy lenta, sin golpes): nivel, su máximo reciente y normalizado
+const wvEs = new Float32Array(WV_NS + 1), wvEf = new Float32Array(WV_NS + 1), wvEa = new Float32Array(WV_NS + 1);   // espectro a lo ancho de la cinta que se dibuja: lento, rápido y acumulado
 const wvA = new Float32Array(WV_NS + 1), wvBo = new Float32Array(WV_NS + 1), wvBe = new Float32Array(WV_NS + 1);   // borde A, borde B y barriga de la cinta que se dibuja
+const wvPul = [];   // golpes viajeros: { f: frecuencia (0 graves … 1 agudos), a: fuerza, age: edad (s), u: posición de salida en cada cinta }
+const wvOn = new Float32Array(6);   // espera mínima entre golpes de cada grupo de frecuencias
 let wvE = 0, wvK = 0, wvL = 0;         // energía y golpe suavizados; wvL: luz de fondo (sube y baja despacio)
 // cintas: dos bordes con dos senos compartidos (desfasados, para que la cinta se retuerza) y uno propio, una barriga, mezcla rápida/lenta y respuesta al golpe (todo determinista)
 const wvRib = WV_RIB.map((rb, ri) => {
@@ -466,17 +470,40 @@ const wvRib = WV_RIB.map((rb, ri) => {
   const sh = [comp(), comp()];
   const A = norm([...sh.map(c => ({ ...c })), comp()]);
   const B = norm([...sh.map(c => ({ ...c, ph: c.ph + 0.8 + 1.8 * rnd(), a: c.a * (0.6 + 0.6 * rnd()) })), comp()]);
-  rnd(); rnd();   // (antes: mezcla rápida/lenta y respuesta al golpe; se siguen consumiendo para no cambiar el resto de valores)
-  return { ...rb, A, B, bel: comp(), g: 0.85 + 0.3 * rnd(), off: rnd() };
+  return { ...rb, A, B, bel: comp(), m: 0.55 + 0.45 * rnd(), kw: 0.6 + rnd(), g: 0.85 + 0.3 * rnd(), off: rnd() };
 });
 
 function drawWave(w, h, dt) {
   const lv = viz.levels, cy = h * 0.56, H = Math.min(h * 0.19, w * 0.22);
   for (let i = 0; i < N; i++) {
-    wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 3 : 1.3));   // lento: va acumulando las subidas (sin golpes en las cintas; los golpes se ven en el fondo)
-    wvPk[i] = Math.max(wvB[i], wvPk[i] - dt * 0.1, 0.08);
+    wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 9 : 2.8));
+    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 32 : 10));
+    wvPk[i] = Math.max(wvF[i], wvPk[i] - dt * 0.1, 0.08);
     wvS[i] = wvB[i] * (0.55 + 0.45 / wvPk[i]);   // normalización a medias: los graves siguen pesando algo más
+    wvQ[i] = wvF[i] * (0.55 + 0.45 / wvPk[i]);
+    wvAc[i] += (lv[i] - wvAc[i]) * Math.min(1, dt * (lv[i] > wvAc[i] ? 3 : 1.3));
+    wvPa[i] = Math.max(wvAc[i], wvPa[i] - dt * 0.1, 0.08);
+    wvT[i] = wvAc[i] * (0.55 + 0.45 / wvPa[i]);
   }
+  // golpes por frecuencia: en cada grupo de 6 barras, si la respuesta rápida se adelanta con claridad a la lenta, sale una onda que recorre cada cinta de izquierda a
+  // derecha desde donde está esa frecuencia en ella
+  for (let g = 0; g < 6; g++) {
+    let d = 0;
+    for (let i = g * 6; i < g * 6 + 6; i++) d += wvF[i] - wvB[i];
+    d /= 6;
+    wvOn[g] = Math.max(0, wvOn[g] - dt);
+    if (d > 0.07 && wvOn[g] === 0) {
+      wvOn[g] = 0.3;
+      const f = (g * 6 + 3) / (N - 1);
+      wvPul.push({ f, a: Math.min(1, d * 4.5), age: 0, u: wvRib.map(rb => {   // primera posición (desde la izquierda) donde la cinta tiene esa frecuencia
+        let best = 0, bd = 9;
+        for (let j = 0; j <= WV_NS; j++) { const x = j / WV_NS * rb.k + rb.off, dd = Math.abs(1 - Math.abs(2 * (x - Math.floor(x)) - 1) - f); if (dd < 0.05) { best = j; break; } if (dd < bd) { bd = dd; best = j; } }
+        return best / WV_NS;
+      }) });
+      if (wvPul.length > 14) wvPul.shift();
+    }
+  }
+  for (let q = wvPul.length - 1; q >= 0; q--) { wvPul[q].age += dt; if (wvPul[q].age > 3) wvPul.splice(q, 1); }
   const kk = Math.min(1, Math.max(0, bass - bassAvg) * 2.8);
   wvK += (kk - wvK) * Math.min(1, dt * (kk > wvK ? 12 : 3.5));
   wvE += (energy - wvE) * Math.min(1, dt * 1.5);
@@ -505,31 +532,37 @@ function drawWave(w, h, dt) {
   ctx.lineJoin = ctx.lineCap = 'round';
   ctx.lineWidth = 0.75;
   const x0 = -w * 0.01, xw = w * 1.02, sp = 0.7 + 0.6 * wvE, T = 6.2832;
-  for (const rb of wvRib) {
+  for (let ri = 0; ri < wvRib.length; ri++) {
+    const rb = wvRib[ri];
     for (const c of rb.A) c.ph += dt * c.sp * sp;
     for (const c of rb.B) c.ph += dt * c.sp * sp;
     rb.bel.ph += dt * rb.bel.sp * sp;
     // onda interna: las frecuencias se desplazan poco a poco por la cinta (el espectro se recorre en triángulo, graves → agudos → graves, así no hay saltos)
     rb.off = (rb.off + dt * rb.sv * (0.7 + 0.8 * wvE) + 1) % 1;
-    const es = wvEs, oy = cy + h * rb.y;
+    const es = wvEs, ef = wvEf, ea = wvEa, oy = cy + h * rb.y, kick = 1 + 0.6 * rb.kw * wvK;
     for (let j = 0; j <= WV_NS; j++) {
       const x = j / WV_NS * rb.k + rb.off, fr = 1 - Math.abs(2 * (x - Math.floor(x)) - 1);
       const f = fr * (N - 1), i0 = Math.min(N - 2, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t);
       es[j] = wvS[i0] + (wvS[i0 + 1] - wvS[i0]) * sm;
+      ef[j] = wvQ[i0] + (wvQ[i0 + 1] - wvQ[i0]) * sm;
+      ea[j] = wvT[i0] + (wvT[i0 + 1] - wvT[i0]) * sm;
     }
-    for (let pass = 0; pass < 6; pass++) {
-      const arr = es;
+    for (const arr of [es, ef, ea]) for (let pass = 0; pass < 6; pass++) {
       let prev = arr[0];
       for (let j = 1; j < WV_NS; j++) { const cur = arr[j]; arr[j] = (prev + 2 * cur + arr[j + 1]) / 4; prev = cur; }
     }
     for (let j = 0; j <= WV_NS; j++) {
       const u = j / WV_NS, tap = 0.3 + 0.7 * Math.pow(Math.sin(Math.PI * u), 0.8);
-      const env = es[j], amp = H * rb.g * tap * (0.25 + 1.9 * Math.pow(Math.min(1, env), 1.7));   // curva: el nivel medio da poca altura y solo los niveles altos llegan al máximo (más rango)
+      const env = es[j] * (1 - rb.m) + ef[j] * rb.m, curve = v => 0.25 + 1.9 * Math.pow(Math.min(1, v), 1.7);
+      const amp = H * rb.g * tap * ((2 / 3) * curve(env) * kick + (1 / 3) * curve(ea[j]));   // 2/3 respuesta viva (con golpe) + 1/3 acumulada (sin golpes)   // curva: el nivel medio da poca altura y solo los niveles altos llegan al máximo (más rango)
       let sa = 0, sb = 0;
       for (const c of rb.A) sa += c.a * Math.sin(T * c.f * u + c.ph);
       for (const c of rb.B) sb += c.a * Math.sin(T * c.f * u + c.ph);
-      wvA[j] = oy - amp * sa;
-      wvBo[j] = oy - amp * sb;
+      let bump = 0;   // golpes viajeros: un bulto que avanza hacia la derecha y se apaga
+      for (const pu of wvPul) { const dx = (u - pu.u[ri] - 0.42 * pu.age) / 0.06; if (dx > -3 && dx < 3) bump += pu.a * Math.exp(-pu.age * 1.1) * Math.exp(-dx * dx); }
+      const by = H * 0.7 * tap * bump;
+      wvA[j] = oy - amp * sa - by;
+      wvBo[j] = oy - amp * sb - by * 0.75;
       wvBe[j] = -H * 0.22 * tap * (0.4 + env) * Math.sin(T * rb.bel.f * u + rb.bel.ph);
     }
     const grads = [0, 1, 2, 3].map(q => {   // de un borde al otro el tono cambia; a lo ancho, poco
@@ -567,8 +600,8 @@ const O_HC = 1.5, O_SPR = 64, O_TILT = 0.45;   // altura de la cámara, lado de 
 const O_DH = [0, 52, -52, 115], O_KINDS = 5;   // desviación de tono de cada clase de punto (la quinta es casi blanca)
 const oSprites = [];   // [clase][desenfoque] → lienzo con un punto (se repintan cada fotograma con el tono actual)
 const oFronts = [];    // frentes de ola lanzados por los golpes: { p: posición (profundidad), a: altura }
-let oT = 0, oKick = 0, oK = 0, oSwell = 0, oMid = 0, oHi = 0, oMidP = 0, oHiP = 0;   // oMid/oHi: medios y agudos suavizados; oMidP/oHiP: fase de sus olas (avanzan más deprisa cuanto más suenan)
-   // oKick: impulso del golpe (cae solo); oK: el mismo suavizado, que es el que se ve (así nada salta de golpe)
+let oT = 0, oKick = 0, oK = 0, oSwell = 0;   // oKick: impulso del golpe (cae solo); oK: el mismo suavizado, que es el que se ve (así nada salta de golpe)
+let oMid = 0, oHi = 0, oMidP = 0, oHiP = 0;   // medios y agudos suavizados y fase de sus olas (avanzan más deprisa cuanto más suenan)
 const oB = new Float32Array(N);   // nivel suavizado de cada barra: la cresta de la ola sube o baja según la zona del espectro que tiene encima
 
 // Puntos con tres grados de desenfoque (0 nítido, 1 suave, 2 muy suave), uno por cada clase de color
@@ -616,7 +649,7 @@ function drawOcean(w, h, dt) {
   oHiP += dt * (1.5 + 5 * oHi);
   const mA = 0.12 + 0.75 * oMid, hA = 0.05 + 1.1 * oHi;
   oPaintSprites();
-  const k0 = Math.min(1.4, oK), cx = w / 2, cy = h / 2, horizon = h * (0.4 - 0.01 * k0), F = h * 0.95 * (1 + 0.04 * k0);   // con el golpe la cámara se acerca un poco
+  const k0 = Math.min(1.4, oK), cx = w / 2, cy = h / 2, horizon = h * (0.31 - 0.01 * k0), F = h * 0.95 * (1 + 0.04 * k0);   // con el golpe la cámara se acerca un poco
   const yaw = 0.62 + 0.1 * Math.sin(oT * 0.07), ca = Math.cos(yaw), sa = Math.sin(yaw);
   const roll = 0.07 + 0.04 * Math.sin(oT * 0.11 + 1);
   const swell = 0.3 + 0.7 * oSwell + 0.7 * k0, zc = 5.4 + 0.7 * Math.sin(oT * 0.25);   // altura y posición de la ola grande
