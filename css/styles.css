@@ -223,7 +223,11 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres[data-mode="1"] .pres-ps { max-width: 34vmin; font-size: 5.6vmin; white-space: normal; overflow-wrap: break-word; text-overflow: clip; }   /* en el Radial el nombre no se desplaza: se reparte en varias líneas dentro del círculo */
 .pres[data-mode="1"] .pres-ps > span { white-space: pre-line; }   /* respeta el salto de línea que pone info() */
 .pres[data-mode="1"] .pres-qual { flex-direction: column; align-items: center; gap: .15em; max-width: 34vmin; font-size: 1.5vmin; }
-.pres[data-mode="2"] .pres-info, .pres[data-mode="3"] .pres-info { display: none; }   /* Océano y Vórtice: vistas limpias, sin nombre ni hora */
+.pres[data-mode="3"] .pres-info { display: none; }   /* Vórtice: vista limpia, sin nombre ni hora */
+/* Océano: solo una ventana translúcida arriba (efecto cristal) con el nombre */
+.pres[data-mode="2"] .pres-info { top: max(8.8vh, env(safe-area-inset-top)); left: 0; right: 0; width: fit-content; max-width: min(88vw, calc(100vw - 128px)); margin: 0 auto; box-sizing: border-box; padding: .7vh 1.4em; border-radius: 16px; background: rgba(14, 18, 28, .32); border: 1px solid rgba(255, 255, 255, .1); -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); box-shadow: 0 6px 24px rgba(0, 0, 0, .25); }
+.pres[data-mode="2"] .pres-ps { max-width: 80vw; font-size: min(6.6vw, 4.6vh); letter-spacing: .05em; }
+.pres[data-mode="2"] .pres-qual, .pres[data-mode="2"] .pres-clock { display: none; }
 .pres-mode { position: absolute; left: 0; right: 0; bottom: 4vh; text-align: center; font-size: .85rem; font-weight: 600; letter-spacing: .22em; text-transform: uppercase; color: #8c98a8; opacity: 0; transition: opacity .4s; pointer-events: none; }
 .pres-mode.show { opacity: 1; }
 .pres-close { position: absolute; top: max(10px, env(safe-area-inset-top)); right: 12px; flex: none; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #cbd5e1; font-size: 1.1rem; transition: opacity .4s; }
@@ -231,6 +235,11 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-spin { display: none; pointer-events: auto; margin-top: .2vmin; padding: .4vmin 1.2vmin; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 1.6vmin; font-weight: 600; letter-spacing: .12em; color: #8c98a8; cursor: pointer; }   /* solo en el Radial (debajo del reloj) */
 .pres-spin:hover { color: #cbd5e1; background: rgba(255, 255, 255, .06); }
 .pres[data-mode="1"] .pres-spin { display: block; }
+/* En pantallas táctiles, mientras se ven los controles los títulos se apartan un momento para que se lean bien (salvo en el Radial, donde no estorban) */
+@media (pointer: coarse) {
+  .pres-info { transition: opacity .25s; }
+  .pres.show-top:not([data-mode="1"]) .pres-info { opacity: 0; }
+}
 .pres-clock { margin-top: .5vh; font-size: min(4.6vw, 3.4vh); font-weight: 600; letter-spacing: .06em; font-variant-numeric: tabular-nums; color: #cbd5e1; }
 
 /* Paneles que aparecen al llevar el ratón arriba a la izquierda (control) y abajo (emisoras); en pantallas táctiles, al tocar */
@@ -242,7 +251,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-strip .preset { cursor: inherit; }
 .pres-strip.dragging { cursor: grabbing; user-select: none; }
 .pres-strip.dragging .preset { pointer-events: none; }
-@media (pointer: coarse), (max-width: 600px) { .pres-ctl { top: max(34px, calc(env(safe-area-inset-top) + 22px)); left: 0; right: 0; margin: 0 auto; } }
+@media (pointer: coarse), (max-width: 600px) { .pres-ctl { top: max(58px, calc(env(safe-area-inset-top) + 46px)); left: 0; right: 0; margin: 0 auto; } }
 .pres.show-top .pres-ctl, .pres.show-bottom .pres-strip { opacity: 1; pointer-events: auto; transform: none; }
 .pres.show-bottom .pres-mode { bottom: 112px; }
 .pc-row { display: flex; align-items: center; gap: 12px; font-size: .88rem; color: #cbd5e1; }
