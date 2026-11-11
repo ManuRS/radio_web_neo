@@ -25,6 +25,7 @@ export const presPs = document.getElementById('presPs');
 export const presPsText = document.getElementById('presPsText');
 export const presQual = document.getElementById('presQual');
 export const presClock = document.getElementById('presClock');
+export const presSpin = document.getElementById('presSpin');   // Radial: activa o para el giro de las barras
 export const presCtl = document.getElementById('presCtl');
 export const presPlay = document.getElementById('presPlay');
 export const presNews = document.getElementById('presNews');

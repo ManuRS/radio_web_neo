@@ -11,7 +11,7 @@
 import { S } from './state.js';
 import {
   newsBox, newsToggle, newsVolume, newsVolValue, clockEl, presetsBox, stop, toggle, volume, volValue,
-  presCanvas, presClock, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
+  presCanvas, presClock, presSpin, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
   presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue
 } from './dom.js';
 import { setText } from './ui.js';
@@ -21,6 +21,7 @@ import { emisoraName } from './utils.js';
 import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
+const SPIN_KEY = 'rn_giro';   // Radial: '0' = barras sin girar
 const MODES = ['Espectro', 'Onda', 'Océano', 'Radial', 'Vórtice', 'Seda'];
 const [SPECTRUM, WAVE, OCEAN, RADIAL, VORTEX, SILK_MODE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
@@ -195,7 +196,31 @@ function drawSpectrum(w, h, c, levels) {
 // ==================
 // == VISTA RADIAL ==
 // ==================
-function drawRadial(w, h, c, lv) {
+// Giro de las barras: se puede parar con el botón "Giro on/off" de debajo del reloj. Al pararlo, las barras siguen girando (frenando al final) hasta volver a su
+// posición de reposo (graves abajo), y ahí se quedan.
+let spinOn = true, barRot = 0, radSpin = 0;
+try { spinOn = localStorage.getItem(SPIN_KEY) !== '0'; } catch (_) {}
+function showSpin() { presSpin.textContent = spinOn ? 'Giro on' : 'Giro off'; presSpin.setAttribute('aria-pressed', String(spinOn)); }
+showSpin();
+presSpin.addEventListener('click', e => {
+  e.stopPropagation();   // no cambia de vista
+  spinOn = !spinOn;
+  try { localStorage.setItem(SPIN_KEY, spinOn ? '1' : '0'); } catch (_) {}
+  showSpin();
+  presSpin.blur();   // que el teclado vuelva a cambiar de vista
+});
+function turnBars(dt) {
+  const ds = Math.min(Math.max(0, (spin - radSpin) * 0.1), dt * 0.3);   // lo que girarían ahora (0,025-0,28 rad/s según la energía; el tope evita un salto al volver a esta vista)
+  radSpin = spin;
+  if (spinOn) { barRot = (barRot + ds) % TAU; return; }
+  if (barRot === 0) return;
+  const left = TAU - barRot, v = Math.max(ds / Math.max(dt, 1e-3), 0.6) * Math.min(1, 0.15 + left / 0.7);   // al menos 0,6 rad/s para no tardar minutos; frena al llegar
+  barRot += v * dt;
+  if (barRot >= TAU - 0.002) barRot = 0;
+}
+
+function drawRadial(w, h, c, lv, dt) {
+  turnBars(dt);
   const cx = w / 2, cy = h / 2, m = Math.min(w, h), tall = h > w * 1.3, R = m * (tall ? 0.23 : 0.19), maxLen = m * (tall ? 0.24 : 0.26),   // en vertical, círculo más grande (sobra alto)
         lw = Math.max(3, 2 * Math.PI * R / (2 * N) * 0.55);
   halo(w, h, cx, cy, m * 0.62, c, 0.4);
@@ -238,7 +263,7 @@ function drawRadial(w, h, c, lv) {
   ctx.restore();
   // barras en círculo: graves abajo, agudos arriba, iguales a izquierda y derecha
   ctx.lineWidth = lw;
-  const rot = spin * 0.1, dark = shade(c, 0.7);   // rot: giro de las barras en sentido horario (0,025-0,28 rad/s según la energía)
+  const rot = barRot, dark = shade(c, 0.7);   // rot: giro de las barras en sentido horario (ver turnBars)
   for (let i = 0; i < N; i++) {
     const l = ease(lv[i]), len = 3 + l * maxLen, a = i / (N - 1) * Math.PI;   // las barras giran despacio en sentido horario (rot)
     ctx.strokeStyle = mix(dark, '#ffffff', l * 0.6);
@@ -425,7 +450,7 @@ function drawSilk(w, h, dt) {
 // un tono a otro de un borde al otro.
 const WV_NS = 150;                    // muestras a lo ancho
 const WV_L = 40;                      // líneas por cinta
-const WV_RIB = [{ dh: -55, y: -0.015, k: 0.5, sv: 0.045 }, { dh: 35, y: 0.02, k: 0.5, sv: -0.06 }, { dh: 95, y: 0.004, k: 1, sv: 0.035 }, { dh: -10, y: 0.03, k: 0.75, sv: -0.08 }];   // k: cuántas veces recorre el espectro a lo ancho; sv: velocidad con que las frecuencias se desplazan por la cinta (ciclos/s)
+const WV_RIB = [{ dh: -55, y: -0.015, k: 0.5, sv: 0.11 }, { dh: 35, y: 0.02, k: 0.5, sv: -0.15 }, { dh: 95, y: 0.004, k: 1, sv: 0.09 }, { dh: -10, y: 0.03, k: 0.75, sv: -0.2 }];   // k: cuántas veces recorre el espectro a lo ancho; sv: velocidad con que las frecuencias se desplazan por la cinta (ciclos/s)
 const wvB = new Float32Array(N);      // nivel suavizado de cada barra (respuesta lenta)
 const wvF = new Float32Array(N);      // lo mismo con respuesta rápida
 const wvPk = new Float32Array(N).fill(0.25);   // máximo reciente de cada barra (para normalizar)
@@ -437,7 +462,7 @@ let wvE = 0, wvK = 0;                 // energía y golpe suavizados
 const wvRib = WV_RIB.map((rb, ri) => {
   let sd = 7 + ri * 13;
   const rnd = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
-  const comp = () => ({ f: 1.1 + 3.2 * rnd(), a: 0.4 + 0.6 * rnd(), ph: rnd() * 6.28, sp: (rnd() < 0.5 ? -1 : 1) * (0.12 + 0.3 * rnd()) });
+  const comp = () => ({ f: 1.1 + 3.2 * rnd(), a: 0.4 + 0.6 * rnd(), ph: rnd() * 6.28, sp: (rnd() < 0.5 ? -1 : 1) * (0.3 + 0.65 * rnd()) });   // avance propio de cada seno (rad/s)
   const norm = cs => { const t = cs.reduce((x, c) => x + c.a, 0); cs.forEach(c => { c.a *= 1.1 / t; }); return cs; };
   const sh = [comp(), comp()];
   const A = norm([...sh.map(c => ({ ...c })), comp()]);
@@ -464,6 +489,19 @@ function drawWave(w, h, dt) {
   gl.addColorStop(1, pal(0, 60, 40, 0));
   ctx.fillStyle = gl;
   ctx.fillRect(0, 0, w, h);
+  const lit = Math.max(wvK, 0.8 * pulse);   // golpe de graves (subida sobre su media o golpe detectado)
+  if (lit > 0.01) {   // cada golpe de graves enciende el fondo detrás de las cintas: un resplandor ancho y aplastado que sube rápido y se apaga suave
+    ctx.save();
+    ctx.translate(w / 2, cy);
+    ctx.scale(1, 0.55);
+    const gk = ctx.createRadialGradient(0, 0, 0, 0, 0, w * 0.62);
+    gk.addColorStop(0, pal(0, 75, 58, (0.45 * lit).toFixed(3)));
+    gk.addColorStop(0.5, pal(25, 70, 48, (0.18 * lit).toFixed(3)));
+    gk.addColorStop(1, pal(25, 70, 45, 0));
+    ctx.fillStyle = gk;
+    ctx.fillRect(-w, -h * 2.5, w * 2, h * 5);
+    ctx.restore();
+  }
   ctx.globalCompositeOperation = 'lighter';
   ctx.lineJoin = ctx.lineCap = 'round';
   ctx.lineWidth = 0.75;
@@ -642,7 +680,7 @@ function frame(now) {
     moveParticles(w, h, dt);
     ctx.fillStyle = '#0a0d12';
     ctx.fillRect(0, 0, w, h);
-    if (mode === SPECTRUM) drawSpectrum(w, h, c, lv); else drawRadial(w, h, c, lv);
+    if (mode === SPECTRUM) drawSpectrum(w, h, c, lv); else drawRadial(w, h, c, lv, dt);
   }
   drawn = mode;
   if (now - infoAt > 250) { infoAt = now; info(); }

@@ -229,6 +229,9 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-mode.show { opacity: 1; }
 .pres-close { position: absolute; top: max(10px, env(safe-area-inset-top)); right: 12px; flex: none; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #cbd5e1; font-size: 1.1rem; transition: opacity .4s; }
 .pres.idle .pres-close { opacity: 0; pointer-events: none; }
+.pres-spin { display: none; pointer-events: auto; margin-top: .2vmin; padding: .4vmin 1.2vmin; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 1.6vmin; font-weight: 600; letter-spacing: .12em; color: #8c98a8; cursor: pointer; }   /* solo en el Radial (debajo del reloj) */
+.pres-spin:hover { color: #cbd5e1; background: rgba(255, 255, 255, .06); }
+.pres[data-mode="3"] .pres-spin { display: block; }
 .pres-clock { margin-top: .5vh; font-size: min(4.6vw, 3.4vh); font-weight: 600; letter-spacing: .06em; font-variant-numeric: tabular-nums; color: #cbd5e1; }
 
 /* Paneles que aparecen al llevar el ratón arriba a la izquierda (control) y abajo (emisoras); en pantallas táctiles, al tocar */
