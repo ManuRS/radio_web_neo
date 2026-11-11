@@ -437,7 +437,8 @@ const wvStr = WV_PLANES.map((pl, pi) => {
     const xs = rnd() < 0.7 ? 0.04 + 0.26 * rnd() : 0, xe = rnd() < 0.7 ? 1 - 0.04 - 0.26 * rnd() : 1;   // tramo vivo de la hebra: antes y después va "muerta" (plana sobre la línea central)
     const kn = Array.from({ length: 10 }, () => 0.35 + 1.15 * rnd()), g = new Float32Array(WV_NS + 1);   // factor por zona: 10 nudos suavizados
     for (let j = 0; j <= WV_NS; j++) { const f = j / WV_NS * 9, i0 = Math.min(8, Math.floor(f)), t = f - i0, sm = t * t * (3 - 2 * t); g[j] = kn[i0] + (kn[i0 + 1] - kn[i0]) * sm; }
-    return { c, xs, xe, g, v: 0.7 + 0.6 * rnd(), p: 0.7 + 1.2 * rnd(), m: rnd(), r: 1 + 1.5 * rnd() * rnd() + 0.4 * rnd(), sp: 0.08 + 0.36 * rnd(), ph: rnd() * 6.28 };
+    return { c, xs, xe, g, v: 0.7 + 0.6 * rnd(), p: 0.6 + 1.7 * rnd(), m: Math.sqrt(rnd()), r: 1 + 2.4 * rnd() * rnd() + 0.9 * rnd(), sp: 0.08 + 0.36 * rnd(), bt: 0, ph: rnd() * 6.28,
+      id: 0.13 + 0.22 * rnd(), kw: 0.1 + 1.5 * rnd() * rnd(), br: 0.5 + 1.2 * rnd(), bp: rnd() * 6.28, ba: 0.25 + 0.4 * rnd() };
   });
 });
 
@@ -445,7 +446,7 @@ function drawWave(w, h, dt) {
   const lv = viz.levels, cy = h * 0.56, maxH = Math.min(h * 0.23, w * 0.23), margin = w * 0.05, usable = w - margin * 2;
   for (let i = 0; i < N; i++) {
     wvB[i] += (lv[i] - wvB[i]) * Math.min(1, dt * (lv[i] > wvB[i] ? 9 : 2.8));
-    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 24 : 7));
+    wvF[i] += (lv[i] - wvF[i]) * Math.min(1, dt * (lv[i] > wvF[i] ? 34 : 11));
     wvPk[i] = Math.max(wvF[i], wvPk[i] - dt * 0.1, 0.08);
     wvS[i] = wvB[i] * (0.55 + 0.45 / wvPk[i]);   // normalización a medias: mezcla del nivel real y del nivel respecto al máximo reciente de esa frecuencia (los graves siguen pesando algo más)
     wvQ[i] = wvF[i] * (0.55 + 0.45 / wvPk[i]);
@@ -483,17 +484,19 @@ function drawWave(w, h, dt) {
   for (let j = 0; j <= WV_NS; j++) px[j] = margin + usable * j / WV_NS;
   const path = (py, oy) => { ctx.beginPath(); ctx.moveTo(px[0], oy + py[0]); for (let j = 1; j <= WV_NS; j++) ctx.lineTo(px[j], oy + py[j]); };
   for (let pi = 0; pi < WV_PLANES.length; pi++) {   // del plano lejano al cercano: la sombra de cada plano oscurece al de detrás
-    const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.2 * wvK), oy = cy + h * pl.dy;
+    const pl = WV_PLANES[pi], strs = wvStr[pi], amp = maxH * pl.amp * (1 + 0.2 * wvK), oy = cy + h * pl.dy, lim = maxH * pl.amp * 1.2;
     for (let k = 0; k < pl.n; k++) {
       const st = strs[k], py = wvPts[k];
       st.ph += dt * st.sp;   // avance muy lento, distinto en cada hebra
-      const phs = pl.ph + st.ph;
+      const phs = pl.ph + st.ph, br = 1 + st.ba * Math.sin(st.bp + st.br * (st.bt += dt));   // br: la hebra respira (sube y baja por su cuenta) aunque la música sea constante
       for (let j = 0; j <= WV_NS; j++) {
         const x2 = j / WV_NS * 6.2832, gj = st.g[j], lvl = wvEnv[j] * (1 - st.m) + wvEnvF[j] * st.m;   // lvl: respuesta de esta hebra (mezcla de rápida y lenta)
-        const e = 0.05 + 1.0 * Math.pow(Math.min(1.3, lvl * st.r), st.p) * gj, d = st.c * (0.9 + 1.2 * (0.2 + 0.85 * wvEnv[j] * gj));   // e: altura (contraste propio); d: desplazamiento respecto a las demás
-        const xn = j / WV_NS, tap = xn <= st.xs || xn >= st.xe ? 0 : Math.pow(Math.sin(Math.PI * (xn - st.xs) / (st.xe - st.xs)), 0.7);   // fuera de su tramo vivo la hebra está muerta (0); todas nacen y mueren en los puntos de los extremos
+        const e = 0.05 + (1.0 * Math.pow(Math.min(1.6, lvl * st.r), st.p) + st.kw * wvK) * gj * br, d = st.c * (0.9 + 1.2 * (0.2 + 0.85 * wvEnv[j] * gj));   // e: altura (contraste propio); d: desplazamiento respecto a las demás
+        const xn = j / WV_NS, tap = xn <= st.xs || xn >= st.xe ? 0 : Math.pow(Math.sin(Math.PI * (xn - st.xs) / (st.xe - st.xs)), 0.7);   // tramo vivo; fuera de él la hebra está "parada" pero con una ondulación suave propia (idle), nunca recta; todas nacen y mueren en los extremos
+        const idle = st.id * Math.pow(Math.sin(Math.PI * xn), 0.8) * (0.7 + 0.6 * Math.min(1, lvl * st.r));
         const v = 0.72 * Math.sin(x2 * 2.2 - phs + d) + 0.36 * Math.sin(x2 * 3.7 - 0.7 * phs + 1.3 * d + 1.7) + 0.45 * wvFine[j] * Math.sin(x2 * 7 - 3 * phs + 2 * d + 0.6);
-        py[j] = -amp * (1 - 0.16 * Math.abs(st.c)) * st.v * e * tap * v;
+        py[j] = -amp * (1 - 0.16 * Math.abs(st.c)) * st.v * (e * tap + idle * (1 - tap)) * v;
+        py[j] = lim * Math.tanh(py[j] / lim);   // tope suave para que ninguna hebra se dispare hasta el título
       }
     }
     // sombras: casi negras y caídas hacia abajo
