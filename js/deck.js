@@ -282,7 +282,8 @@ export class Deck {
     const code = el.error ? el.error.code : 0;
     // la primera carga con CORS ha fallado: se prueba sin él (si funciona, la emisora no tiene CORS)
     // (con la red caída no se prueba: el fallo no dice nada del CORS)
-    if (this.cors && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
+    // (grabando tampoco: una emisora sin CORS no se podría grabar, ver recorder.js)
+    if (this.cors && !S.recording && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
       this.triedDirect = true;
       this.cors = false;
       log(this.station.name + ': falla con CORS, se prueba en modo degradado');

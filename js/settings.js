@@ -13,6 +13,7 @@ import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
 import { restartAudio } from './player.js';
+import { stopRecording } from './recorder.js';
 import { editHooks, expandGroup, refreshAccent } from './stations.js';
 import { loadCustom, saveCustom } from './custom.js';
 import { refreshDelayUi, setAutoDelay, setManualDelay } from './clock.js';
@@ -349,7 +350,8 @@ function refreshNormSwitch() {
   normSwitch.disabled = getOutMode() === 'nativa';
 }
 
-outSelect.addEventListener('change', () => {
+outSelect.addEventListener('change', async () => {
+  await stopRecording();   // el audio se va a rehacer: si se estaba grabando, se cierra y se descarga lo grabado
   setOutMode(outSelect.value);
   refreshNormSwitch();
   restartAudio();

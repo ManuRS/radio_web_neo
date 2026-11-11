@@ -83,6 +83,8 @@ export const S = {
   newsSlot: null, // franja en curso: { idx, startAbs, endAbs } (ms absolutos, ya con el retraso del stream)
   skippedSlot: -1, // franja que el usuario ha abandonado a mano (no se vuelve a entrar en ella)
   trans: null, // transición en curso
+  // ---- grabación ----
+  recording: false, // hay una grabación en curso (recorder.js): el audio no se recrea al reproducir y las emisoras degradadas no se pueden poner
 };
 
 // Deja el modo boletines sin noticias en curso (no toca el interruptor ni la franja abandonada)

@@ -11,6 +11,7 @@ import { log, setStatus, toast, updateButtons } from './ui.js';
 import { cancelTransition } from './transitions.js';
 import { clearMediaSession, scheduleMediaTitle, setPlaybackState } from './mediasession.js';
 import { refreshStations } from './stations.js';
+import { refreshRecBtn } from './recorder.js';
 
 let main = null;       // deck que suena (o al que se está entrando)
 let newsDeck = null;   // deck de la emisora de noticias, conectado en silencio a la espera de la hora
@@ -76,6 +77,7 @@ export function syncUi() {
   refreshEq();
   refreshStations();
   updateButtons(S.session !== 'off', S.newsOn && !S.prevStation);   // durante unas noticias sin música debajo se puede pulsar Reproducir
+  refreshRecBtn();
   if (S.session === 'off') {
     setStatus(S.newsMode ? 'Esperando noticias' : 'Desconectado');
   } else if (S.held) {
@@ -101,7 +103,7 @@ export function play(station = null, variant = 0) {
   S.lastStation = st;
   S.lastVariant = vi;
   S.held = false;
-  initAudioGraph(decks.size === 0);   // sin nada sonando se recrea el audio (tras cambiar de salida, p. ej. unos cascos, el anterior puede quedarse mudo)
+  initAudioGraph(decks.size === 0 && !S.recording);   // sin nada sonando se recrea el audio (tras cambiar de salida, p. ej. unos cascos, el anterior puede quedarse mudo); grabando no, se cortaría la grabación
   if (S.newsOn) {
     // se pulsa Reproducir durante unas noticias: siguen sonando y al acabar se vuelve a esta emisora
     S.prevStation = st;

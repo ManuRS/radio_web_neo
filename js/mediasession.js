@@ -7,7 +7,8 @@ import { S, APP_TITLE } from './state.js';
 import { log } from './ui.js';
 import { getSoundData } from './sounds.js';
 import { anyPlaying } from './audio.js';
-import { holdPlayback, play, resumePlayback, stopAll, wake } from './player.js';
+import { holdPlayback, play, resumePlayback, wake } from './player.js';
+import { requestStop } from './recorder.js';
 import { stepStation } from './stations.js';
 import { emisoraName } from './utils.js';
 
@@ -82,7 +83,7 @@ export function setPlaybackState(state) {
 if (mediaSessionOk()) {
   try {
     navigator.mediaSession.setActionHandler('pause', () => holdPlayback());
-    navigator.mediaSession.setActionHandler('stop', () => stopAll());
+    navigator.mediaSession.setActionHandler('stop', () => requestStop());
     navigator.mediaSession.setActionHandler('play', () => { if (S.held) resumePlayback(); else if (S.session === 'off') play(); else wake(); });   // wake: el audio lo pausó otra app o el sistema
     navigator.mediaSession.setActionHandler('previoustrack', () => stepStation(-1));
     navigator.mediaSession.setActionHandler('nexttrack', () => stepStation(1));

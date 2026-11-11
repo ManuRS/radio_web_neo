@@ -11,10 +11,16 @@ import { applyAccent, setText } from './ui.js';
 import { switchStation } from './transitions.js';
 import { play, stopAll, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
+import { corsAllowed } from './deck.js';
+import { toast } from './ui.js';
 
 // Edición de las emisoras desde la rejilla (arrastrar para reordenar; clic derecho para añadir una variante o eliminar): settings.js rellena estas funciones y escribe el JSON
 // Cada función devuelve (o resuelve con) el texto del error, o nada si todo fue bien. addVariant(id, url, nombre) comprueba la URL; rename(id, nombre, corto, nombresVariantes) cambia los nombres
 export const editHooks = { move: null, remove: null, removeVariant: null, addVariant: null, rename: null };
+
+// Grabando, las emisoras sin CORS (modo degradado) no se pueden poner: su audio no llega a la grabación (ver recorder.js)
+const recBlocked = (st, vi) => S.recording && !corsAllowed(st, vi);
+const REC_BLOCK_MSG = 'Esta emisora no se puede grabar';
 
 const GROUPS = [{ id: 'general', title: 'Generalistas' }, { id: 'musical', title: 'Musicales' }];
 const LAST_KEY = 'rn_last';
@@ -273,6 +279,7 @@ function variantLabel(st, i) {
 }
 // Sintonizar una variante concreta desde el menú
 function pickVariant(st, vi) {
+  if (recBlocked(st, vi)) { toast(REC_BLOCK_MSG); return; }
   if (S.session === 'off') { saveLast(st, vi); play(st, vi); return; }
   if (S.current === st && S.variant === vi) return;   // ya suena
   selectStation(st, vi);
@@ -407,6 +414,7 @@ function openMenu(x, y, st) {
       go.setAttribute('role', 'menuitem');
       go.textContent = variantLabel(st, i);
       if (S.current === st && S.variant === i) go.classList.add('on');   // la que suena
+      if (recBlocked(st, i)) { go.disabled = true; go.classList.add('recoff'); go.title = REC_BLOCK_MSG; }
       go.addEventListener('click', () => { closeMenu(); pickVariant(st, i); });
       row.append(go, deleteButton(i, 'Eliminar ' + variantLabel(st, i)));
       list.appendChild(row);
@@ -472,13 +480,19 @@ export const blocksNews = st => !!st && st.group !== 'musical' && !st.news;
 // ===========================
 // Un clic suena esa cadena (en la emisora donde se dejó); otro clic mientras suena pasa a su siguiente emisora (si tiene más de una). Parado, el clic la elige y la pone a sonar.
 function onStationClick(st) {
-  if (S.session === 'off') { const vi = posOf(st); saveLast(st, vi); play(st, vi); return; }
-  if (S.current === st) {
+  if (S.current === st && S.session !== 'off') {
     if (st.urls.length < 2) return;   // ya suena
-    selectStation(st, (S.variant + 1) % st.urls.length);
+    // la siguiente emisora de la cadena (grabando, se saltan las que no se pueden grabar)
+    for (let k = 1; k < st.urls.length; k++) {
+      const vi = (S.variant + k) % st.urls.length;
+      if (!recBlocked(st, vi)) { selectStation(st, vi); return; }
+    }
     return;
   }
-  selectStation(st, posOf(st));   // retoma la emisora de la cadena donde se dejó
+  const vi = posOf(st);   // retoma la emisora de la cadena donde se dejó
+  if (recBlocked(st, vi)) { toast(REC_BLOCK_MSG); return; }
+  if (S.session === 'off') { saveLast(st, vi); play(st, vi); return; }
+  selectStation(st, vi);
 }
 
 export function selectStation(st, vi = 0) {
@@ -510,7 +524,12 @@ export function stepStation(dir) {
   if (!base) return;
   const list = S.stations.filter(s => s.group === base.group);
   const i = Math.max(0, list.indexOf(base));
-  const next = list[(i + dir + list.length) % list.length];
+  let next = null;
+  for (let k = 1; k <= list.length; k++) {   // grabando, se saltan las que no se pueden grabar
+    const c = list[(i + dir * k + list.length * k) % list.length];
+    if (!recBlocked(c, posOf(c))) { next = c; break; }
+  }
+  if (!next || next === S.current) return;
   const vi = posOf(next);
   if (S.session === 'off') { saveLast(next, vi); play(next, vi); } else selectStation(next, vi);
 }
@@ -549,6 +568,10 @@ export function refreshStations() {
     const st = g.list[i];
     const active = S.current === st;
     b.classList.toggle('active', active);
+    const off = !active && recBlocked(st, posOf(st));   // grabando: su emisora no se puede grabar
+    b.classList.toggle('recoff', off);
+    if (off) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
+    b.title = off ? REC_BLOCK_MSG : '';
     setText(g.labels[i], emisoraSub(st, active));   // bajo el nombre, solo en la elegida y con varias emisoras: "10 emisoras"
   }));
   refreshNow();

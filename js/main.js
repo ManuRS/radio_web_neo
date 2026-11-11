@@ -13,8 +13,9 @@ import { ensureSounds, ARTWORK_URL } from './sounds.js';
 import { buildStations, refreshStations, restoreLast } from './stations.js';
 import { rebuildSlots, slotPlan, tick } from './boletines.js';
 import { loadArtwork } from './mediasession.js';
-import { play, stopAll, syncUi } from './player.js';
+import { play, syncUi } from './player.js';
 import { initClock } from './clock.js';
+import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
 import './importer.js';
 
@@ -75,7 +76,7 @@ initSettingsDialog(applyConfig, applyLive);
 initClock();
 refreshVolumeUi();
 toggle.addEventListener('click', () => play());
-stop.addEventListener('click', () => stopAll());
+stop.addEventListener('click', () => requestStop());   // grabando, se pregunta antes (ver recorder.js)
 
 // Los ajustes guardados en el navegador mandan; si no hay (o no son válidos), los de por defecto (stations.json)
 async function loadSettings() {
@@ -107,5 +108,6 @@ loadSettings().then(source => {
   tick();
   setInterval(tick, 1000);
   runCustom();   // personalizar.js (si el usuario lo ha subido): lo último de todo
+  checkUnfinished();   // si quedó una grabación a medias (se cerró la página grabando), se ofrece descargarla
   if (source === 'guardados') syncDefaults();   // por detrás: las cadenas por defecto que no se han tocado se ponen al día con stations.json
 });

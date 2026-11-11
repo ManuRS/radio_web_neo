@@ -23,6 +23,8 @@ const OUT_KEY = 'rn_salida';
 let outMode = 'webaudio';
 try { if (localStorage.getItem(OUT_KEY) === 'nativa') outMode = 'nativa'; } catch (_) {}
 export const getOutMode = () => outMode;
+// Punto del que graba recorder.js: tras la normalización y el ecualizador, antes del volumen (null sin Web Audio)
+export const getRecTap = () => eqPre;
 export function setOutMode(mode) {
   outMode = mode === 'nativa' ? 'nativa' : 'webaudio';
   try { localStorage.setItem(OUT_KEY, outMode); } catch (_) {}
