@@ -2,6 +2,8 @@
 // == VISUALIZADOR DE BARRAS ==
 // ============================
 // Dibuja barras que se mueven con el sonido. Se alimenta de un AnalyserNode (ver attach) y no conoce nada más de la aplicación.
+// Estéreo (setStereo, solo mientras lo pide el Radial): el analizador pasa a medir el canal izquierdo y uno segundo, el derecho; al quitarlo,
+// el segundo se destruye y todo vuelve a un único analizador. levelsL y levelsR tienen siempre valor (sin estéreo, iguales a levels).
 // Con una emisora que no pasa por Web Audio (modo degradado, ver setSynthetic) no hay nada que analizar: las barras se mueven con un movimiento
 // orgánico sintético, como en Radio Web Fast.
 
@@ -22,8 +24,9 @@ export const shade = (hex, k) => '#' + [1, 3, 5].map(i => Math.round(parseInt(he
 export function createVisualizer(canvas, isPaused) {
   const ctx2d = canvas.getContext('2d');
   const BARS = 36;
-  const barLevels = new Array(BARS).fill(0);
-  let audioCtx = null, analyser = null, freqData = null, binRanges = null;
+  const barLevels = new Array(BARS).fill(0), levelsL = new Array(BARS).fill(0), levelsR = new Array(BARS).fill(0);
+  let audioCtx = null, analyser = null, freqData = null, binRanges = null, src = null;
+  let stereoOn = false, up = null, split = null, anR = null, freqR = null;   // estéreo: nodos que solo existen mientras está activo
   let running = false, looping = false;
   let colTop = DEF_TOP, colBottom = DEF_BOTTOM, fadeId = 0, first = true;
   let synth = false, smooth = false, tSyn = 0, lastT = 0;
@@ -54,6 +57,35 @@ export function createVisualizer(canvas, isPaused) {
       if (b1 <= b0) b1 = b0 + 1;
       binRanges.push([b0, Math.min(b1, bins)]);
     }
+  }
+  // Estéreo: src → up (una emisora mono pasa a dos canales iguales; el divisor no sabe hacerlo) → divisor → izquierdo al analizador de siempre y
+  // derecho a uno segundo. Al quitarlo se desmonta todo y src vuelve a ir directo al analizador
+  function wireStereo(on) {
+    if (on && !split && src && analyser && audioCtx) {
+      try {
+        up = audioCtx.createGain();
+        up.channelCount = 2; up.channelCountMode = 'explicit'; up.channelInterpretation = 'speakers';
+        split = audioCtx.createChannelSplitter(2);
+        anR = audioCtx.createAnalyser();
+        anR.fftSize = analyser.fftSize; anR.smoothingTimeConstant = analyser.smoothingTimeConstant;
+        anR.minDecibels = analyser.minDecibels; anR.maxDecibels = analyser.maxDecibels;
+        freqR = new Uint8Array(anR.frequencyBinCount);
+        src.disconnect(analyser);
+        src.connect(up); up.connect(split); split.connect(analyser, 0); split.connect(anR, 1);
+      } catch (_) { wireStereo(false); }
+    } else if (!on && split) {
+      try { src.disconnect(up); } catch (_) {}
+      for (const n of [up, split, anR]) { try { n.disconnect(); } catch (_) {} }
+      up = split = anR = freqR = null;
+      try { src.connect(analyser); } catch (_) {}
+    }
+  }
+  // nivel (0 a 1) de la franja i con los datos de un analizador
+  function band(data, i) {
+    const [b0, b1] = binRanges[i];
+    let sum = 0;
+    for (let b = b0; b < b1; b++) sum += data[b];
+    return Math.min(1, (sum / (b1 - b0)) / 255 * (0.9 + 0.7 * i / (BARS - 1)));   // compensa la caída natural de agudos
   }
   // El degradado solo se recrea si cambia el alto o el color
   let grad = null, gradH = 0;
@@ -98,29 +130,39 @@ export function createVisualizer(canvas, isPaused) {
     } else if (live) {
       analyser.getByteFrequencyData(freqData);
       const rise = 1 - Math.exp(-dt / SMOOTH_TAU);
-      for (let i = 0; i < BARS; i++) {
-        const [b0, b1] = binRanges[i];
-        let sum = 0;
-        for (let b = b0; b < b1; b++) sum += freqData[b];
-        const v = (sum / (b1 - b0)) / 255;
-        const target = Math.min(1, v * (0.9 + 0.7 * i / (BARS - 1))); // compensa la caída natural de agudos
-        // suavizado: la subida se acerca al nivel nuevo en vez de saltar a él (el analizador se actualiza a golpes cuando el móvil procesa el audio por bloques grandes)
-        barLevels[i] = target > barLevels[i] ? (smooth ? barLevels[i] + (target - barLevels[i]) * rise : target) : Math.max(target, barLevels[i] - 0.035);
+      // suavizado: la subida se acerca al nivel nuevo en vez de saltar a él (el analizador se actualiza a golpes cuando el móvil procesa el audio por bloques grandes)
+      const step = (cur, target) => target > cur ? (smooth ? cur + (target - cur) * rise : target) : Math.max(target, cur - 0.035);
+      if (anR) {
+        // estéreo: cada canal por su lado; levels (para el resto de la presentación y la página) es la media de los dos
+        anR.getByteFrequencyData(freqR);
+        for (let i = 0; i < BARS; i++) {
+          levelsL[i] = step(levelsL[i], band(freqData, i));
+          levelsR[i] = step(levelsR[i], band(freqR, i));
+          barLevels[i] = (levelsL[i] + levelsR[i]) / 2;
+        }
+      } else {
+        for (let i = 0; i < BARS; i++) barLevels[i] = step(barLevels[i], band(freqData, i));
       }
     } else {
       for (let i = 0; i < BARS; i++) barLevels[i] = Math.max(0, barLevels[i] - 0.05);
     }
+    if (!anR || !live) for (let i = 0; i < BARS; i++) levelsL[i] = levelsR[i] = barLevels[i];   // sin estéreo, los dos lados son el mismo
     draw();
     if (running || barLevels.some(l => l > 0.01)) requestAnimationFrame(frame);
     else looping = false;
   }
   return {
     // conecta el analizador (cuando se crea el grafo de audio)
-    attach(ac, an) {
-      audioCtx = ac; analyser = an;
+    // src: el nodo que alimenta al analizador (hace falta para separar los canales en el estéreo)
+    attach(ac, an, s) {
+      up = split = anR = freqR = null;   // los nodos del estéreo eran del grafo anterior
+      audioCtx = ac; analyser = an; src = s || null;
       freqData = new Uint8Array(an.frequencyBinCount);
       computeBinRanges();
+      if (stereoOn) wireStereo(true);
     },
+    // true = mide los dos canales por separado (levelsL, levelsR); false = un solo analizador, como siempre
+    setStereo(on) { stereoOn = !!on; wireStereo(stereoOn); },
     // color de énfasis ("#rrggbb"); vacío o no válido = el verde por defecto
     // Cambia el color de las barras con una transición suave (misma duración que la de --accent en el CSS)
     setAccent(hex) {
@@ -149,6 +191,7 @@ export function createVisualizer(canvas, isPaused) {
     draw,
     get looping() { return looping; },
     levels: barLevels,                       // nivel actual de cada barra (0 a 1), para otras vistas como el modo presentación
+    levelsL, levelsR,                        // lo mismo por canal (con el estéreo activo; si no, iguales a levels)
     get analyser() { return analyser; },     // analizador del audio (para vistas que usan la forma de onda)
     get accent() { return colTop; },         // color actual de las barras ("#rrggbb", con la transición ya aplicada)
   };

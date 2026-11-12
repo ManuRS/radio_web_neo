@@ -4,7 +4,7 @@
 // Pantalla completa con un visualizador grande (botón en la esquina del visualizador de la página). Siete vistas, que se cambian tocando la pantalla
 // (o con las flechas y el espacio), en este orden:
 //   Espectro      barras grandes con reflejo, picos que caen, halo que late con los graves y partículas
-//   Radial        las barras en círculo alrededor de la emisora; botón "Giro on/off" para parar su giro
+//   Radial        las barras en círculo alrededor de la emisora; un botón alterna el giro y el estéreo (Sin Giro, Sin Giro ST, Con Giro, Con Giro ST)
 //   Océano        una gran ola de puntos de luz que se levanta con cada golpe de graves (sin textos)
 //   Vórtice       la forma de onda real en anillo con realimentación, que cambia de figura cada pocos golpes (sin textos)
 //   Seda          cintas de luz finas, una por franja de frecuencias
@@ -28,7 +28,7 @@ import { emisoraName } from './utils.js';
 import { mix, shade } from './viz.js';
 
 const MODE_KEY = 'rn_pres';
-const SPIN_KEY = 'rn_giro';   // Radial: '0' = barras sin girar
+const SPIN_KEY = 'rn_giro';   // Radial: '0' sin giro, '1' con giro; con una 's' detrás, en estéreo (ST)
 const MODES = ['Espectro', 'Radial', 'Océano', 'Vórtice', 'Seda', 'Onda', 'Onda de seda'];   // (las reglas CSS por vista usan este orden: Radial = 1, Océano = 2, Vórtice = 3)
 const [SPECTRUM, RADIAL, OCEAN, VORTEX, SILK_MODE, WAVE, SILK_WAVE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
@@ -87,11 +87,14 @@ function analyse(lv, dt, now) {
   spin += dt * (0.25 + energy * 2.5);
   if (now - beatAt > 3000) tempo = follow(tempo, 0, dt, 0.2);   // sin golpes de graves, el tempo se olvida poco a poco
   movePalette(dt);
-  // picos: suben con la barra, se quedan un momento y caen acelerando
+  trackPeaks(lv, peaks, hold, fall, dt);
+}
+// picos: suben con la barra, se quedan un momento y caen acelerando
+function trackPeaks(lv, pk, hd, fl, dt) {
   for (let i = 0; i < N; i++) {
-    if (lv[i] >= peaks[i]) { peaks[i] = lv[i]; hold[i] = PEAK_HOLD_S; fall[i] = 0; }
-    else if (hold[i] > 0) hold[i] -= dt;
-    else { fall[i] += dt * 2.4; peaks[i] = Math.max(lv[i], peaks[i] - fall[i] * dt); }
+    if (lv[i] >= pk[i]) { pk[i] = lv[i]; hd[i] = PEAK_HOLD_S; fl[i] = 0; }
+    else if (hd[i] > 0) hd[i] -= dt;
+    else { fl[i] += dt * 2.4; pk[i] = Math.max(lv[i], pk[i] - fl[i] * dt); }
   }
 }
 
@@ -207,17 +210,30 @@ function drawSpectrum(w, h, c, levels) {
 // ==================
 // == VISTA RADIAL ==
 // ==================
-// Giro de las barras: se puede parar con el botón "Giro on/off" de debajo del reloj. Al pararlo, las barras siguen girando a su ritmo hasta volver a su
-// posición de reposo (graves abajo), y ahí se quedan.
-let spinOn = true, barRot = 0, radSpin = 0;
-try { spinOn = localStorage.getItem(SPIN_KEY) !== '0'; } catch (_) {}
-function showSpin() { presSpin.textContent = spinOn ? 'Giro on' : 'Giro off'; presSpin.setAttribute('aria-pressed', String(spinOn)); }
+// El botón de debajo del reloj pasa por cuatro modos: Sin Giro → Sin Giro ST → Con Giro → Con Giro ST.
+// Giro: al pararlo, las barras siguen girando a su ritmo hasta volver a su posición de reposo (graves abajo), y ahí se quedan.
+// ST (estéreo): el canal izquierdo a la izquierda y el derecho a la derecha, en vez del mismo en espejo. El segundo analizador que hace falta solo
+// existe mientras se ve el Radial en ST (syncStereo); al salir se destruye.
+let spinOn = true, stOn = false, barRot = 0, radSpin = 0, stLive = false;
+try { const v = localStorage.getItem(SPIN_KEY) || '1'; spinOn = v[0] !== '0'; stOn = v.endsWith('s'); } catch (_) {}
+const peaksL = new Float32Array(N), holdL = new Float32Array(N), fallL = new Float32Array(N);
+const peaksR = new Float32Array(N), holdR = new Float32Array(N), fallR = new Float32Array(N);
+function showSpin() { presSpin.textContent = (spinOn ? 'Con Giro' : 'Sin Giro') + (stOn ? ' ST' : ''); }
 showSpin();
+function syncStereo() {
+  const on = open && mode === RADIAL && stOn;
+  if (on === stLive) return;
+  stLive = on;
+  if (on) { for (const a of [peaksL, peaksR]) a.set(peaks); for (const a of [holdL, holdR]) a.set(hold); for (const a of [fallL, fallR]) a.set(fall); }   // los picos parten de los de ahora
+  viz.setStereo(on);
+}
 presSpin.addEventListener('click', e => {
   e.stopPropagation();   // no cambia de vista
-  spinOn = !spinOn;
-  try { localStorage.setItem(SPIN_KEY, spinOn ? '1' : '0'); } catch (_) {}
+  const k = ((spinOn ? 2 : 0) + (stOn ? 1 : 0) + 1) % 4;
+  spinOn = k >= 2; stOn = k % 2 === 1;
+  try { localStorage.setItem(SPIN_KEY, (spinOn ? '1' : '0') + (stOn ? 's' : '')); } catch (_) {}
   showSpin();
+  syncStereo();
   presSpin.blur();   // que el teclado vuelva a cambiar de vista
 });
 function turnBars(dt) {
@@ -272,14 +288,17 @@ function drawRadial(w, h, c, lv, dt) {
   ctx.lineWidth = 3;
   ctx.beginPath(); ctx.arc(cx, cy, R + maxLen * 1.12, 0, TAU); ctx.stroke();
   ctx.restore();
-  // barras en círculo: graves abajo, agudos arriba, iguales a izquierda y derecha
+  // barras en círculo: graves abajo, agudos arriba; iguales a izquierda y derecha o, en ST, cada canal en su lado (s = 1 derecha, s = -1 izquierda)
+  const lvR = stLive ? viz.levelsR : lv, lvL = stLive ? viz.levelsL : lv, pkR = stLive ? peaksR : peaks, pkL = stLive ? peaksL : peaks;
+  if (stLive) { trackPeaks(lvL, peaksL, holdL, fallL, dt); trackPeaks(lvR, peaksR, holdR, fallR, dt); }
+  const sides = stLive ? [[1], [-1]] : [[1, -1]];   // en espejo, las dos mitades van en un solo trazo
   ctx.lineWidth = lw;
   const rot = barRot, dark = shade(c, 0.7);   // rot: giro de las barras en sentido horario (ver turnBars)
-  for (let i = 0; i < N; i++) {
-    const l = ease(lv[i]), len = 3 + l * maxLen, a = i / (N - 1) * Math.PI;   // las barras giran despacio en sentido horario (rot)
+  for (let i = 0; i < N; i++) for (const side of sides) {
+    const l = ease((side[0] === 1 ? lvR : lvL)[i]), len = 3 + l * maxLen, a = i / (N - 1) * Math.PI;   // las barras giran despacio en sentido horario (rot)
     ctx.strokeStyle = mix(dark, '#ffffff', l * 0.6);
     ctx.beginPath();
-    for (const s of [1, -1]) {
+    for (const s of side) {
       const t = Math.PI / 2 - s * a + rot, cos = Math.cos(t), sin = Math.sin(t), r0 = R + (rr - R) * 0.3 + lw;   // las barras se apartan solo en parte, para no salirse de la pantalla
       ctx.moveTo(cx + cos * r0, cy + sin * r0);
       ctx.lineTo(cx + cos * (r0 + len), cy + sin * (r0 + len));
@@ -290,10 +309,11 @@ function drawRadial(w, h, c, lv, dt) {
   ctx.fillStyle = mix(c, '#ffffff', 0.75);
   ctx.beginPath();
   for (let i = 0; i < N; i++) {
-    if (peaks[i] <= 0.03) continue;
-    const a = i / (N - 1) * Math.PI, d = rr + lw + 3 + ease(peaks[i]) * maxLen + lw;
+    const a = i / (N - 1) * Math.PI;
     for (const s of [1, -1]) {
-      const t = Math.PI / 2 - s * a + rot;
+      const p = (s === 1 ? pkR : pkL)[i];
+      if (p <= 0.03) continue;
+      const d = rr + lw + 3 + ease(p) * maxLen + lw, t = Math.PI / 2 - s * a + rot;
       ctx.moveTo(cx + Math.cos(t) * d + lw / 3, cy + Math.sin(t) * d);
       ctx.arc(cx + Math.cos(t) * d, cy + Math.sin(t) * d, lw / 3, 0, TAU);
     }
@@ -1032,6 +1052,7 @@ function setMode(m) {
   try { localStorage.setItem(MODE_KEY, MODES[mode]); } catch (_) {}
   presEl.dataset.mode = String(mode);
   presMode.textContent = MODES[mode];
+  syncStereo();
   presMode.classList.add('show');
   clearTimeout(modeTimer);
   modeTimer = setTimeout(() => presMode.classList.remove('show'), 1600);
@@ -1051,6 +1072,7 @@ function openPres(full) {
   fsUsed = !!full;
   presEl.hidden = false;
   presEl.dataset.mode = String(mode);
+  syncStereo();
   last = performance.now();
   infoAt = 0;
   ptr.x = ptr.y = -1;
@@ -1064,6 +1086,7 @@ function openPres(full) {
 function closePres() {
   if (!open) return;
   open = false;
+  syncStereo();
   cancelAnimationFrame(raf);
   drawn = -1;
   clearTimeout(idleTimer);

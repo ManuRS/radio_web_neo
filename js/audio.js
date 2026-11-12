@@ -113,7 +113,7 @@ export function initAudioGraph(fresh = false) {
       analyser.minDecibels = -85;
       analyser.maxDecibels = -20;
       eqHigh.connect(analyser);   // las barras muestran el efecto del ecualizador
-      viz.attach(S.audioCtx, analyser);
+      viz.attach(S.audioCtx, analyser, eqHigh);
     } catch (err) {
       analyser = null;
       log('Visualización no disponible: ' + err.message);
