@@ -101,6 +101,7 @@ input[type="range"]:disabled { opacity: .4; }
 .rec-time:empty { display: none; }
 .now .rec.on { width: auto; padding: 0 13px 0 12px; border-color: #e5484d; background: #2a1d22; }
 .rec.on .rec-dot { animation: rec-pulse 1.2s ease-in-out infinite; }
+.rec.on.paused .rec-dot { animation: none; opacity: .45; }   /* en espera (radio en pausa o parada): el punto no parpadea */
 @keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .rec.on .rec-dot { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .ps.pending, .pres-ps.pending { animation: none; opacity: .6; } }

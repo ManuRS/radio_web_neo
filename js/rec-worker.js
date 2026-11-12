@@ -10,6 +10,7 @@ importScripts('../vendor/wasm-media-encoder.min.js');
 
 const VBR_QUALITY = 4;   // LAME -V4: suficiente para streams de radio (no traen más calidad); el bitrate sube y baja según lo que suena
 const MARK_EVERY = 64;   // cada cuántas tramas se apunta su posición en bytes (para el índice de la cabecera)
+const MAX_MARKS = 2048;  // al llegar aquí se quita una de cada dos y se apuntan la mitad de veces: el índice no crece sin fin en grabaciones largas
 const DB_NAME = 'rn_rec';
 
 let enc = null, db = null, meta = null;
@@ -62,7 +63,10 @@ function count(bytes) {
     if (!n) { i++; continue; }   // no debería pasar: LAME solo saca tramas enteras
     if (i + n > b.length) break;
     if (!meta.hdr) meta.hdr = [b[i], b[i + 1], b[i + 2], b[i + 3]];
-    if (meta.frames % MARK_EVERY === 0) meta.marks.push(base + i);
+    if (meta.frames % meta.step === 0) {
+      if (meta.marks.length >= MAX_MARKS) { meta.marks = meta.marks.filter((_, k) => k % 2 === 0); meta.step *= 2; }
+      if (meta.frames % meta.step === 0) meta.marks.push(base + i);
+    }
     meta.frames++;
     i += n;
   }
@@ -122,7 +126,7 @@ onmessage = async e => {
     enc = await WasmMediaEncoder.createEncoder('audio/mpeg', wasm);
     enc.configure({ channels: 2, sampleRate: m.sampleRate, vbrQuality: VBR_QUALITY });
     db = await openDb();
-    meta = { id: m.id, name: m.name, start: m.start, sr: m.sampleRate, seq: 0, bytes: 0, frames: 0, samples: 0, dur: 0, marks: [], hdr: null, t: Date.now() };
+    meta = { id: m.id, name: m.name, start: m.start, sr: m.sampleRate, seq: 0, bytes: 0, frames: 0, samples: 0, dur: 0, marks: [], step: MARK_EVERY, hdr: null, t: Date.now() };
     await put(null, meta);
     m.port.onmessage = onPcm;
     postMessage({ ready: true });

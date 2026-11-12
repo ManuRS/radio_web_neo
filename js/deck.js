@@ -7,7 +7,7 @@
 // El deck no sabe nada del audio de la página: audio.js le conecta los nodos de Web Audio mediante los ganchos (hooks) que recibe.
 
 import { S, LIVE_MARGIN_S, LIVE_RESUME_SLACK_S, LIVE_SLACK_S, RETRY_S, STALL_S } from './state.js';
-import { log } from './ui.js';
+import { log, toast } from './ui.js';
 
 // ===========
 // == HLS.JS ==
@@ -282,8 +282,13 @@ export class Deck {
     const code = el.error ? el.error.code : 0;
     // la primera carga con CORS ha fallado: se prueba sin él (si funciona, la emisora no tiene CORS)
     // (con la red caída no se prueba: el fallo no dice nada del CORS)
-    // (grabando tampoco: una emisora sin CORS no se podría grabar, ver recorder.js)
-    if (this.cors && !S.recording && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
+    // (grabando no se prueba: una emisora sin CORS no se podría grabar, ver recorder.js)
+    if (this.cors && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
+      if (S.recording) {   // no se insiste: se avisa y se renuncia (al cambiar de emisora, sigue sonando la anterior)
+        toast('Esta emisora no se puede grabar');
+        this.fail('falla con CORS; grabando no se prueba el modo degradado');
+        return;
+      }
       this.triedDirect = true;
       this.cors = false;
       log(this.station.name + ': falla con CORS, se prueba en modo degradado');

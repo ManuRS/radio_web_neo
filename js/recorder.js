@@ -16,6 +16,7 @@ import { getMain, stopAll } from './player.js';
 
 const DB_NAME = 'rn_rec';
 const LOCK_PREFIX = 'rn-rec-';        // mientras se graba, la pestaña tiene este candado: otra pestaña no la confunde con una grabación abandonada
+const IDLE_STOP_MS = 5 * 60000;       // grabando sin nada sonando (la radio se paró sola): pasado este tiempo, la grabación se cierra y se descarga
 const STALE_MS = 15000;               // sin candados en el navegador: una grabación sin trozos nuevos desde hace esto se da por abandonada
 
 const recBtn = document.getElementById('recBtn');
@@ -28,7 +29,7 @@ const askNo = document.getElementById('askNo');
 
 const supported = typeof AudioWorkletNode !== 'undefined' && typeof Worker !== 'undefined' && typeof indexedDB !== 'undefined';
 
-let rec = null;   // grabación en curso: { id, name, start, worker, node, sink, unlock, stopping }
+let rec = null;   // grabación en curso: { id, name, start, t0, paused, pauseAt, idleSince, worker, node, sink, unlock, stopping }
 let timer = 0;
 
 // ==================
@@ -75,7 +76,7 @@ async function deleteRec(id) {
 // ===============================
 // LAME, usado por trozos, no escribe la cabecera de bitrate variable: sin ella los reproductores calculan mal la duración y saltan mal.
 // Se añade al principio una trama vacía con la etiqueta "Xing": número de tramas, tamaño y un índice de 100 posiciones (meta.marks
-// guarda dónde empieza cada 64ª trama).
+// guarda dónde empieza una de cada meta.step tramas).
 const BR1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320];
 const BR2 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160];
 const SR = [44100, 48000, 32000];
@@ -103,9 +104,9 @@ function xingFrame(meta) {
   const total = size + meta.bytes;
   dv.setUint32(o + 12, total);
   const posOfFrame = k => {                        // posición aproximada de la trama k (entre dos marcas, a partes iguales)
-    const m = meta.marks, j = Math.min(m.length - 1, Math.floor(k / 64));
-    const a = m[j], b = j + 1 < m.length ? m[j + 1] : meta.bytes, span = j + 1 < m.length ? 64 : Math.max(1, meta.frames - j * 64);
-    return a + (b - a) * Math.min(1, (k - j * 64) / span);
+    const m = meta.marks, st = meta.step || 64, j = Math.min(m.length - 1, Math.floor(k / st));
+    const a = m[j], b = j + 1 < m.length ? m[j + 1] : meta.bytes, span = j + 1 < m.length ? st : Math.max(1, meta.frames - j * st);
+    return a + (b - a) * Math.min(1, (k - j * st) / span);
   };
   for (let i = 0; i < 100; i++) f[o + 16 + i] = Math.min(255, Math.floor((size + posOfFrame(Math.floor(i / 100 * meta.frames))) / total * 256));
   return f;
@@ -167,7 +168,7 @@ async function start() {
       worker.onmessage = e => {
         const m = e.data || {};
         if (m.ready) { r.ready = true; res(); }
-        else if (m.error) { if (r.ready) onWorkerError(r, m.error); else rej(new Error(m.error)); }
+        else if (m.error) { if (r.done) { log('Grabación: ' + m.error); r.done(); } else if (r.ready) onWorkerError(r, m.error); else rej(new Error(m.error)); }   // fallo al cerrar: se guarda ya lo que haya
         else if (m.done && r.done) r.done();
       };
       worker.onerror = e => { const msg = (e && e.message) || 'Error del grabador'; if (r.ready) onWorkerError(r, msg); else rej(new Error(msg)); };
@@ -183,7 +184,7 @@ async function start() {
     tap.connect(node);
     node.connect(sink);
     sink.connect(ac.destination);
-    r.start = Date.now();
+    r.t0 = ac.currentTime;   // el contador va con el reloj del audio: si el sistema lo suspende (una llamada), no cuenta lo que no se graba
     log('Grabando: ' + r.name + '.mp3');
     timer = setInterval(refreshRecBtn, 500);
     refreshRecBtn();
@@ -241,6 +242,31 @@ export function stopRecording() {
   return r.stopping;
 }
 
+// ==========================
+// == PAUSA Y RADIO PARADA ==
+// ==========================
+// Con la radio en pausa, o parada sin haber parado la grabación (el navegador bloqueó el audio, la emisora no conecta…), no se graba el silencio:
+// la grabación espera y sigue cuando vuelve a sonar. La pausa puede durar lo que sea; parada, a los 5 minutos se cierra y se descarga sola.
+function checkPause(r) {
+  if (!r.node || r.stopping || !S.audioCtx) return;
+  const main = getMain();
+  const idle = !S.held && (S.session === 'off' || !main || main.state === 'failed');
+  const paused = S.held || idle;
+  if (paused !== !!r.paused) {
+    r.paused = paused;
+    r.node.port.postMessage({ pause: paused });
+    if (paused) r.pauseAt = S.audioCtx.currentTime; else r.t0 += S.audioCtx.currentTime - r.pauseAt;
+    log(paused ? 'Grabación en espera: no suena nada' : 'La grabación continúa');
+  }
+  if (!idle) r.idleSince = 0;
+  else if (!r.idleSince) r.idleSince = Date.now();
+  else if (Date.now() - r.idleSince > IDLE_STOP_MS) {
+    log('Grabación cerrada: 5 minutos sin nada sonando');
+    toast('Grabación cerrada: 5 minutos sin nada sonando', 5000);
+    stopRecording();
+  }
+}
+
 // ==================
 // == BOTÓN ==
 // ==================
@@ -250,14 +276,16 @@ export function refreshRecBtn() {
   const show = supported && getOutMode() !== 'nativa';
   recBtn.hidden = !show;
   if (!show) return;
+  if (rec) checkPause(rec);
   const on = !!rec;
   recBtn.classList.toggle('on', on);
+  recBtn.classList.toggle('paused', on && !!rec.paused);
   const main = getMain();
   const canStart = !!S.audioCtx && !!main && main.state === 'playing' && !S.degraded && S.session !== 'off' && !S.held;
-  recBtn.disabled = on ? !!rec.stopping : !canStart;
+  recBtn.disabled = on ? !!rec.stopping || !rec.node : !canStart;   // arrancando, apagado: un segundo toque no la para nada más empezar
   const label = on ? 'Parar la grabación' : S.degraded && main ? 'Esta emisora no se puede grabar' : 'Grabar';
   if (recBtn.title !== label) { recBtn.title = label; recBtn.setAttribute('aria-label', label); }
-  const t = on ? fmtDur((Date.now() - rec.start) / 1000) : '';
+  const t = on ? fmtDur(rec.node && S.audioCtx ? (rec.paused ? rec.pauseAt : S.audioCtx.currentTime) - rec.t0 : 0) : '';
   if (recTime.textContent !== t) recTime.textContent = t;
 }
 
