@@ -267,8 +267,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-ctl { top: 12px; left: 12px; width: min(300px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 12px; padding: 12px 14px; transform: translateY(-8px); }
 .pres-strip { left: 12px; right: 12px; bottom: 12px; display: flex; gap: 8px; padding: 8px; overflow-x: auto; overscroll-behavior: contain; touch-action: pan-x; scrollbar-width: none; -ms-overflow-style: none; transform: translateY(8px); }
 .pres-strip::-webkit-scrollbar { display: none; }
-.pres-strip { cursor: grab; }   /* se puede arrastrar */
-.pres-strip .preset { cursor: inherit; }
+.pres-strip .preset:not(:disabled):not(.recoff) { cursor: pointer; }   /* dedo de pulsar; la mano cerrada, solo mientras se arrastra */
 .pres-strip.dragging { cursor: grabbing; user-select: none; }
 .pres-strip.dragging .preset { pointer-events: none; }
 @media (pointer: coarse), (max-width: 600px) { .pres-ctl { top: max(58px, calc(env(safe-area-inset-top) + 46px)); left: 0; right: 0; margin: 0 auto; } }

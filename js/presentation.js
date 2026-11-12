@@ -892,7 +892,7 @@ function syncRange(copy, orig, label, origLabel) {
 }
 
 // Emisoras: una tarjeta por cada botón de la página (se actualizan en su sitio; se rehacen solo si cambia su número)
-let stripKey = '';
+let stripCenter = true;   // la activa se centra solo al abrir la presentación (y si se rehace la tira), nunca al elegir otra: la tira no salta
 function syncStrip() {
   const src = Array.from(presetsBox.querySelectorAll('.preset:not(.more)'));
   if (presStrip.children.length !== src.length) {
@@ -904,7 +904,7 @@ function syncStrip() {
       b.addEventListener('click', e => { e.stopPropagation(); const cur = presetsBox.querySelectorAll('.preset:not(.more)')[i]; if (cur) cur.click(); });
       presStrip.appendChild(b);
     });
-    stripKey = '';
+    stripCenter = true;
   }
   src.forEach((b, i) => {
     const c = presStrip.children[i];
@@ -913,10 +913,11 @@ function syncStrip() {
     setText(c.firstChild, b.querySelector('.pn').textContent);
     setText(c.lastChild, b.querySelector('.pf').textContent);
   });
-  // la activa se deja a la vista al cambiar
-  const act = presStrip.querySelector('.active'), key = act ? Array.prototype.indexOf.call(presStrip.children, act) + ':' + presStrip.children.length : '';
-  if (act && key !== stripKey) presStrip.scrollLeft = act.offsetLeft - (presStrip.clientWidth - act.offsetWidth) / 2;
-  stripKey = key;
+  const act = presStrip.querySelector('.active');
+  if (stripCenter) {   // solo en ese momento: si entonces no hay ninguna activa, la tira se queda donde está
+    stripCenter = false;
+    if (act) { stopGlide(); presStrip.scrollLeft = act.offsetLeft - (presStrip.clientWidth - act.offsetWidth) / 2; }
+  }
 }
 
 // Nombre que no cabe (con nombres largos, en los modos que no son el Radial): va de un lado a otro, con una pausa en cada extremo. En el Radial se reparte en varias líneas
@@ -1002,24 +1003,48 @@ presPlay.addEventListener('click', () => (playing ? stop : toggle).click());
 window.addEventListener('pointerup', () => { dragging = null; });
 window.addEventListener('pointercancel', () => { dragging = null; });
 presNews.addEventListener('change', () => { newsToggle.checked = presNews.checked; newsToggle.dispatchEvent(new Event('change')); });
-// La tira de emisoras se mueve con la rueda (también con deltas en líneas, como en Firefox) y arrastrándola con el ratón
+// La tira de emisoras se mueve con la rueda (también con deltas en líneas, como en Firefox) y arrastrándola con el ratón; al soltarla sigue un poco
+// con la velocidad que llevaba y frena poco a poco (inercia, como la que pone el navegador al deslizar con el dedo)
 presStrip.addEventListener('wheel', e => {
+  stopGlide();
   const k = e.deltaMode === 1 ? 40 : e.deltaMode === 2 ? presStrip.clientWidth : 1;
   presStrip.scrollLeft += (Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY) * k;
   e.preventDefault();
 }, { passive: false });
 let stripDrag = null, stripDragged = false;
+let glide = 0, glideV = 0, glidePos = 0, glideT = 0;   // inercia: velocidad (px/s, en el sentido del ratón) y posición con decimales
+const GLIDE_FRICTION = 4;   // cuánto frena (más = se para antes); con un arrastre rápido recorre del orden de media pantalla
+function stopGlide() { if (glide) { cancelAnimationFrame(glide); glide = 0; } }
+function glideStep(now) {
+  const dt = Math.min(0.05, (now - glideT) / 1000);
+  glideT = now;
+  const max = presStrip.scrollWidth - presStrip.clientWidth;
+  glidePos = Math.max(0, Math.min(max, glidePos - glideV * dt));
+  presStrip.scrollLeft = glidePos;
+  glideV *= Math.exp(-GLIDE_FRICTION * dt);
+  glide = Math.abs(glideV) > 15 && glidePos > 0 && glidePos < max ? requestAnimationFrame(glideStep) : 0;   // se para al frenar o al llegar a un extremo
+}
 presStrip.addEventListener('pointerdown', e => {
+  stopGlide();   // tocar la tira mientras se desliza la para
   if (e.pointerType !== 'mouse' || e.button !== 0) return;
-  stripDrag = { x: e.clientX, left: presStrip.scrollLeft, moved: false };
+  stripDrag = { x: e.clientX, left: presStrip.scrollLeft, moved: false, pts: [[e.timeStamp, e.clientX]] };
 });
 presStrip.addEventListener('pointermove', e => {
   if (!stripDrag) return;
   const dx = e.clientX - stripDrag.x;
   if (!stripDrag.moved && Math.abs(dx) > 5) { stripDrag.moved = true; presStrip.setPointerCapture(e.pointerId); presStrip.classList.add('dragging'); }
   if (stripDrag.moved) presStrip.scrollLeft = stripDrag.left - dx;
+  const pts = stripDrag.pts;
+  pts.push([e.timeStamp, e.clientX]);
+  while (pts.length > 2 && e.timeStamp - pts[0][0] > 100) pts.shift();   // la velocidad, con los últimos 100 ms
 });
-const endStripDrag = () => {
+const endStripDrag = e => {
+  if (stripDrag && stripDrag.moved && e.type === 'pointerup') {
+    const pts = stripDrag.pts, [t0, x0] = pts[0], [t1, x1] = pts[pts.length - 1];
+    // si el ratón ya estaba quieto al soltar, no hay inercia
+    glideV = t1 > t0 && e.timeStamp - t1 < 60 ? (x1 - x0) / (t1 - t0) * 1000 : 0;
+    if (Math.abs(glideV) > 150) { glidePos = presStrip.scrollLeft; glideT = performance.now(); glide = requestAnimationFrame(glideStep); }
+  }
   if (stripDrag && stripDrag.moved) { stripDragged = true; setTimeout(() => { stripDragged = false; }, 60); }   // el clic que sigue a un arrastre no elige emisora
   stripDrag = null;
   presStrip.classList.remove('dragging');
@@ -1075,6 +1100,7 @@ function openPres(full) {
   syncStereo();
   last = performance.now();
   infoAt = 0;
+  stripCenter = true;   // la tira se abre con la activa en el centro
   ptr.x = ptr.y = -1;
   ptr.touch = false;
   raf = requestAnimationFrame(frame);
@@ -1088,6 +1114,7 @@ function closePres() {
   open = false;
   syncStereo();
   cancelAnimationFrame(raf);
+  stopGlide();
   drawn = -1;
   clearTimeout(idleTimer);
   presEl.hidden = true;
