@@ -1,7 +1,7 @@
 {
   "name": "Radio Neo",
   "short_name": "Radio Neo",
-  "description": "Reproductor de radio con las emisiones oficiales en directo.",
+  "description": "Reproductor de radio ligero con buscador de emisoras y boletines automáticos",
 
   "categories": [
     "radio",
