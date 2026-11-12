@@ -206,7 +206,15 @@ function bindEdit(b, st) {
     dragId = st.id;
     e.dataTransfer.effectAllowed = 'move';
     try { e.dataTransfer.setData('text/plain', st.id); } catch (_) {}
-    setTimeout(() => { if (dragId === st.id) b.classList.add('dragging'); }, 0);   // un instante después: el navegador ya ha hecho la imagen que se arrastra y en su sitio queda el hueco
+    // imagen que sigue al ratón: la misma tarjeta que sigue al dedo en el móvil (redondeada y con el color de énfasis). Sin ella el navegador hace una foto
+    // del botón, y si la hace tarde (con la radio sonando va más cargado) pilla la casilla ya vacía y saca su recuadro de selección
+    const r = b.getBoundingClientRect(), img = b.cloneNode(true);
+    img.className = 'preset dnd-card dnd-img';
+    img.style.width = r.width + 'px';
+    img.style.height = r.height + 'px';
+    document.body.appendChild(img);
+    try { e.dataTransfer.setDragImage(img, e.clientX - r.left, e.clientY - r.top); } catch (_) {}
+    setTimeout(() => { img.remove(); if (dragId === st.id) b.classList.add('dragging'); }, 0);   // en su sitio queda el hueco
   });
   b.addEventListener('dragend', () => { dragId = null; clearDrop(); b.classList.remove('dragging'); });
   b.addEventListener('dragover', e => {
