@@ -160,8 +160,9 @@ body.no-config .panel.vols > * { visibility: visible; }
 .ptitle { margin: 0 0 8px 2px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8c98a8; }
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
 .pgrid .preset { border-radius: 12px; }
-/* Pulsación larga en el móvil (abre el menú de la cadena): sin selección de texto ni el menú de copiar y pegar del navegador */
-.preset, .preset * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+/* Pulsación larga en el móvil (abre el menú de la cadena): sin selección de texto ni el menú de copiar y pegar del navegador. En toda la zona de las cadenas
+   (títulos y huecos incluidos): si la selección empezaba en un título, al arrastrar Android teñía de color de selección cada casilla, en rectángulos */
+.presets, .presets *, .dnd-card, .dnd-card * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .preset { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: calc(1.8rem + 32px); padding: 10px 8px; color: #e8edf5; background: #2a3441; border: 1px solid transparent; }
 .preset .pn { display: flex; align-items: center; text-align: center; font-size: .95rem; font-weight: 700; line-height: 1.15; letter-spacing: .01em; overflow-wrap: anywhere; color: #f1f5f9; }
 .preset .pf { text-align: center; font-size: .74rem; line-height: 1.1; font-weight: 500; color: #9fabb9; }

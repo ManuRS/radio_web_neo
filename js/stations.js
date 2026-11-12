@@ -128,7 +128,7 @@ let tdrag = null;            // arrastre táctil en curso: { b, st, ghost, ox, o
 let ignoreClickUntil = 0;
 // Con el dedo puesto, el navegador no debe desplazar la página ni seleccionar texto (touchmove tiene que poder cancelarse: de ahí passive: false)
 document.addEventListener('touchmove', e => { if (holding || tdrag) e.preventDefault(); }, { passive: false });
-document.addEventListener('selectstart', e => { if (pressing && !(e.target.closest && e.target.closest('input, textarea'))) e.preventDefault(); });
+document.addEventListener('selectstart', e => { if ((pressing || tdrag) && !(e.target.closest && e.target.closest('input, textarea'))) e.preventDefault(); });
 // El clic que puede llegar al soltar tras arrastrar no debe sintonizar la cadena que quede debajo
 presetsBox.addEventListener('click', e => { if (Date.now() < ignoreClickUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
 
@@ -174,6 +174,7 @@ function beginTouchDrag(b, st, e) {
   ghost.style.width = r.width + 'px';
   ghost.style.height = r.height + 'px';
   document.body.appendChild(ghost);
+  try { window.getSelection().removeAllRanges(); } catch (_) {}   // si Android llegó a empezar una selección, se quita (su tinte se vería en rectángulos sobre las casillas)
   b.classList.add('dragging');
   tdrag = { b, st, ghost, ox: e.clientX - r.left, oy: e.clientY - r.top, x: e.clientX, y: e.clientY, pid: e.pointerId, tick: setInterval(dragTick, 16) };
   moveGhost();
