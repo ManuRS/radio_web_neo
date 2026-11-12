@@ -25,17 +25,46 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "Radio Web Neo",
-  "description": "Reproductor ligero con buscador de emisoras y boletines automáticos",
-  "url": "https://radioneo.pages.dev/",
-  "image": "https://radioneo.pages.dev/img/og-neo.jpg",
-  "applicationCategory": "MultimediaApplication",
-  "operatingSystem": "All",
-  "inLanguage": "es",
-  "browserRequirements": "Requiere JavaScript",
-  "isAccessibleForFree": true,
-  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://radioneo.pages.dev/#website",
+      "name": "Radio Web Neo",
+      "alternateName": ["Radio Neo"],
+      "url": "https://radioneo.pages.dev/",
+      "inLanguage": "es"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://radioneo.pages.dev/#app",
+      "name": "Radio Web Neo",
+      "description": "Reproductor ligero con buscador de emisoras y boletines automáticos",
+      "url": "https://radioneo.pages.dev/",
+      "isPartOf": { "@id": "https://radioneo.pages.dev/#website" },
+      "image": "https://radioneo.pages.dev/img/og-neo.jpg",
+      "screenshot": [
+        "https://radioneo.pages.dev/img/cap2-wide.webp",
+        "https://radioneo.pages.dev/img/cap1-wide.webp",
+        "https://radioneo.pages.dev/img/cap3-wide.webp"
+      ],
+      "featureList": [
+        "Buscador de emisoras",
+        "Ecualizador",
+        "Modo boletines",
+        "7 visualizadores a pantalla completa",
+        "Grabación en MP3",
+        "Sin cookies ni ningún otro tipo de rastreo"
+      ],
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All",
+      "inLanguage": "es",
+      "browserRequirements": "Requiere JavaScript",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "author": { "@type": "Person", "name": "ManuRS", "url": "https://github.com/ManuRS" },
+      "license": "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  ]
 }
 </script>
 
