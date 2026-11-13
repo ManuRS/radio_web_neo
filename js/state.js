@@ -56,7 +56,7 @@ export const S = {
   accent: '', // color de énfasis general ("#rrggbb"; vacío = el verde por defecto)
   stationColors: true, // ajuste del navegador (rn_stcolor; activado por defecto): hacer caso a "color" de cada emisora o usar siempre el color general
   stations: [], // [{ id, name, short (nombre corto del botón), group: 'general' | 'musical', urls: [{ label (nombre de la variante; por defecto el formato), url, kind }], cors, news, color }]
-  defaultDelayS: DEFAULT_DELAY_S, // retraso (s) del stream de la emisora de noticias respecto a la emisión real; solo sirve para calcular la hora de las franjas
+  defaultDelayS: DEFAULT_DELAY_S, // retraso (s) del stream de la emisora de noticias respecto a la emisión real; solo sirve para calcular la hora de las franjas (y la del reloj); se puede cambiar en General (clock.js)
   newsStation: null, // emisora a la que se cambia durante las noticias (objeto de S.stations)
   news: [], // [{ start: 'hh:mm:ss', end: 'hh:mm:ss' }] (horas reales de emisión, hora de Madrid)
   pending: false, // se ha pedido una emisora y aún no se ha confirmado el cambio: el panel sigue con la anterior, parpadeando

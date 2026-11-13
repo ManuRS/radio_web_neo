@@ -49,6 +49,7 @@ export const newsVolValue = document.getElementById('newsVolValue');
 export const settingsDlg = document.getElementById('settings');
 export const delayInput = document.getElementById('delayInput');
 export const autoDelay = document.getElementById('autoDelay');
+export const streamDelayInput = document.getElementById('streamDelayInput');
 export const outSelect = document.getElementById('outSelect');
 export const normSwitch = document.getElementById('normSwitch');
 export const customBtn = document.getElementById('customBtn');

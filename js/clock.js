@@ -3,10 +3,11 @@
 // ==================
 // Retraso del reloj local (hora real = hora local + retraso): a mano o detectado solo comparando con una hora oficial.
 // Lo detectado solo corrige diferencias mayores de AUTO_DEAD_S; entre medias se queda en 0. Se aplica con decimales y se muestra con uno.
+// Aquí también el retraso de la señal de audio (S.defaultDelayS): el de los ajustes ("defaultDelayS") salvo que se cambie en General.
 
 import { parseNumber } from './utils.js';
 import { S } from './state.js';
-import { autoDelay, delayInput } from './dom.js';
+import { autoDelay, delayInput, streamDelayInput } from './dom.js';
 import { log } from './ui.js';
 
 const TIME_URL = 'https://time.now/developer/api/timezone/Europe/Madrid';
@@ -19,6 +20,7 @@ const MAX_RETRIES = 3;
 const KEY_MANUAL = 'rn_delay', KEY_AUTO_ON = 'rn_autodelay', KEY_AUTO_VAL = 'rn_autodelay_val';
 const load = key => { try { return localStorage.getItem(key); } catch (_) { return null; } };
 const save = (key, value) => { try { localStorage.setItem(key, String(value)); } catch (_) {} };
+const drop = key => { try { localStorage.removeItem(key); } catch (_) {} };
 
 let autoOn = load(KEY_AUTO_ON) !== '0';                 // por defecto, activada
 let manualSec = parseNumber(load(KEY_MANUAL)) || 0;     // retraso escrito a mano
@@ -28,13 +30,43 @@ let lastOk = 0, retries = 0, retryTimer = null, running = false;
 const apply = () => { S.clockDelayMs = (autoOn ? autoSec : manualSec) * 1000; };
 apply();
 
+// == RETRASO DE LA SEÑAL DE AUDIO ==
+// El de los ajustes vale mientras no se escriba otro en General; escribir el mismo o vaciar el campo vuelve a él
+const KEY_STREAM = 'rn_streamdelay', STREAM_MAX_S = 300;
+let streamSec = parseNumber(load(KEY_STREAM));          // el escrito en General (null = el de los ajustes)
+let cfgStreamSec = S.defaultDelayS;                      // "defaultDelayS" de los ajustes
+const applyStream = () => { S.defaultDelayS = streamSec !== null ? streamSec : cfgStreamSec; };
+applyStream();
+
+export function setCfgStreamDelay(sec) {
+  cfgStreamSec = sec;
+  applyStream();
+}
+
+function setStreamDelay(sec) {
+  streamSec = sec === null || sec === cfgStreamSec ? null : sec;
+  if (streamSec === null) drop(KEY_STREAM); else save(KEY_STREAM, streamSec);
+  applyStream();
+}
+
 // Campo e interruptor de la ventana de ajustes: con la autodetección activa el campo no se edita y muestra el valor aplicado
 export function refreshDelayUi() {
   autoDelay.checked = autoOn;
   delayInput.disabled = autoOn;
   const sec = autoOn ? autoSec : manualSec;
   delayInput.value = autoOn ? sec.toFixed(1) : sec !== 0 ? String(sec) : '';
+  streamDelayInput.placeholder = String(cfgStreamSec);
+  streamDelayInput.value = String(S.defaultDelayS);
 }
+
+streamDelayInput.addEventListener('input', () => {
+  if (streamDelayInput.value.trim() === '') { setStreamDelay(null); return; }
+  const n = parseNumber(streamDelayInput.value);
+  if (n !== null && n >= 0 && n <= STREAM_MAX_S) setStreamDelay(n);   // fuera de rango no se aplica
+});
+streamDelayInput.addEventListener('change', () => {   // al salir del campo se ve el valor que vale
+  streamDelayInput.value = String(S.defaultDelayS);
+});
 
 export function setManualDelay(sec) {
   manualSec = sec;

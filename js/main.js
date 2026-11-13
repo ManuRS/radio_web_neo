@@ -14,7 +14,7 @@ import { buildStations, refreshStations, restoreLast } from './stations.js';
 import { rebuildSlots, slotPlan, tick } from './boletines.js';
 import { loadArtwork } from './mediasession.js';
 import { play, syncUi } from './player.js';
-import { initClock } from './clock.js';
+import { initClock, setCfgStreamDelay } from './clock.js';
 import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
 import './importer.js';
@@ -38,7 +38,7 @@ function applyConfig(cfg) {
   S.artwork = ARTWORK_URL;   // fija, en el código
   loadArtwork();
   S.stations = cfg.stations;
-  S.defaultDelayS = cfg.defaultDelayS;
+  setCfgStreamDelay(cfg.defaultDelayS);   // salvo que se haya cambiado en General (clock.js)
   S.newsStation = cfg.stations.find(x => x.id === cfg.newsStationId) || null;
   S.news = cfg.news;
   rebuildSlots();
