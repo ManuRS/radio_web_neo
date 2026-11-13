@@ -4,14 +4,13 @@ Reproductor de radio *vibecodeado*. Es una versión renovada de [Radio Web Fast]
 
 - Tiene una interfaz distinta: Más compacta y centrada en el texto
 
-- Menor sencillez, mayores opciones: Soporta ecualizaciones y buscar emisoras
+- Menor sencillez, más opciones: Soporta ecualizaciones y buscar emisoras
 
 - Incluye un visualizador del sonido en tiempo real con 7 efectos diferentes
 
 <p align="center">
-  <img src="img/cap1-wide.webp" width="32%" alt="Interfaz">
-  <img src="img/cap2-wide.webp" width="32%" alt="Buscador de emisoras">
-  <img src="img/cap3-wide.webp" width="32%" alt="Visualizadores">
+  <img src="img/cap2-wide.webp" width="49%" alt="Buscador de emisoras">
+  <img src="img/cap1-wide.webp" width="49%" alt="Interfaz">
 </p>
 
 ## Guía de uso
