@@ -14,12 +14,13 @@
 // de la página (viz.levels) y, en el Vórtice, la forma de onda del analizador; no toca el audio. Con el ratón arriba a la izquierda aparece el control
 // (reproducir, volúmenes y boletines) y abajo las emisoras; en pantallas táctiles, ambos al tocar. Son copias de los controles de la página, que se
 // mantienen al día con ellos.
+// Imagen en imagen: la vista elegida, en la ventana flotante del navegador (ver el apartado IMAGEN EN IMAGEN, al final).
 
 import { S } from './state.js';
 import {
   newsBox, newsToggle, newsVolume, newsVolValue, clockEl, presetsBox, stop, toggle, volume, volValue,
   presCanvas, presClock, presSpin, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
-  presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue
+  presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue, pipBtn, pipRow, pipToggle, presPipRow, presPip
 } from './dom.js';
 import { setText } from './ui.js';
 import { viz } from './audio.js';
@@ -40,7 +41,8 @@ const N = viz.levels.length;
 const WIDE = 15;            // bandas (de las 36) que cuentan para el bote del círculo del Radial: graves y medios bajos
 const NARROW_PX = 600;      // por debajo de este ancho (móvil en vertical) el espectro lleva menos barras
 
-const ctx = presCanvas.getContext('2d');
+const presCtx = presCanvas.getContext('2d');
+let ctx = presCtx;   // lienzo en el que dibujan las vistas: el de la presentación o, para imagen en imagen, el de la ventana flotante
 let mode = 0;
 // Se guarda el nombre de la vista (antes, su número en el orden de entonces: 0 Espectro, 1 Radial, 2 Vórtice, 3 Seda)
 try {
@@ -221,7 +223,7 @@ const peaksR = new Float32Array(N), holdR = new Float32Array(N), fallR = new Flo
 function showSpin() { presSpin.textContent = (spinOn ? 'Con Giro' : 'Sin Giro') + (stOn ? ' ST' : ''); }
 showSpin();
 function syncStereo() {
-  const on = open && mode === RADIAL && stOn;
+  const on = (open || pipOn) && mode === RADIAL && stOn;
   if (on === stLive) return;
   stLive = on;
   if (on) { for (const a of [peaksL, peaksR]) a.set(peaks); for (const a of [holdL, holdR]) a.set(hold); for (const a of [fallL, fallR]) a.set(fall); }   // los picos parten de los de ahora
@@ -342,7 +344,7 @@ const vNewLook = old => {
 let vLook = { st: 0, lobes: 5, copies: 1, delay: 6, size: 0.17, mirror: false }, vOld = null, vFade = 1, vCount = 0, vNext = 8, vLookAt = 0;
 
 function drawVortex(w, h, dt, dpr) {
-  const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = presCanvas.width, ch = presCanvas.height;
+  const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = ctx.canvas.width, ch = ctx.canvas.height;
   // forma de onda con ganancia automática (siempre llena el anillo, suene fuerte o flojo)
   let mx = 0;
   if (an && !viz.synthetic) {
@@ -376,7 +378,7 @@ function drawVortex(w, h, dt, dpr) {
   const zoom = 1 + dt * (0.3 + bass * 1.7 + pulse * 1.3 + vHit * 2.6);   // con cada golpe la estela se lanza hacia fuera
   ctx.scale(zoom, zoom);
   ctx.translate(-cw / 2, -ch / 2);
-  ctx.drawImage(presCanvas, 0, 0);
+  ctx.drawImage(ctx.canvas, 0, 0);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = 'rgba(3, 4, 8, 0.11)';   // la estela se apaga antes: si se acumula mucho, los tonos que van pasando se mezclan en un gris blanquecino
   ctx.fillRect(0, 0, cw, ch);
@@ -843,13 +845,13 @@ function drawOcean(w, h, dt) {
 // ===========
 // == BUCLE ==
 // ===========
-let drawn = -1;   // vista dibujada en el fotograma anterior (el Vórtice parte de fondo limpio si viene de otra)
+let drawn = -1, drawnOn = null;   // vista dibujada en el fotograma anterior y en qué lienzo (el Vórtice parte de fondo limpio si viene de otra o de otro lienzo)
 function size() {
   const w = presEl.clientWidth, h = presEl.clientHeight;
   const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PIXELS / (w * h || 1))));
   const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
   if (presCanvas.width !== cw || presCanvas.height !== ch) { presCanvas.width = cw; presCanvas.height = ch; }
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  presCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return { w, h, dpr };
 }
 
@@ -858,8 +860,17 @@ function frame(now) {
   raf = requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
   last = now;
-  const { w, h, dpr } = size(), lv = viz.levels;
+  const { w, h, dpr } = size();
   if (w < 2 || h < 2) return;   // sin tamaño todavía (o ventana minimizada): no hay nada que dibujar
+  ctx = presCtx;
+  render(w, h, dpr, dt, now);
+  if (now - infoAt > 250) { infoAt = now; info(); }
+}
+
+// Un fotograma de la vista actual en ctx (w × h en píxeles CSS; dpr: píxeles reales por cada uno)
+function render(w, h, dpr, dt, now) {
+  const lv = viz.levels;
+  if (ctx.canvas !== drawnOn) { drawn = -1; drawnOn = ctx.canvas; }
   analyse(lv, dt, now);
   const c = palColor();
   if (mode === VORTEX) drawVortex(w, h, dt, dpr);
@@ -874,7 +885,6 @@ function frame(now) {
     if (mode === SPECTRUM) drawSpectrum(w, h, c, lv); else drawRadial(w, h, c, lv, dt);
   }
   drawn = mode;
-  if (now - infoAt > 250) { infoAt = now; info(); }
 }
 
 // ==================================
@@ -972,9 +982,13 @@ function fitsOneLine(name) {
   return measure.measureText(name).width + name.length * fs * 0.06 <= avail;   // 0,06 = letter-spacing
 }
 
-function info() {
+// en pantalla completa, "SER Web" es "SER": el Web sobra
+function presName() {
   const st = shownStation();
-  const name = st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';   // en pantalla completa, "SER Web" es "SER": el Web sobra
+  return st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';
+}
+function info() {
+  const name = presName();
   setText(presPsText, mode === RADIAL || !fitsOneLine(name) ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
@@ -1146,3 +1160,139 @@ document.addEventListener('keydown', e => {
 });
 document.addEventListener('fullscreenchange', () => { if (open && fsUsed && !document.fullscreenElement) closePres(); });
 document.addEventListener('visibilitychange', () => { if (open && !document.hidden && !wake) lockScreen(); });
+
+// ======================
+// == IMAGEN EN IMAGEN ==
+// ======================
+// La ventana flotante del navegador solo admite vídeo: la vista se dibuja en un lienzo propio (16:9; 1:1 en el Radial y el Vórtice), que se convierte
+// en un vídeo mudo (captureStream) y es ese vídeo el que va a la ventana. El sonido sigue saliendo de la página. Se abre con el botón de al lado de
+// "Ampliar" (y se cierra con el mismo) o, con el interruptor "Imagen en imagen" activado (por defecto), sola al cambiar de pestaña o minimizar cuando el
+// navegador lo permite: Chrome llama entonces a la acción "enterpictureinpicture" de Media Session. Los botones de la ventana son los de la
+// notificación: pausa y reanuda, y anterior y siguiente cambian de emisora.
+// Con la página oculta el navegador no da fotogramas (requestAnimationFrame), así que la ventana lleva su propio ritmo con un temporizador. Si a la vez
+// se está viendo la presentación, la ventana copia su lienzo (recortado a su forma) en vez de dibujar otra vez: las vistas no avanzan dos veces.
+const PIP_KEY = 'rn_pip';                     // '0' = no se abre sola (el botón sigue funcionando)
+const PIP_TEXTS = true;                       // nombre de la emisora (y en el Radial la hora) sobre el dibujo; false = solo el dibujo
+const PIP_WIDE = [854, 480], PIP_SQUARE = [480, 480];   // tamaño del lienzo (px)
+const PIP_FPS = 30;
+const pipOk = !!(document.pictureInPictureEnabled && HTMLCanvasElement.prototype.captureStream);
+const pipCanvas = document.createElement('canvas'), pipCtx = pipCanvas.getContext('2d');
+let pipOn = false, pipVideo = null, pipTimer = 0, pipLast = 0, pipFont = '';
+
+function pipTick() {
+  pipTimer = setTimeout(pipTick, 1000 / PIP_FPS);
+  const now = performance.now(), dt = Math.min(0.05, (now - pipLast) / 1000 || 1 / PIP_FPS);
+  pipLast = now;
+  const [w, h] = mode === RADIAL || mode === VORTEX ? PIP_SQUARE : PIP_WIDE;
+  if (pipCanvas.width !== w || pipCanvas.height !== h) { pipCanvas.width = w; pipCanvas.height = h; drawnOn = null; }
+  pipCtx.setTransform(1, 0, 0, 1, 0, 0);
+  if (open && !document.hidden && presCanvas.width > 1) {
+    // la presentación se está dibujando: se copia su lienzo, centrado y recortado a la forma de la ventana
+    const sw = presCanvas.width, sh = presCanvas.height, k = Math.max(w / sw, h / sh);
+    pipCtx.drawImage(presCanvas, (w - sw * k) / 2, (h - sh * k) / 2, sw * k, sh * k);
+  } else {
+    ctx = pipCtx;
+    render(w, h, 1, dt, now);
+    ctx = presCtx;
+  }
+  if (PIP_TEXTS) pipTexts(w, h);
+}
+
+// Los textos de cada vista (en pantalla completa son de la página, no del dibujo): el nombre arriba (en el Océano, en su ventana de cristal);
+// en el Radial, el nombre y la hora en el centro; el Vórtice, sin textos
+function pipTexts(w, h) {
+  if (mode === VORTEX) return;
+  if (!pipFont) pipFont = getComputedStyle(document.body).fontFamily;
+  const c = pipCtx, name = presName();
+  c.save();
+  c.setTransform(1, 0, 0, 1, 0, 0);
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  const font = (px, weight = 750) => { c.font = weight + ' ' + px.toFixed(1) + 'px ' + pipFont; };
+  const fit = (text, px, max, weight) => { font(px, weight); const tw = c.measureText(text).width; if (tw > max) font(px * max / tw, weight); };   // reduce la letra si no cabe
+  const glow = () => { c.shadowColor = rgba(palColor(), 0.55); c.shadowBlur = h * 0.03; };
+  if (mode === RADIAL) {
+    const lines = twoLines(name).split('\n'), px = h * 0.056, lh = px * 1.15, clock = clockEl.textContent;
+    const y0 = h / 2 - (lines.length * lh + px * 0.75) / 2 + lh / 2;
+    c.fillStyle = '#f1f5f9';
+    glow();
+    lines.forEach((ln, i) => { fit(ln, px, h * 0.34, 750); c.fillText(ln, w / 2, y0 + i * lh); });
+    c.shadowBlur = 0;
+    c.fillStyle = '#cbd5e1';
+    font(px * 0.62, 600);
+    c.fillText(clock, w / 2, y0 + lines.length * lh + px * 0.1);
+  } else if (mode === OCEAN) {
+    const px = h * 0.075;
+    fit(name, px, w * 0.8, 750);
+    const tw = c.measureText(name).width, bw = tw + px * 1.6, bh = px * 1.6, x = (w - bw) / 2, y = h * 0.07;
+    c.fillStyle = 'rgba(14, 18, 28, .5)';
+    c.strokeStyle = 'rgba(255, 255, 255, .12)';
+    c.lineWidth = 1;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(x, y, bw, bh, px * 0.45); else c.rect(x, y, bw, bh);
+    c.fill();
+    c.stroke();
+    c.fillStyle = '#f1f5f9';
+    glow();
+    c.fillText(name, w / 2, y + bh / 2);
+  } else {
+    c.fillStyle = '#f1f5f9';
+    glow();
+    fit(name, h * 0.13, w * 0.92, 750);
+    c.fillText(name, w / 2, h * 0.15);
+  }
+  c.restore();
+}
+
+async function pipOpen() {
+  if (!pipOk || document.pictureInPictureElement) return;
+  if (!pipVideo) {
+    pipVideo = document.createElement('video');
+    pipVideo.muted = true;
+    pipVideo.playsInline = true;
+    pipVideo.setAttribute('aria-hidden', 'true');
+    pipVideo.style.cssText = 'position: fixed; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none;';
+    pipVideo.addEventListener('leavepictureinpicture', pipStop);
+    document.body.appendChild(pipVideo);
+  }
+  pipOn = true;
+  syncStereo();
+  clearTimeout(pipTimer);
+  pipLast = performance.now();
+  pipTick();   // el primer fotograma ya está antes de pedir la ventana
+  if (!pipVideo.srcObject) pipVideo.srcObject = pipCanvas.captureStream(PIP_FPS);
+  try {
+    await pipVideo.play();
+    await pipVideo.requestPictureInPicture();
+  } catch (_) { pipStop(); }
+}
+
+// Al cerrarse la ventana se deja de dibujar y se suelta el vídeo
+function pipStop() {
+  if (!pipOn) return;
+  pipOn = false;
+  clearTimeout(pipTimer);
+  pipTimer = 0;
+  if (pipVideo && pipVideo.srcObject) { pipVideo.srcObject.getTracks().forEach(t => t.stop()); pipVideo.srcObject = null; }
+  syncStereo();
+}
+
+// Interruptor "Imagen en imagen" (en el panel de volúmenes y en su copia de la presentación): si está activado, el navegador puede abrir la ventana solo
+let pipAuto = true;
+try { pipAuto = localStorage.getItem(PIP_KEY) !== '0'; } catch (_) {}
+function setPipAuto(on, save) {
+  pipAuto = on;
+  if (save) { try { localStorage.setItem(PIP_KEY, on ? '1' : '0'); } catch (_) {} }
+  pipToggle.checked = presPip.checked = on;
+  try { navigator.mediaSession.setActionHandler('enterpictureinpicture', on ? () => { pipOpen(); } : null); } catch (_) {}   // navegadores sin esta acción: solo el botón
+}
+if (pipOk) {
+  pipBtn.hidden = pipRow.hidden = presPipRow.hidden = false;
+  setPipAuto(pipAuto, false);
+  for (const t of [pipToggle, presPip]) t.addEventListener('change', () => setPipAuto(t.checked, true));
+  pipBtn.addEventListener('click', e => {
+    e.stopPropagation();
+    if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {}); else pipOpen();
+  });
+  pipBtn.addEventListener('keydown', e => e.stopPropagation());
+}
