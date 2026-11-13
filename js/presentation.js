@@ -49,7 +49,7 @@ try {
   const saved = localStorage.getItem(MODE_KEY), old = ['Espectro', 'Radial', 'Vórtice', 'Seda'];
   mode = Math.max(0, MODES.indexOf(/^\d+$/.test(saved || '') ? old[+saved] : saved));
 } catch (_) {}
-let fsUsed = false, open = false, raf = 0, last = 0, infoAt = 0, wake = null, idleTimer = 0, modeTimer = 0;
+let fsUsed = false, open = false, raf = 0, last = 0, presAt = 0, infoAt = 0, wake = null, idleTimer = 0, modeTimer = 0;
 
 const TAU = Math.PI * 2;
 const rgba = (hex, a) => 'rgba(' + [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16)).join(',') + ',' + a + ')';
@@ -862,6 +862,7 @@ function frame(now) {
   last = now;
   const { w, h, dpr } = size();
   if (w < 2 || h < 2) return;   // sin tamaño todavía (o ventana minimizada): no hay nada que dibujar
+  presAt = performance.now();
   ctx = presCtx;
   render(w, h, dpr, dt, now);
   if (now - infoAt > 250) { infoAt = now; info(); }
@@ -1181,8 +1182,9 @@ document.addEventListener('visibilitychange', () => { if (open && !document.hidd
 // Tamaño: el lienzo se dibuja al tamaño real de la ventana flotante y con la densidad de la pantalla, como la presentación (con un tamaño fijo, las
 // líneas y los efectos quedaban con otras proporciones y se veían estirados).
 // Ritmo: con la página visible, el de la pantalla (requestAnimationFrame); con la página oculta el navegador no da fotogramas, así que un temporizador,
-// y la ventana pone ella al día los niveles (viz.tick). Si se está viendo la presentación, la ventana copia su lienzo (recortado a su forma) en vez de
-// dibujar otra vez: las vistas no avanzan dos veces.
+// y la ventana pone ella al día los niveles (viz.tick). Si la presentación está dibujando (lo ha hecho hace nada: en el PC, Chrome puede seguir dándole
+// fotogramas con la página oculta), la ventana copia su lienzo (recortado a su forma) en vez de dibujar otra vez: dibujando las dos, las vistas
+// avanzaban dos veces y el Vórtice, que se construye sobre el fotograma anterior, empezaba de cero en cada uno (sin estela, luz ni golpes).
 const PIP_KEY = 'rn_pip';                     // '0' = no se abre sola (el botón sigue funcionando)
 const PIP_TEXTS = true;                       // nombre de la emisora (y en el Radial la hora) sobre el dibujo; false = solo el dibujo
 const PIP_START = 480;                        // alto (px) del primer fotograma, antes de que la ventana diga su tamaño
@@ -1204,14 +1206,14 @@ function pipTick() {
   pipSchedule();
   const now = performance.now(), dt = Math.min(0.05, (now - pipLast) / 1000 || 1 / 60);
   pipLast = now;
-  if (document.hidden) viz.tick(now);   // sin fotogramas del navegador, los niveles no se moverían
+  viz.tick(now);   // sin fotogramas del navegador los niveles no se moverían (si los hay, no hace nada)
   // tamaño en píxeles CSS: el de la ventana (16:9, o 1:1 en el Radial y el Vórtice) y, antes de abrirse, uno de partida
   const square = mode === RADIAL || mode === VORTEX, ww = pipWin && pipWin.width, wh = pipWin && pipWin.height;
   const w = square ? (ww ? Math.min(ww, wh) : PIP_START) : (ww || Math.round(PIP_START * 16 / 9)), h = square ? w : Math.round(w * 9 / 16);
   const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PIXELS / (w * h))));
   const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
   if (pipCanvas.width !== cw || pipCanvas.height !== ch) { pipCanvas.width = cw; pipCanvas.height = ch; drawnOn = null; }
-  if (open && !document.hidden && presCanvas.width > 1) {
+  if (open && now - presAt < 100 && presCanvas.width > 1) {
     // la presentación se está dibujando: se copia su lienzo, centrado y recortado a la forma de la ventana
     const sw = presCanvas.width, sh = presCanvas.height, k = Math.max(cw / sw, ch / sh);
     pipCtx.setTransform(1, 0, 0, 1, 0, 0);

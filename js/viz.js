@@ -122,6 +122,7 @@ export function createVisualizer(canvas, isPaused) {
     });
   }
   // Calcula los niveles (sin dibujar). Lo hace cada fotograma; con la página oculta el navegador no da fotogramas, y entonces lo llama la imagen en imagen (tick)
+  let rafAt = 0;   // último fotograma del navegador
   function update(now) {
     const dt = lastT ? Math.min(0.05, (now - lastT) / 1000) : 0.016;
     lastT = now || 0;
@@ -150,6 +151,7 @@ export function createVisualizer(canvas, isPaused) {
     if (!anR || !live) for (let i = 0; i < BARS; i++) levelsL[i] = levelsR[i] = barLevels[i];   // sin estéreo, los dos lados son el mismo
   }
   function frame(now) {
+    rafAt = performance.now();
     update(now);
     draw();
     if (running || barLevels.some(l => l > 0.01)) requestAnimationFrame(frame);
@@ -192,7 +194,7 @@ export function createVisualizer(canvas, isPaused) {
     // empieza a animar (al conectar) / deja que las barras bajen y se paren (al desconectar)
     start() { running = true; if (!looping) { looping = true; requestAnimationFrame(frame); } },
     stop() { running = false; },
-    tick(now) { update(now); },   // niveles al día sin fotogramas del navegador (página oculta, ventana flotante abierta)
+    tick(now) { if (now - rafAt > 100) update(now); },   // niveles al día sin fotogramas del navegador (página oculta, ventana flotante abierta); si los hay, no hace nada
     draw,
     get looping() { return looping; },
     levels: barLevels,                       // nivel actual de cada barra (0 a 1), para otras vistas como el modo presentación
