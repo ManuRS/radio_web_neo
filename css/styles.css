@@ -112,6 +112,7 @@ input[type="range"]:disabled { opacity: .4; }
 /* Alineado con el margen de las barras (a su izquierda; la etiqueta del ecualizador va a su derecha), en la franja de arriba; el área de toque se extiende con ::after */
 .pres-open { position: absolute; top: 10px; left: 18px; flex: none; display: grid; place-items: center; width: 14px; height: 14px; padding: 0; border-radius: 3px; background: none; color: #fff; opacity: 1; }
 .pres-expand { left: 48px; }
+.pres-pip { left: 78px; }
 .pres-open::after { content: ''; position: absolute; inset: -9px -8px; }
 .pres-open svg { display: block; }
 .viz.off .pres-open { display: none; }
