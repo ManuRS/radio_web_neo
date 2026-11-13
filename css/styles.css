@@ -112,7 +112,6 @@ input[type="range"]:disabled { opacity: .4; }
 /* Alineado con el margen de las barras (a su izquierda; la etiqueta del ecualizador va a su derecha), en la franja de arriba; el área de toque se extiende con ::after */
 .pres-open { position: absolute; top: 10px; left: 18px; flex: none; display: grid; place-items: center; width: 14px; height: 14px; padding: 0; border-radius: 3px; background: none; color: #fff; opacity: 1; }
 .pres-expand { left: 48px; }
-.pres-pip { left: 78px; }
 .pres-open::after { content: ''; position: absolute; inset: -9px -8px; }
 .pres-open svg { display: block; }
 .viz.off .pres-open { display: none; }
@@ -256,6 +255,9 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-mode.show { opacity: 1; }
 .pres-close { position: absolute; top: max(10px, env(safe-area-inset-top)); right: 12px; flex: none; width: 40px; height: 40px; padding: 0; border-radius: 50%; background: rgba(255, 255, 255, .08); color: #cbd5e1; font-size: 1.1rem; transition: opacity .4s; }
 .pres.idle .pres-close { opacity: 0; pointer-events: none; }
+.pres-pipbtn { right: 60px; }   /* imagen en imagen, a la izquierda de la ✕ (se esconde con ella) */
+.pres-pipbtn:not([hidden]) { display: grid; place-items: center; }
+.pres-pipbtn svg { display: block; }
 .pres-spin { display: none; pointer-events: auto; margin-top: .2vmin; padding: .4vmin 1.2vmin; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 1.6vmin; font-weight: 600; letter-spacing: .12em; color: #8c98a8; cursor: pointer; }   /* solo en el Radial (debajo del reloj) */
 .pres-spin:hover { color: #cbd5e1; background: rgba(255, 255, 255, .06); }
 .pres[data-mode="1"] .pres-spin { display: block; }

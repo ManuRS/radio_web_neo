@@ -121,7 +121,8 @@ export function createVisualizer(canvas, isPaused) {
       ctx2d.fill();
     });
   }
-  function frame(now) {
+  // Calcula los niveles (sin dibujar). Lo hace cada fotograma; con la página oculta el navegador no da fotogramas, y entonces lo llama la imagen en imagen (tick)
+  function update(now) {
     const dt = lastT ? Math.min(0.05, (now - lastT) / 1000) : 0.016;
     lastT = now || 0;
     const live = !synth && analyser && audioCtx && audioCtx.state === 'running' && !isPaused() && binRanges;
@@ -147,6 +148,9 @@ export function createVisualizer(canvas, isPaused) {
       for (let i = 0; i < BARS; i++) barLevels[i] = Math.max(0, barLevels[i] - 0.05);
     }
     if (!anR || !live) for (let i = 0; i < BARS; i++) levelsL[i] = levelsR[i] = barLevels[i];   // sin estéreo, los dos lados son el mismo
+  }
+  function frame(now) {
+    update(now);
     draw();
     if (running || barLevels.some(l => l > 0.01)) requestAnimationFrame(frame);
     else looping = false;
@@ -188,6 +192,7 @@ export function createVisualizer(canvas, isPaused) {
     // empieza a animar (al conectar) / deja que las barras bajen y se paren (al desconectar)
     start() { running = true; if (!looping) { looping = true; requestAnimationFrame(frame); } },
     stop() { running = false; },
+    tick(now) { update(now); },   // niveles al día sin fotogramas del navegador (página oculta, ventana flotante abierta)
     draw,
     get looping() { return looping; },
     levels: barLevels,                       // nivel actual de cada barra (0 a 1), para otras vistas como el modo presentación
