@@ -8,6 +8,12 @@ Reproductor de radio *vibecodeado*. Es una versión renovada de [Radio Web Fast]
 
 - Incluye un visualizador del sonido en tiempo real con 7 efectos diferentes
 
+<p align="center">
+  <img src="img/cap1-wide.webp" width="32%" alt="Interfaz">
+  <img src="img/cap2-wide.webp" width="32%" alt="Buscador de emisoras">
+  <img src="img/cap3-wide.webp" width="32%" alt="Visualizadores">
+</p>
+
 ## Guía de uso
 
 Las presintonias de Neo funciona como CADENAS/GRUPOS, es decir, pueden almacenar varias EMISORAS (varios streams de audio). Por defecto, cuando se abre la aplicación por primera vez hay cargados ejemplos de presintonías:
