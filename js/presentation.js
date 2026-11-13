@@ -1107,6 +1107,7 @@ async function lockScreen() {
 
 function openPres(full) {
   if (open) return;
+  pipClose();   // abrir la presentación cierra la ventana flotante: si no, se verían las dos
   open = true;
   fsUsed = !!full;
   presEl.hidden = false;
@@ -1130,7 +1131,7 @@ function closePres(keepPip) {
   open = false;
   syncStereo();
   syncPipAction();
-  if (!keepPip && document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {});
+  if (!keepPip) pipClose();
   cancelAnimationFrame(raf);
   stopGlide();
   drawn = -1;
@@ -1175,17 +1176,21 @@ document.addEventListener('visibilitychange', () => { if (open && !document.hidd
 // presentación, como hacen las aplicaciones de vídeo (si no, se verían las dos). Con el interruptor "Imagen en imagen" activado (por defecto) y la
 // presentación abierta, se abre sola al cambiar de pestaña o minimizar cuando el navegador lo permite (Chrome llama a la acción "enterpictureinpicture"
 // de Media Session); entonces la presentación sigue abierta, y salir de ella con la ✕ cierra también la ventana. Los botones de la ventana son los de la
-// notificación: pausa y reanuda, y anterior y siguiente cambian de emisora.
+// notificación: pausa y reanuda, y anterior y siguiente cambian de emisora. Abrir la presentación con la ventana abierta la cierra (otra vez se verían
+// las dos). "Volver a la pestaña" desde la ventana lleva a donde se abrió: si fue desde la presentación, se vuelve a ella.
+// Tamaño: el lienzo se dibuja al tamaño real de la ventana flotante y con la densidad de la pantalla, como la presentación (con un tamaño fijo, las
+// líneas y los efectos quedaban con otras proporciones y se veían estirados).
 // Ritmo: con la página visible, el de la pantalla (requestAnimationFrame); con la página oculta el navegador no da fotogramas, así que un temporizador,
 // y la ventana pone ella al día los niveles (viz.tick). Si se está viendo la presentación, la ventana copia su lienzo (recortado a su forma) en vez de
 // dibujar otra vez: las vistas no avanzan dos veces.
 const PIP_KEY = 'rn_pip';                     // '0' = no se abre sola (el botón sigue funcionando)
 const PIP_TEXTS = true;                       // nombre de la emisora (y en el Radial la hora) sobre el dibujo; false = solo el dibujo
-const PIP_WIDE = [854, 480], PIP_SQUARE = [480, 480];   // tamaño del lienzo (px)
+const PIP_START = 480;                        // alto (px) del primer fotograma, antes de que la ventana diga su tamaño
 const PIP_HIDDEN_FPS = 60;                    // con la página oculta (temporizador)
 const pipOk = !!(document.pictureInPictureEnabled && HTMLCanvasElement.prototype.captureStream);
 const pipCanvas = document.createElement('canvas'), pipCtx = pipCanvas.getContext('2d');
-let pipOn = false, pipVideo = null, pipTimer = 0, pipRaf = 0, pipLast = 0, pipFont = '';
+let pipOn = false, pipVideo = null, pipWin = null, pipTimer = 0, pipRaf = 0, pipLast = 0, pipFont = '';
+let pipFrom = null, pipByUs = false;   // pipFrom: desde dónde se abrió a mano ('full', 'expand' o null = la página); pipByUs: la cierra la propia app
 
 function pipSchedule() {
   if (document.hidden) pipTimer = setTimeout(pipTick, 1000 / PIP_HIDDEN_FPS); else pipRaf = requestAnimationFrame(pipTick);
@@ -1200,19 +1205,24 @@ function pipTick() {
   const now = performance.now(), dt = Math.min(0.05, (now - pipLast) / 1000 || 1 / 60);
   pipLast = now;
   if (document.hidden) viz.tick(now);   // sin fotogramas del navegador, los niveles no se moverían
-  const [w, h] = mode === RADIAL || mode === VORTEX ? PIP_SQUARE : PIP_WIDE;
-  if (pipCanvas.width !== w || pipCanvas.height !== h) { pipCanvas.width = w; pipCanvas.height = h; drawnOn = null; }
-  pipCtx.setTransform(1, 0, 0, 1, 0, 0);
+  // tamaño en píxeles CSS: el de la ventana (16:9, o 1:1 en el Radial y el Vórtice) y, antes de abrirse, uno de partida
+  const square = mode === RADIAL || mode === VORTEX, ww = pipWin && pipWin.width, wh = pipWin && pipWin.height;
+  const w = square ? (ww ? Math.min(ww, wh) : PIP_START) : (ww || Math.round(PIP_START * 16 / 9)), h = square ? w : Math.round(w * 9 / 16);
+  const dpr = Math.max(1, Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(MAX_PIXELS / (w * h))));
+  const cw = Math.round(w * dpr), ch = Math.round(h * dpr);
+  if (pipCanvas.width !== cw || pipCanvas.height !== ch) { pipCanvas.width = cw; pipCanvas.height = ch; drawnOn = null; }
   if (open && !document.hidden && presCanvas.width > 1) {
     // la presentación se está dibujando: se copia su lienzo, centrado y recortado a la forma de la ventana
-    const sw = presCanvas.width, sh = presCanvas.height, k = Math.max(w / sw, h / sh);
-    pipCtx.drawImage(presCanvas, (w - sw * k) / 2, (h - sh * k) / 2, sw * k, sh * k);
+    const sw = presCanvas.width, sh = presCanvas.height, k = Math.max(cw / sw, ch / sh);
+    pipCtx.setTransform(1, 0, 0, 1, 0, 0);
+    pipCtx.drawImage(presCanvas, (cw - sw * k) / 2, (ch - sh * k) / 2, sw * k, sh * k);
   } else {
+    pipCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx = pipCtx;
-    render(w, h, 1, dt, now);
+    render(w, h, dpr, dt, now);
     ctx = presCtx;
   }
-  if (PIP_TEXTS) pipTexts(w, h);
+  if (PIP_TEXTS) pipTexts(cw, ch);
 }
 
 // Los textos de cada vista (en pantalla completa son de la página, no del dibujo): el nombre arriba (en el Océano, en su ventana de cristal);
@@ -1270,7 +1280,7 @@ async function pipOpen(manual) {
     pipVideo.playsInline = true;
     pipVideo.setAttribute('aria-hidden', 'true');
     pipVideo.style.cssText = 'position: fixed; left: 0; top: 0; width: 1px; height: 1px; opacity: 0; pointer-events: none;';
-    pipVideo.addEventListener('leavepictureinpicture', pipStop);
+    pipVideo.addEventListener('leavepictureinpicture', pipLeft);
     document.body.appendChild(pipVideo);
   }
   pipOn = true;
@@ -1280,13 +1290,28 @@ async function pipOpen(manual) {
   if (!pipVideo.srcObject) pipVideo.srcObject = pipCanvas.captureStream();   // sin ritmo fijo: un fotograma de vídeo por cada dibujo
   try {
     await pipVideo.play();
-    await pipVideo.requestPictureInPicture();
+    pipWin = await pipVideo.requestPictureInPicture();
   } catch (_) { pipStop(); return; }
+  pipFrom = manual && open ? (fsUsed ? 'full' : 'expand') : null;
   if (manual && open) closePres(true);   // queda solo la ventana flotante
+}
+function pipClose() {
+  if (!document.pictureInPictureElement) return;
+  pipByUs = true;
+  document.exitPictureInPicture().catch(() => {});
+}
+// Se ha cerrado la ventana. Con "volver a la pestaña" el vídeo sigue en marcha (con la ✕ de la ventana, el navegador lo pausa): si se abrió desde la
+// presentación, se vuelve a ella (a pantalla completa solo si el navegador lo deja sin pulsar nada; si no, ampliada)
+function pipLeft() {
+  const back = !pipByUs && pipFrom && !open && pipVideo && !pipVideo.paused, from = pipFrom;
+  pipByUs = false;
+  pipFrom = null;
+  pipStop();
+  if (back) openPres(from === 'full');
 }
 function togglePip(e) {
   e.stopPropagation();   // en la presentación, no cambia de vista
-  if (document.pictureInPictureElement) document.exitPictureInPicture().catch(() => {}); else pipOpen(true);
+  if (document.pictureInPictureElement) pipClose(); else pipOpen(true);
   e.currentTarget.blur();   // que el teclado vuelva a cambiar de vista
 }
 
@@ -1294,6 +1319,7 @@ function togglePip(e) {
 function pipStop() {
   if (!pipOn) return;
   pipOn = false;
+  pipWin = null;
   pipCancel();
   if (pipVideo && pipVideo.srcObject) { pipVideo.srcObject.getTracks().forEach(t => t.stop()); pipVideo.srcObject = null; }
   syncStereo();
