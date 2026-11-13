@@ -20,7 +20,7 @@ import { S } from './state.js';
 import {
   newsBox, newsToggle, newsVolume, newsVolValue, clockEl, presetsBox, stop, toggle, volume, volValue,
   presCanvas, presClock, presSpin, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
-  presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue, pipBtn, presPipBtn, pipRow, pipToggle, presPipRow, presPip
+  presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue, pipBtn, presPipBtn, presPipRow, presPip
 } from './dom.js';
 import { setText } from './ui.js';
 import { viz } from './audio.js';
@@ -1174,8 +1174,8 @@ document.addEventListener('visibilitychange', () => { if (open && !document.hidd
 // La ventana flotante del navegador solo admite vídeo: la vista se dibuja en un lienzo propio (16:9; 1:1 en el Radial y el Vórtice), que se convierte
 // en un vídeo mudo (captureStream) y es ese vídeo el que va a la ventana. El sonido sigue saliendo de la página. Se abre a mano con el botón del
 // visualizador de la página o con el de al lado de la ✕ en la presentación (los dos la cierran si ya está abierta); abrirla a mano cierra la
-// presentación, como hacen las aplicaciones de vídeo (si no, se verían las dos). Con el interruptor "Imagen en imagen" activado (por defecto) y la
-// presentación abierta, se abre sola al cambiar de pestaña o minimizar cuando el navegador lo permite (Chrome llama a la acción "enterpictureinpicture"
+// presentación, como hacen las aplicaciones de vídeo (si no, se verían las dos). Con el interruptor "Imagen en imagen" del menú de la presentación
+// activado (por defecto) y la presentación abierta, se abre sola al cambiar de pestaña o minimizar cuando el navegador lo permite (Chrome llama a la acción "enterpictureinpicture"
 // de Media Session); entonces la presentación sigue abierta, y salir de ella con la ✕ cierra también la ventana. Los botones de la ventana son los de la
 // notificación: pausa y reanuda, y anterior y siguiente cambian de emisora. Abrir la presentación con la ventana abierta la cierra (otra vez se verían
 // las dos). "Volver a la pestaña" desde la ventana lleva a donde se abrió: si fue desde la presentación, se vuelve a ella.
@@ -1327,8 +1327,8 @@ function pipStop() {
   syncStereo();
 }
 
-// Interruptor "Imagen en imagen" (en el panel de volúmenes y en su copia de la presentación): si está activado y la presentación está abierta, el navegador
-// puede abrir la ventana solo
+// Interruptor "Imagen en imagen" del menú de la presentación (solo ahí: es donde se abre sola): si está activado y la presentación está abierta, el
+// navegador puede abrir la ventana solo
 let pipAuto = true;
 try { pipAuto = localStorage.getItem(PIP_KEY) !== '0'; } catch (_) {}
 function syncPipAction() {
@@ -1338,13 +1338,13 @@ function syncPipAction() {
 function setPipAuto(on, save) {
   pipAuto = on;
   if (save) { try { localStorage.setItem(PIP_KEY, on ? '1' : '0'); } catch (_) {} }
-  pipToggle.checked = presPip.checked = on;
+  presPip.checked = on;
   syncPipAction();
 }
 if (pipOk) {
-  pipBtn.hidden = presPipBtn.hidden = pipRow.hidden = presPipRow.hidden = false;
+  pipBtn.hidden = presPipBtn.hidden = presPipRow.hidden = false;
   setPipAuto(pipAuto, false);
-  for (const t of [pipToggle, presPip]) t.addEventListener('change', () => setPipAuto(t.checked, true));
+  presPip.addEventListener('change', () => setPipAuto(presPip.checked, true));
   for (const b of [pipBtn, presPipBtn]) b.addEventListener('click', togglePip);
   pipBtn.addEventListener('keydown', e => e.stopPropagation());
 }

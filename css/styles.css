@@ -68,8 +68,6 @@ button:disabled { opacity: .45; cursor: default; }
 .vols .volume + .volume { margin-top: 12px; }
 .volume label { flex: 0 0 4.6em; }
 .volume span { flex: 0 0 3ch; text-align: right; font-variant-numeric: tabular-nums; }
-.volume .pip-label { flex: 1 1 auto; text-align: left; }   /* imagen en imagen: el texto a la izquierda y el interruptor a la derecha */
-.volume .switch { flex: 0 0 auto; }
 input { width: 100%; accent-color: var(--accent); }
 input[type="range"]:disabled { opacity: .4; }
 
