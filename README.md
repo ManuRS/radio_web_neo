@@ -8,10 +8,9 @@ Reproductor de radio *vibecodeado*. Es una versión renovada de [Radio Web Fast]
 
 - Incluye un visualizador del sonido en tiempo real con 7 efectos diferentes
 
-<p align="center">
-  <img src="img/cap2-wide.webp" width="49%" alt="Buscador de emisoras">
-  <img src="img/cap1-wide.webp" width="49%" alt="Interfaz">
-</p>
+![Buscador de emisoras](img/cap2-wide.webp)
+
+![Interfaz](img/cap1-wide.webp)
 
 ## Guía de uso
 
