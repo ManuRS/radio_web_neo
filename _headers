@@ -26,3 +26,7 @@
 # la imagen de la notificación casi nunca cambia (si la cambias, sube SOUNDS_VERSION en js/sounds.js)
 /img/*
   Cache-Control: public, max-age=31536000, immutable
+
+# las fuentes no cambian nunca (si se cambia una, cambia también el nombre del archivo)
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable

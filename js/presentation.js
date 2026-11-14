@@ -934,6 +934,7 @@ function syncStrip() {
 // Nombre que no cabe (con nombres largos, en los modos que no son el Radial): va de un lado a otro, con una pausa en cada extremo. En el Radial se reparte en varias líneas
 let fitKey = '';
 const measure = document.createElement('canvas').getContext('2d');
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => { fitKey = ''; });   // la fuente propia cambia las medidas: se vuelve a ajustar
 function fitName() {
   const key = presPsText.textContent + '|' + presPs.clientWidth + '|' + mode + '|' + innerWidth + 'x' + innerHeight;
   if (key === fitKey) return;

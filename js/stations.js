@@ -581,6 +581,7 @@ function fitNow() {
   } else psValue.classList.remove('marquee');
 }
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitNow).observe(psValue);
+if (document.fonts) document.fonts.addEventListener('loadingdone', () => { fitKey = ''; fitNow(); });   // con la fuente propia ya cargada, el nombre mide otra cosa
 
 export function refreshNow() {
   if (!S.pending) { shown = S.current || S.lastStation; shownV = S.current ? S.variant : S.lastVariant; }

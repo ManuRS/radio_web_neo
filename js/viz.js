@@ -108,7 +108,7 @@ export function createVisualizer(canvas, isPaused) {
     const gap = 3, bw = (w - gap * (BARS - 1)) / BARS;
     // dos pasadas (barras con sonido y barras en reposo), cada una con un único trazo
     [true, false].forEach(active => {
-      ctx2d.fillStyle = active ? grad : '#2a3441';
+      ctx2d.fillStyle = active ? grad : '#343e4a';
       ctx2d.beginPath();
       for (let i = 0; i < BARS; i++) {
         const lvl = barLevels[i];

@@ -1,16 +1,23 @@
 /* ==========
    == BASE ==
    ========== */
+/* Fuentes propias (en fonts/, sin pedir nada a internet): Barlow para la interfaz y Barlow Condensed para el panel del nombre */
+@font-face { font-family: 'Barlow'; font-weight: 400; font-display: swap; src: url(../fonts/barlow-latin-400-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow'; font-weight: 500; font-display: swap; src: url(../fonts/barlow-latin-500-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow'; font-weight: 600; font-display: swap; src: url(../fonts/barlow-latin-600-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-latin-700-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Barlow Condensed'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-condensed-latin-700-normal.woff2) format('woff2'); }
+
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen) */
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
-  color-scheme: dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+  color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
   --accent: #58dfa3;
   transition: --accent .6s ease;
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
-  --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
+  --accent-bg: color-mix(in srgb, var(--accent) 12%, #252928);      /* fondo de la cadena activa */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
 }
 
@@ -19,8 +26,8 @@
    ====================================================== */
 /* Sin altura mínima en body: el fondo de toda la pantalla lo pone html, y una altura mínima en vh/dvh dejaba scroll vacío en el móvil
    cuando la barra del navegador cambiaba de tamaño */
-html { background: #1a2029; }
-body { margin: 0; display: grid; place-items: start center; background: #1a2029; color: #edf2f7; }
+html { background: #242a32; }
+body { margin: 0; display: grid; place-items: start center; background: #242a32; color: #edf2f7; }
 main { width: min(520px, 100%); box-sizing: border-box; padding: 22px 20px 28px; }
 /* Con altura suficiente la página no hace scroll: lo hace por dentro la parte de abajo (boletines y emisoras), sin barra visible.
    Con poca altura (móvil apaisado, ventanas bajas) se queda como una página normal */
@@ -42,7 +49,7 @@ h1 { font-size: 1.35rem; margin: 0; }
 p { color: #aeb9c8; line-height: 1.45; }
 /* Subtítulo bajo el título, escrito directamente en el HTML: 1rem, color #aeb9c8 y .6em de margen superior */
 .subtitle { margin: .6em 0 0; }
-.status { display: flex; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+.status { display: flex; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #1b2026; color: #cbd5e1; font-size: .78rem; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
 .status:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
@@ -74,8 +81,8 @@ input[type="range"]:disabled { opacity: .4; }
 /* ===================================
    == EMISORA ACTUAL Y VISUALIZADOR ==
    =================================== */
-.now { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 10px; padding: 21px 18px 16px; min-height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; }
-.viz { position: relative; user-select: none; -webkit-tap-highlight-color: transparent; margin-top: 10px; padding: 28px 18px 14px; height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; }
+.now { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 10px; padding: 21px 18px 16px; min-height: 86px; box-sizing: border-box; border-radius: 12px; background: #1b2026; }
+.viz { position: relative; user-select: none; -webkit-tap-highlight-color: transparent; margin-top: 10px; padding: 28px 18px 14px; height: 86px; box-sizing: border-box; border-radius: 12px; background: #1b2026; }
 .viz canvas { display: block; width: 100%; height: 100%; }
 .viz.eq-on { cursor: pointer; }
 .viz.off canvas, .viz.off .eq-label { opacity: .45; filter: grayscale(1); }
@@ -83,7 +90,7 @@ input[type="range"]:disabled { opacity: .4; }
 .viz:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .eq-label { position: absolute; top: 10px; right: 18px; max-width: calc(100% - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: var(--accent); pointer-events: none; }
 .now .ps.idle { color: #8c98a8; }
-.now .ps { flex: 1 1 0; width: 0; min-width: 0; margin: 0 -8px 0 -12px; padding: 0 22px 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 2.1rem; font-weight: 700; letter-spacing: .06em; color: #edf2f7; }
+.now .ps { flex: 1 1 0; width: 0; min-width: 0; margin: 0 -8px 0 -12px; padding: 0 22px 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 2.5rem; font-weight: 700; letter-spacing: .02em; color: #edf2f7; }
 /* Cambio de emisora pedido y aún sin confirmar: el nombre actual parpadea suave hasta que suena la nueva */
 .ps.pending, .pres-ps.pending { animation: ps-blink 1.1s ease-in-out infinite; }
 @keyframes ps-blink { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
@@ -93,13 +100,13 @@ input[type="range"]:disabled { opacity: .4; }
 .now .ps.marquee > span { animation: pres-marquee var(--dur, 10s) ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) { .now .ps.marquee > span { animation: none; } }
 /* Botón de grabar (a la derecha del nombre de la emisora): un punto rojo; grabando, se alarga con el tiempo y el punto late */
-.now .rec { flex: none; align-self: center; display: flex; align-items: center; justify-content: center; gap: 7px; width: 40px; height: 40px; padding: 0; border-radius: 20px; background: #1f2732; border: 1px solid #303a47; }
+.now .rec { flex: none; align-self: center; display: flex; align-items: center; justify-content: center; gap: 7px; width: 40px; height: 40px; padding: 0; border-radius: 20px; background: #29313b; border: 1px solid #3a4450; }
 .now .rec[hidden] { display: none; }
 .rec-dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: #e5484d; }
 .rec:disabled .rec-dot { background: #6b7684; }
 .rec-time { font-size: .86rem; font-weight: 700; font-variant-numeric: tabular-nums; color: #ffc2c4; }
 .rec-time:empty { display: none; }
-.now .rec.on { width: auto; padding: 0 13px 0 12px; border-color: #e5484d; background: #2a1d22; }
+.now .rec.on { width: auto; padding: 0 13px 0 12px; border-color: #e5484d; background: #34272b; }
 .rec.on .rec-dot { animation: rec-pulse 1.2s ease-in-out infinite; }
 .rec.on.paused .rec-dot { animation: none; opacity: .45; }   /* en espera (radio en pausa o parada): el punto no parpadea */
 @keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
@@ -119,16 +126,16 @@ input[type="range"]:disabled { opacity: .4; }
    == PANEL DEL MODO BOLETINES ==
    =============================== */
 /* Paneles: misma estética, sin brillo */
-.panel { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 15px; border-radius: 12px; background: #11161d; }
-.panel .badge { display: grid; place-items: center; flex: 0 0 auto; min-width: 38px; height: 38px; box-sizing: border-box; padding: 0 6px; border-radius: 10px; background: #1a2029; font-size: 1.2rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.panel { display: flex; align-items: center; gap: 12px; margin-top: 10px; padding: 15px; border-radius: 12px; background: #1b2026; }
+.panel .badge { display: grid; place-items: center; flex: 0 0 auto; min-width: 38px; height: 38px; box-sizing: border-box; padding: 0 6px; border-radius: 10px; background: #242a32; font-size: 1.2rem; font-weight: 750; font-variant-numeric: tabular-nums; }
 .panel .info { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
 .panel .info b { font-size: .88rem; font-weight: 650; color: #e2e8f0; }
 .panel .info span { font-size: .78rem; color: #9fabb9; }
 .panel .switch { margin-left: auto; }
-.panel.news { margin-inline: 2px; background: #2a3441; }
+.panel.news { margin-inline: 2px; background: #343e4a; }
 .panel.news { margin-top: 14px; }
 /* Buscador de emisoras (importador de TDTChannels): otro panel de gris claro, con el campo de texto y la lupa; justo encima, el de boletines baja a la separación normal */
-.panel.search { margin: 22px 2px 0; background: #2a3441; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
+.panel.search { margin: 22px 2px 0; background: #343e4a; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
 .panel.search + .panel.news { margin-top: 14px; }   /* el buscador a 22 px de las barras y boletines a 14 px del buscador */
 .panel.search input { flex: 1 1 auto; min-width: 0; height: 38px; padding: 0 2px; border: 0; outline: 0; background: none; color: #edf2f7; font: inherit; font-size: .92rem; -webkit-appearance: none; appearance: none; }
 .panel.search input::placeholder { color: #8c98a8; }
@@ -144,7 +151,7 @@ body.no-config .panel.vols > * { visibility: visible; }
 .panel.news .badge { transition: background .4s; }
 .panel.news.live .badge { background: var(--accent-soft); }
 .switch input:disabled { cursor: not-allowed; }
-.switch input:disabled + .track { background: #2a3039; }
+.switch input:disabled + .track { background: #343a42; }
 .switch { position: relative; flex: 0 0 auto; width: 46px; height: 26px; cursor: pointer; }
 .switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
 .switch .track { position: absolute; inset: 0; border-radius: 999px; background: #394454; transition: background .2s; }
@@ -164,41 +171,41 @@ body.no-config .panel.vols > * { visibility: visible; }
 /* Pulsación larga en el móvil (abre el menú de la cadena): sin selección de texto ni el menú de copiar y pegar del navegador. En toda la zona de las cadenas
    (títulos y huecos incluidos): si la selección empezaba en un título, al arrastrar Android teñía de color de selección cada casilla, en rectángulos */
 .presets, .presets *, .dnd-card, .dnd-card * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
-.preset { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: calc(1.8rem + 32px); padding: 10px 8px; color: #e8edf5; background: #2a3441; border: 1px solid transparent; }
+.preset { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: calc(1.8rem + 32px); padding: 10px 8px; color: #e8edf5; background: #343e4a; border: 1px solid transparent; }
 .preset .pn { display: flex; align-items: center; text-align: center; font-size: .95rem; font-weight: 700; line-height: 1.15; letter-spacing: .01em; overflow-wrap: anywhere; color: #f1f5f9; }
 .preset .pf { text-align: center; font-size: .74rem; line-height: 1.1; font-weight: 500; color: #9fabb9; }
 .preset .pf:empty { display: none; }
 .preset[hidden] { display: none; }
-.preset.more { justify-content: center; font-size: 1.8rem; font-weight: 600; line-height: 1; color: var(--accent); background: #1a2029; border: 1px dashed #303a47; }
+.preset.more { justify-content: center; font-size: 1.8rem; font-weight: 600; line-height: 1; color: var(--accent); background: #242a32; border: 1px dashed #3a4450; }
 .preset.active { border-color: var(--accent); background: var(--accent-bg); }
 .preset:disabled { opacity: .4; }
 /* Grabando: cadenas cuya emisora no se puede grabar (modo degradado). No se pueden poner */
-.preset.recoff { background: #231b20; border-color: #3a2830; color: #7d6b72; cursor: not-allowed; }
+.preset.recoff { background: #2d2529; border-color: #443239; color: #7d6b72; cursor: not-allowed; }
 .preset.recoff .pn, .preset.recoff .pf { color: #7d6b72; }
 
 /* ========================
    == REGISTRO (VENTANA) ==
    ======================== */
-#log { display: block; width: 100%; margin: 0; flex: 1 0 auto; height: 0; min-height: 120px; resize: vertical; box-sizing: border-box; padding: 12px; border: 0; overflow-wrap: anywhere; background: #11161d; border-radius: 10px; color: #9fabb9; font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+#log { display: block; width: 100%; margin: 0; flex: 1 0 auto; height: 0; min-height: 120px; resize: vertical; box-sizing: border-box; padding: 12px; border: 0; overflow-wrap: anywhere; background: #1b2026; border-radius: 10px; color: #9fabb9; font: 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
 audio { display: none; }
 
 /* ========================
    == VENTANA DE AJUSTES ==
    ======================== */
 /* La ventana (ajustes, configuración y registro) mide lo mismo en todas las pestañas y va pegada arriba; el área central ocupa el resto y, en el texto de configuración y el registro, se puede estirar desde la esquina (la ventana crece con ella) */
-dialog.settings { width: min(560px, 94vw); min-height: min(584px, calc(100vh - 44px)); min-height: min(584px, calc(100dvh - 44px)); max-height: calc(100vh - 44px); max-height: calc(100dvh - 44px); overflow: auto; margin: 22px auto auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+dialog.settings { width: min(560px, 94vw); min-height: min(584px, calc(100vh - 44px)); min-height: min(584px, calc(100dvh - 44px)); max-height: calc(100vh - 44px); max-height: calc(100dvh - 44px); overflow: auto; margin: 22px auto auto; padding: 0; border: 1px solid #3a4450; border-radius: 16px; background: #242a32; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.settings[open] { display: flex; flex-direction: column; }
 dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .dlg { flex: 1 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 18px; box-sizing: border-box; }
 .dlg-head { display: flex; align-items: center; justify-content: space-between; font-size: 1.05rem; }
-.dlg .x { flex: none; padding: 4px 10px; background: #2a3441; color: #cbd5e1; border-radius: 8px; }
+.dlg .x { flex: none; padding: 4px 10px; background: #343e4a; color: #cbd5e1; border-radius: 8px; }
 .clockrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: .88rem; color: #cbd5e1; }
-.clockrow select { padding: 6px 8px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
-.clockrow input[type="text"] { width: 56px; padding: 6px 4px; box-sizing: border-box; text-align: center; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
+.clockrow select { padding: 6px 8px; border-radius: 8px; border: 1px solid #3a4450; background: #1b2026; color: #edf2f7; font: inherit; }
+.clockrow input[type="text"] { width: 56px; padding: 6px 4px; box-sizing: border-box; text-align: center; border-radius: 8px; border: 1px solid #3a4450; background: #1b2026; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"]:disabled { opacity: .6; }
-#cfgText { width: 100%; flex: 1 0 auto; height: 0; min-height: 120px; resize: vertical; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #cbd5e1; font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+#cfgText { width: 100%; flex: 1 0 auto; height: 0; min-height: 120px; resize: vertical; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #3a4450; background: #1b2026; color: #cbd5e1; font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
 /* Pestañas: texto con línea inferior (la activa lleva el color de énfasis); los botones de acción siguen siendo botones rellenos */
-.tabs { display: flex; border-bottom: 1px solid #303a47; }
+.tabs { display: flex; border-bottom: 1px solid #3a4450; }
 .tabs button { flex: 1; padding: 8px 6px 10px; margin-bottom: -1px; border-radius: 0; border-bottom: 2px solid transparent; background: none; color: #8c98a8; font-size: .92rem; }
 .tabs button:hover { color: #cbd5e1; }
 .tabs button.active { color: #edf2f7; border-bottom-color: var(--accent); }
@@ -208,9 +215,9 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .group { display: flex; flex-direction: column; gap: 12px; }
 .clockrow button { flex: none; padding: 6px 12px; font-size: .85rem; color: #e8edf5; background: #394454; }
 .clockrow button.danger { color: #fff; background: #b8414d; }
-.group + .group { padding-top: 14px; border-top: 1px solid #252e3a; }
+.group + .group { padding-top: 14px; border-top: 1px solid #2f3843; }
 /* Hueco reservado para los mensajes de la configuración (guardado, errores...), con su propio fondo */
-.cfgmsg { min-height: calc(2.8em + 18px); box-sizing: border-box; padding: 8px 10px; border: 1px solid #252e3a; border-radius: 10px; background: #11161d; white-space: pre-wrap; font-size: .8rem; line-height: 1.4; }
+.cfgmsg { min-height: calc(2.8em + 18px); box-sizing: border-box; padding: 8px 10px; border: 1px solid #2f3843; border-radius: 10px; background: #1b2026; white-space: pre-wrap; font-size: .8rem; line-height: 1.4; }
 .cfgmsg.ok { color: #58dfa3; }
 .cfgmsg.err { color: #ff8a8a; }
 .dlg-actions { display: flex; gap: 10px; }
@@ -225,7 +232,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
    == MODO PRESENTACIÓN ==
    ======================= */
 /* Capa a pantalla completa con las barras como protagonistas; se dibuja en un canvas (presentation.js) y los textos son HTML encima */
-.pres { position: fixed; inset: 0; z-index: 20; overflow: hidden; background: #0a0d12; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+.pres { position: fixed; inset: 0; z-index: 20; overflow: hidden; background: #14171b; touch-action: none; user-select: none; -webkit-tap-highlight-color: transparent; }
 .pres[hidden] { display: none; }
 .pres.idle:not(.show-top):not(.show-bottom) { cursor: none; }
 .pres canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
@@ -268,7 +275,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .pres-clock { margin-top: .5vh; font-size: min(4.6vw, 3.4vh); font-weight: 600; letter-spacing: .06em; font-variant-numeric: tabular-nums; color: #cbd5e1; }
 
 /* Paneles que aparecen al llevar el ratón arriba a la izquierda (control) y abajo (emisoras); en pantallas táctiles, al tocar */
-.pres-panel { position: absolute; z-index: 2; box-sizing: border-box; background: rgba(17, 22, 29, .9); border: 1px solid #252e3a; border-radius: 14px; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
+.pres-panel { position: absolute; z-index: 2; box-sizing: border-box; background: rgba(27, 32, 38, .9); border: 1px solid #2f3843; border-radius: 14px; backdrop-filter: blur(8px); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
 .pres-ctl { top: 12px; left: 12px; width: min(300px, calc(100vw - 24px)); display: flex; flex-direction: column; gap: 12px; padding: 12px 14px; transform: translateY(-8px); }
 .pres-strip { left: 12px; right: 12px; bottom: 12px; display: flex; gap: 8px; padding: 8px; overflow-x: auto; overscroll-behavior: contain; touch-action: pan-x; scrollbar-width: none; -ms-overflow-style: none; transform: translateY(8px); }
 .pres-strip::-webkit-scrollbar { display: none; }
@@ -299,30 +306,30 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .stform .sttitle { grid-column: 1 / -1; font-size: .95rem; color: #edf2f7; }
 .stform label { display: flex; flex-direction: column; gap: 7px; min-width: 0; font-size: .76rem; color: #8c98a8; }
 .stform .wide { grid-column: 1 / -1; }
-.stform input[type="text"], .stform input[type="url"], .stform select { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .9rem; }
+.stform input[type="text"], .stform input[type="url"], .stform select { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #3a4450; background: #1b2026; color: #edf2f7; font: inherit; font-size: .9rem; }
 .stform input::placeholder { color: #5c6877; }
 .stform .stcolor { display: flex; gap: 8px; }
 .stform .stcolor input[type="text"] { flex: 1 1 auto; min-width: 0; }
-.stform .stcolor input[type="color"] { flex: none; width: 44px; height: 42px; padding: 3px; box-sizing: border-box; border: 1px solid #303a47; border-radius: 10px; background: #11161d; }
+.stform .stcolor input[type="color"] { flex: none; width: 44px; height: 42px; padding: 3px; box-sizing: border-box; border: 1px solid #3a4450; border-radius: 10px; background: #1b2026; }
 /* Arrastrar para reordenar y menú del clic derecho */
 .preset.dragging { background: transparent; border-color: transparent; box-shadow: none; }   /* al arrastrar, el botón se va con el cursor y en su sitio queda solo el hueco, sin borde */
 .preset.dragging > * { visibility: hidden; }
 .preset.drop-target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
 .dnd-card { position: fixed; z-index: 60; left: 0; top: 0; margin: 0; border-radius: 12px; pointer-events: none; opacity: .92; border-color: var(--accent); background: var(--accent-bg); box-shadow: 0 12px 28px rgba(0, 0, 0, .55); }   /* copia que sigue al dedo al arrastrar en el móvil */
 .dnd-card.dnd-img { top: -1000px; opacity: 1; box-shadow: none; }   /* con el ratón: imagen para el navegador, fuera de la vista (la sombra se cortaría en un recuadro) */
-.ctxmenu { display: flex; flex-direction: column; max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px); overflow: hidden; position: fixed; z-index: 60; min-width: 190px; padding: 5px; border: 1px solid #303a47; border-radius: 10px; background: #1a2029; box-shadow: 0 10px 30px #000a; }
+.ctxmenu { display: flex; flex-direction: column; max-height: calc(100vh - 12px); max-height: calc(100dvh - 12px); overflow: hidden; position: fixed; z-index: 60; min-width: 190px; padding: 5px; border: 1px solid #3a4450; border-radius: 10px; background: #242a32; box-shadow: 0 10px 30px #000a; }
 .ctxmenu, .ctxmenu * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }   /* el menú no deja seleccionar texto: con la pulsación larga del móvil saltaba la selección de Android */
 .ctxmenu input { -webkit-user-select: text; user-select: text; }   /* salvo los campos de texto, que se siguen pudiendo editar */
 .ctxmenu button { display: block; width: 100%; padding: 8px 12px; text-align: left; font-size: .88rem; color: #e8edf5; background: none; border-radius: 7px; }
-.ctxmenu button:hover:not(:disabled) { background: #2a3441; }
+.ctxmenu button:hover:not(:disabled) { background: #343e4a; }
 .ctxmenu button.danger:hover { background: #c4525e; }
 .ctxmenu button:disabled { color: #8c98a8; }
-.ctxmenu .ctxtitle { padding: 6px 12px 7px; margin-bottom: 3px; border-bottom: 1px solid #303a47; font-size: .8rem; color: #8c98a8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
-.toast { position: fixed; z-index: 70; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 12px; border: 1px solid #303a47; background: #1a2029; color: #edf2f7; font-size: .88rem; box-shadow: 0 10px 30px #000a; pointer-events: none; }
+.ctxmenu .ctxtitle { padding: 6px 12px 7px; margin-bottom: 3px; border-bottom: 1px solid #3a4450; font-size: .8rem; color: #8c98a8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+.toast { position: fixed; z-index: 70; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 12px; border: 1px solid #3a4450; background: #242a32; color: #edf2f7; font-size: .88rem; box-shadow: 0 10px 30px #000a; pointer-events: none; }
 .toast[hidden] { display: none; }
 
 .ctxform { display: flex; flex-direction: column; gap: 6px; padding: 4px 6px 6px; width: 250px; max-width: 100%; box-sizing: border-box; }
-.ctxform input { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .86rem; }
+.ctxform input { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid #3a4450; background: #1b2026; color: #edf2f7; font: inherit; font-size: .86rem; }
 .ctxform input::placeholder { color: #5c6877; }
 .ctxform .ctxerr { font-size: .78rem; line-height: 1.3; color: #ff7a85; }
 .ctxform button { width: auto; align-self: flex-end; padding: 6px 14px; text-align: center; color: var(--on-accent); background: var(--accent); font-weight: 600; }
@@ -340,10 +347,10 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .ctxmenu button.recoff { color: #7d6b72; cursor: not-allowed; }   /* grabando: emisora que no se puede grabar */
 .ctxmenu .ctxsolo .ctxname { flex: 1 1 auto; min-width: 0; max-width: 260px; padding: 8px 12px; font-size: .88rem; font-weight: 650; color: #e8edf5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* cadena con una sola emisora: su nombre, con el color normal, y "Eliminar" a su lado */
 .ctxmenu .ctxrow .ctxdel { flex: none; width: auto; padding: 8px 10px; font-size: .8rem; color: #ff7a85; }
-.ctxmenu .ctxrow .ctxdel:hover { background: #3a2227; }
+.ctxmenu .ctxrow .ctxdel:hover { background: #442c30; }
 .ctxmenu .ctxrow .ctxdel.danger { color: #fff; background: #b8414d; }
 .ctxmenu .ctxrow .ctxdel.danger:hover { background: #c4525e; }
-.ctxmenu .ctxadd { margin-top: 3px; border-top: 1px solid #303a47; border-radius: 0 0 7px 7px; color: #cbd5e1; }
+.ctxmenu .ctxadd { margin-top: 3px; border-top: 1px solid #3a4450; border-radius: 0 0 7px 7px; color: #cbd5e1; }
 #stMsg:empty { border-color: transparent; background: none; }
 .ctxform label { display: flex; flex-direction: column; gap: 4px; font-size: .74rem; color: #8c98a8; }
 .ctxmenu .ctxren { margin-top: 0; border-top: 0; border-radius: 7px; }
@@ -353,7 +360,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
    =========================================================== */
 dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-height: min(760px, calc(100dvh - 44px)); }
 .tdt .dlg { flex: 1 1 auto; min-height: 0; }
-.tdtq { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .9rem; }
+.tdtq { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #3a4450; background: #1b2026; color: #edf2f7; font: inherit; font-size: .9rem; }
 .tdtq::placeholder { color: #5c6877; }
 .tdtstatus { font-size: .78rem; color: #8c98a8; line-height: 1.4; }
 .tdtstatus.err { color: #ff8a8a; }
@@ -364,7 +371,7 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtsec::after { content: ''; flex: 1; height: 2px; border-radius: 1px; background: var(--accent); opacity: .4; }
 .tdtsec:first-child { margin-top: 2px; }
 /* Una sola tarjeta por canal, sin tarjetas dentro: las opciones son filas con una línea de separación y un punto (relleno = elegida) */
-.tdtch { margin-bottom: 8px; padding: 12px 14px 2px; border-radius: 12px; background: #2a3441; }
+.tdtch { margin-bottom: 8px; padding: 12px 14px 2px; border-radius: 12px; background: #343e4a; }
 .tdthead { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; margin-bottom: 8px; }
 .tdthead b { font-size: .92rem; font-weight: 650; }
 .tdthead .tag { padding: 1px 6px; border: 1px solid #3d4959; border-radius: 6px; font-size: .66rem; color: #9fabb9; }
@@ -385,14 +392,14 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtq, .tdtstatus, .tdtsec, .tdtch { transition: opacity .2s; }
 .tdt.picking .tdtq, .tdt.picking .tdtstatus, .tdt.picking .tdtsec, .tdt.picking .tdtch:not(:has(.tdtopt.sel)) { opacity: .35; }
 .tdt.picking .tdtch:not(:has(.tdtopt.sel)):hover { opacity: .75; }
-.tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; margin-top: 14px; padding: 12px 14px 14px; border-radius: 12px; background: #1c232d; box-shadow: 0 0 0 1.5px var(--accent), 0 -10px 18px -6px rgba(0,0,0,.45); }
+.tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; margin-top: 14px; padding: 12px 14px 14px; border-radius: 12px; background: #262d36; box-shadow: 0 0 0 1.5px var(--accent), 0 -10px 18px -6px rgba(0,0,0,.45); }
 .tdtact[hidden] { display: none; }
 .tdtsel { display: flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 700; color: var(--accent); }
 .tdtsel span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.tdtselx { flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: #2a3441; color: #aeb9c8; font-size: 1.25rem; line-height: 1; }
+.tdtselx { flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: #343e4a; color: #aeb9c8; font-size: 1.25rem; line-height: 1; }
 .tdtselx:hover { color: #fff; }
 .seg { display: flex; gap: 6px; }
-.seg button { padding: 8px 6px; font-size: .8rem; font-weight: 600; background: #2a3441; color: #aeb9c8; border-radius: 8px; }
+.seg button { padding: 8px 6px; font-size: .8rem; font-weight: 600; background: #343e4a; color: #aeb9c8; border-radius: 8px; }
 .seg button.on { background: var(--accent-bg); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .tdtform { gap: 12px 14px; }
 .tdtnew { grid-column: 1 / -1; gap: 12px 14px; }
@@ -404,7 +411,7 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 /* ===================================================
    == PREGUNTA (GRABACIÓN EN CURSO / SIN TERMINAR) ==
    =================================================== */
-dialog.ask { box-sizing: border-box; width: min(400px, calc(100vw - 40px)); margin: auto; padding: 20px; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+dialog.ask { box-sizing: border-box; width: min(400px, calc(100vw - 40px)); margin: auto; padding: 20px; border: 1px solid #3a4450; border-radius: 16px; background: #242a32; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.ask::backdrop { background: rgba(0, 0, 0, .65); }
 dialog.ask b { font-size: 1.05rem; }
 dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
