@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, colorSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -213,6 +213,20 @@ settingsTabs.forEach(b => b.addEventListener('click', () => {
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });
   if (b.dataset.tab === 'log') logBox.scrollTop = 0;
 }));
+
+// La pestaña Registro está oculta: "Mostrar registro" (General) la saca solo durante esta sesión; al cerrar y volver a abrir la aplicación vuelve a estar oculta
+const SHOWLOG_KEY = 'rn_showlog';
+const logTabBtn = [...settingsTabs].find(b => b.dataset.tab === 'log');
+function applyShowLog(on) {
+  logTabBtn.hidden = !on;
+  if (!on && !tabLog.hidden) settingsTabs[0].click();
+}
+try { logSwitch.checked = sessionStorage.getItem(SHOWLOG_KEY) === '1'; } catch (_) {}
+applyShowLog(logSwitch.checked);
+logSwitch.addEventListener('change', () => {
+  try { if (logSwitch.checked) sessionStorage.setItem(SHOWLOG_KEY, '1'); else sessionStorage.removeItem(SHOWLOG_KEY); } catch (_) {}
+  applyShowLog(logSwitch.checked);
+});
 
 function openSettings() {
   refreshDelayUi();

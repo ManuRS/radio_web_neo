@@ -140,7 +140,7 @@ const scroller = document.querySelector('.scroller');
 // Cabecera que se encoge al deslizar (ver header en styles.css): --p va de 0 (grande) a 1 (encogida) según lo que se ha bajado
 // con el scroll de la zona de abajo o, si la página es corta y hace scroll entera, el de la ventana. Con "reducir movimiento" salta de una a otra
 const ctlBar = document.getElementById('ctlBar');
-const HDR_DIST = 120;   // px de scroll hasta que queda del todo encogida: lo que mide de menos (así el contenido sube a la vez que baja la cabecera)
+const HDR_DIST = 124;   // px de scroll hasta que queda del todo encogida: lo que mide de menos (así el contenido sube a la vez que baja la cabecera)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let hdrP = -1;
 function hdrUpdate() {

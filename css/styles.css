@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hf: 176px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hf: 180px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -49,7 +49,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
 header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: #262d37; }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
-.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin-top: calc(12px * (1 - var(--p))); }
+.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin-top: calc(16px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
 .titles { flex: 1 1 auto; min-width: 0; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
@@ -206,8 +206,9 @@ body.no-config .panel.vols > * { visibility: visible; }
 /* =============================================
    == EMISORAS (GRUPOS: GENERALISTAS Y MUSICALES) ==
    ============================================= */
-.presets { margin: 4px 2px 0; }
+.presets { margin: 0 2px; }
 .pgroup { margin-top: 18px; }
+.pgroup:first-child { margin-top: 22px; }   /* el primer título (Generalistas) a 22 px de boletines, como Frecuencias en Proxy y Presintonías sobre el buscador */
 .ptitle { margin: 0 0 8px 2px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8c98a8; }
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
 .pgrid .preset { border-radius: 12px; }

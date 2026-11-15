@@ -67,6 +67,7 @@ export const settingsTabs = document.querySelectorAll('#settings .tabs button');
 export const tabGeneral = document.getElementById('tabGeneral');
 export const tabConfig = document.getElementById('tabConfig');
 export const tabLog = document.getElementById('tabLog');
+export const logSwitch = document.getElementById('logSwitch');
 export const cfgSave = document.getElementById('cfgSave');
 export const cfgFile = document.getElementById('cfgFile');
 export const cfgClearSounds = document.getElementById('cfgClearSounds');

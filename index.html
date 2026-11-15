@@ -236,7 +236,7 @@
         <button type="button" role="tab" data-tab="general" class="active" aria-selected="true">General</button>
         <button type="button" role="tab" data-tab="stations" aria-selected="false">Cadena</button>
         <button type="button" role="tab" data-tab="config" aria-selected="false">Configuración</button>
-        <button type="button" role="tab" data-tab="log" aria-selected="false">Registro</button>
+        <button type="button" role="tab" data-tab="log" aria-selected="false" hidden>Registro</button>
       </div>
       <div class="tab" id="tabGeneral">
         <div class="group">
@@ -286,6 +286,15 @@
             <span>Script de personalización</span>
             <button id="customBtn" type="button">Cargar</button>
             <input id="customInput" type="file" accept=".js,text/javascript,application/javascript,text/plain" hidden>
+          </div>
+        </div>
+        <div class="group">
+          <div class="clockrow">
+            <label for="logSwitch">Mostrar registro</label>
+            <label class="switch">
+              <input type="checkbox" id="logSwitch">
+              <span class="track"></span>
+            </label>
           </div>
         </div>
       </div>
