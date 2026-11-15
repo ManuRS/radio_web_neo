@@ -71,13 +71,15 @@ const luminance = hex => {
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 const ACCENT_MIN_LUM = 0.15;   // por debajo, el color se pierde sobre el fondo oscuro y el texto oscuro de los botones no se lee
-// Ecualizador por defecto: el que se usa si los ajustes no traen el bloque "eq" (con "eq" pero sin modos, no hay ecualizador)
+// Ecualizador por defecto (detrás del "normal", plano y sin texto): el que se usa si los ajustes no traen el bloque "eq" (con "eq" pero sin modos, no hay ecualizador)
 const DEFAULT_EQ = {
   lowHz: 100, midHz: 1000, midQ: 0.8, highHz: 8000, defaultMode: 1,
   modes: [
-    { label: 'EQ Graves', low: 8, mid: 0, high: 2, pre: 0 },
+    { label: 'EQ Graves', low: 10, mid: 0, high: 2, pre: 0 },
     { label: 'EQ Dinámico', low: 5, mid: -1, high: 4, pre: 0 },
     { label: 'Frecuencia Modulada', low: -18, mid: 8, high: -18, pre: 0 },
+    { label: 'EQ Voz', low: -4, mid: 3, high: 2, pre: 0 },                 // tertulias y boletines: menos graves, más presencia
+    { label: 'EQ Especial móvil', low: -3, mid: 2, high: 3, pre: 0 },      // altavoz del móvil: no gasta en graves que no puede dar
   ],
 };
 
