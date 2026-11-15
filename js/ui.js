@@ -103,6 +103,23 @@ if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutCheck).obser
 const scroller = document.querySelector('.scroller');
 scroller.addEventListener('scroll', () => scroller.style.setProperty('--fade', Math.min(96, scroller.scrollTop * 2.4) + 'px'), { passive: true });
 
+// Cabecera que se encoge al deslizar (ver header en styles.css): --p va de 0 (grande) a 1 (encogida) según lo que se ha bajado
+// con el scroll de la zona de abajo o, si la página es corta y hace scroll entera, el de la ventana. Con "reducir movimiento" salta de una a otra
+const hdr = document.getElementById('hdr');
+const HDR_DIST = 60;   // px de scroll hasta que queda del todo encogida
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+let hdrP = -1;
+function hdrUpdate() {
+  let p = Math.min(1, Math.max(0, Math.max(scroller.scrollTop, window.scrollY) / HDR_DIST));
+  if (reduceMotion.matches) p = p > .5 ? 1 : 0;
+  p = Math.round(p * 100) / 100;
+  if (p === hdrP) return;
+  hdrP = p;
+  hdr.style.setProperty('--p', p);
+}
+scroller.addEventListener('scroll', hdrUpdate, { passive: true });
+window.addEventListener('scroll', hdrUpdate, { passive: true });
+
 window.addEventListener('resize', layoutCheck);
 
 // Aviso breve abajo (resultado de editar emisoras desde la rejilla, mensajes sin ventana abierta...)

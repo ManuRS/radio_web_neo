@@ -44,12 +44,17 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: 22px 20px 28px;
 /* ==========================================
    == CABECERA, ESTADO DE CONEXIÓN Y RELOJ ==
    ========================================== */
-header { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 6px; }
-h1 { font-size: 1.35rem; margin: 0; }
+/* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
+   Se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono y el subtítulo y el título baja de tamaño */
+header { --p: 0; --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin: -22px -20px 0; padding: 0 20px; background: #262d37; box-shadow: 0 0 0 100vmax #262d37; clip-path: inset(0 -100vmax); }
+.logo { display: block; flex: 0 0 auto; width: calc(48px * (1 - var(--p))); height: calc(48px * (1 - var(--p))); margin-right: calc(12px * (1 - var(--p))); border-radius: 27%; opacity: clamp(0, calc(1 - 1.6 * var(--p)), 1); }
+.titles { flex: 1 1 auto; min-width: 0; }
+/* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
+h1 { font-size: calc(var(--t0) - (var(--t0) - 1.25rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
-/* Subtítulo bajo el título, escrito directamente en el HTML: 1rem, color #aeb9c8 y .6em de margen superior */
-.subtitle { margin: .6em 0 0; }
-.status { display: flex; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+/* Subtítulo bajo el título: se va cerrando en altura y desvaneciendo con el scroll */
+.subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
+.status { display: flex; margin-left: 14px; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
 .status:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
@@ -63,14 +68,14 @@ p { color: #aeb9c8; line-height: 1.45; }
 /* =========================
    == BOTONES Y VOLÚMENES ==
    ========================= */
-.buttons { display: flex; gap: 10px; margin-top: 17px; }
+.buttons { display: flex; gap: 10px; margin-top: 22px; }
 button { border: 0; border-radius: 10px; padding: 11px 17px; font: inherit; font-weight: 650; cursor: pointer;  flex: 1; }
 #toggle { color: var(--on-accent); background: var(--accent); }
 #stop { color: #e8edf5; background: #394454; }
 button:disabled { opacity: .45; cursor: default; }
 .volume { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
 .volume + .volume { margin-top: 10px; }
-.panel.vols { display: block; margin-top: 22px; padding: 17px 15px; }
+.panel.vols { display: block; margin-top: 10px; padding: 17px 15px; }
 .vols .volume { margin-top: 0; }
 .vols .volume + .volume { margin-top: 12px; }
 .volume label { flex: 0 0 4.6em; }
@@ -81,7 +86,7 @@ input[type="range"]:disabled { opacity: .4; }
 /* ===================================
    == EMISORA ACTUAL Y VISUALIZADOR ==
    =================================== */
-.now { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 10px; padding: 21px 18px 16px; min-height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; }
+.now { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; padding: 21px 18px 16px; min-height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; }
 .viz { position: relative; user-select: none; -webkit-tap-highlight-color: transparent; margin-top: 10px; padding: 28px 18px 14px; height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; }
 .viz canvas { display: block; width: 100%; height: 100%; }
 .viz.eq-on { cursor: pointer; }

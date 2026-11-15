@@ -72,7 +72,7 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#11151b">
+<meta name="theme-color" content="#262d37">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Radio Neo">
@@ -86,11 +86,14 @@
   <!-- ================================= -->
   <!-- == CABECERA, SUBTÍTULO Y RELOJ == -->
   <!-- ================================= -->
-  <header>
-    <h1 id="title">Radio Web Neo</h1>
+  <header id="hdr">
+    <img class="logo" src="icon-192.png" alt="" width="48" height="48">
+    <div class="titles">
+      <h1 id="title">Radio Web Neo</h1>
+      <p class="subtitle">La radio siempre contigo</p>
+    </div>
     <div class="status" id="statusBox" role="button" tabindex="0" aria-label="Ajustes y registro" title="Desconectado"><span class="dot" id="dot"></span><span id="clock">--:--:--</span></div>
   </header>
-  <p class="subtitle">Tu radio siempre lista en cualquier parte: rápida, ligera y privada</p>
   <h3 id="especial"></h3>
   <!-- ============= -->
   <!-- == BOTONES == -->
@@ -101,9 +104,20 @@
   </div>
 
   <!-- ================================================================================= -->
-  <!-- == ZONA CON SCROLL: VOLÚMENES, EMISORA, VISUALIZADOR, BOLETINES Y EMISORAS == -->
+  <!-- == ZONA CON SCROLL: EMISORA, VISUALIZADOR, VOLÚMENES, BOLETINES Y EMISORAS == -->
   <!-- ================================================================================= -->
   <div class="scroller">
+  <div class="now">
+    <div class="ps idle" id="psValue"><span id="psText">—</span></div>
+    <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
+  </div>
+
+  <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas><span id="eqLabel" class="eq-label" aria-hidden="true"></span>
+    <button id="presOpen" class="pres-open" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
+    <button id="presExpand" class="pres-open pres-expand" type="button" aria-label="Ampliar" title="Ampliar"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/></svg></button>
+    <button id="pipBtn" class="pres-open pres-pip" type="button" aria-label="Imagen en imagen" title="Imagen en imagen" hidden><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/><rect x="11" y="10.5" width="7.5" height="6" fill="currentColor"/></svg></button>
+  </div>
+
   <div class="panel vols">
     <div class="volume">
       <label for="volume">Volumen</label>
@@ -115,17 +129,6 @@
       <input id="newsVolume" type="range" min="0.001" max="1.0" step="any" value="1.0">
       <span id="newsVolValue">100%</span>
     </div>
-  </div>
-
-  <div class="now">
-    <div class="ps idle" id="psValue"><span id="psText">—</span></div>
-    <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
-  </div>
-
-  <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas><span id="eqLabel" class="eq-label" aria-hidden="true"></span>
-    <button id="presOpen" class="pres-open" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
-    <button id="presExpand" class="pres-open pres-expand" type="button" aria-label="Ampliar" title="Ampliar"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/></svg></button>
-    <button id="pipBtn" class="pres-open pres-pip" type="button" aria-label="Imagen en imagen" title="Imagen en imagen" hidden><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/><rect x="11" y="10.5" width="7.5" height="6" fill="currentColor"/></svg></button>
   </div>
 
   <!-- ===================================================== -->
