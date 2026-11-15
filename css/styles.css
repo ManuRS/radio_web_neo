@@ -351,7 +351,14 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
    == EMISORAS: LISTA, ALTA Y EDICIÓN ==
    =================================== */
 #tabStations { padding-top: 14px; }   /* el mensaje, el botón y la fila fantasma van abajo, como en Configuración y Registro, para que los botones queden a la misma altura */
-#tabStations .cfgmsg { margin-top: auto; }
+/* Ventanas de formulario (nueva cadena, añadir emisora, cambiar nombre): como la de ajustes, arriba, pero solo con la altura que necesitan */
+dialog.settings.sheet { min-height: 0; }
+.sheet .cfgmsg:empty { display: none; }
+.sheet .dlg { flex: 0 1 auto; min-height: 0; }
+.sheet .stform { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 3px; margin: -3px; }   /* con muchos campos (cambiar nombre de una cadena grande) se desplazan ellos y el botón queda siempre a la vista */
+.sheet .dlg-head, .sheet .cfgmsg, .sheet .dlg-actions { flex: none; }
+.sheet .dlg-actions { justify-content: flex-end; }
+.sheet .dlg-actions .primary { flex: 0 1 auto; min-width: 140px; }
 .stform { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 14px; }
 .stform .sttitle { grid-column: 1 / -1; font-size: .95rem; color: #edf2f7; }
 .stform label { display: flex; flex-direction: column; gap: 7px; min-width: 0; font-size: .76rem; color: #8c98a8; }
@@ -378,19 +385,10 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .toast { position: fixed; z-index: 70; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 12px; border: 1px solid #303a47; background: #1a2029; color: #edf2f7; font-size: .88rem; box-shadow: 0 10px 30px #000a; pointer-events: none; }
 .toast[hidden] { display: none; }
 
-.ctxform { display: flex; flex-direction: column; gap: 6px; padding: 4px 6px 6px; width: 250px; max-width: 100%; box-sizing: border-box; }
-.ctxform input { width: 100%; box-sizing: border-box; padding: 7px 9px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .86rem; }
-.ctxform input::placeholder { color: #5c6877; }
-.ctxform .ctxerr { font-size: .78rem; line-height: 1.3; color: #ff7a85; }
-.ctxform button { width: auto; align-self: flex-end; padding: 6px 14px; text-align: center; color: var(--on-accent); background: var(--accent); font-weight: 600; }
-.ctxform button:disabled { opacity: .55; }
-.ctxmenu .ctxform button:hover:not(:disabled) { background: var(--accent); filter: brightness(1.12); }
 /* Con muchas emisoras en una cadena: el nombre arriba y "Añadir emisora…" / "Cambiar nombre…" (o "Guardar") abajo no se mueven; entre medias, la lista se desplaza */
 .ctxmenu > * { flex: none; }
-.ctxmenu > .ctxlist, .ctxmenu > .ctxform { flex: 0 1 auto; min-height: 0; }
+.ctxmenu > .ctxlist { flex: 0 1 auto; min-height: 0; }
 .ctxlist { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3a4656 transparent; }
-.ctxform { overflow: hidden; }
-.ctxfields { display: flex; flex-direction: column; gap: 6px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3a4656 transparent; padding: 2px; margin: -2px; }
 .ctxrow { display: flex; align-items: center; gap: 4px; }
 .ctxmenu .ctxrow .ctxgo { flex: 1 1 auto; min-width: 0; width: auto; }
 .ctxmenu .ctxrow .ctxgo.on { color: var(--accent); font-weight: 600; }
@@ -402,7 +400,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .ctxmenu .ctxrow .ctxdel.danger:hover { background: #c4525e; }
 .ctxmenu .ctxadd { margin-top: 3px; border-top: 1px solid #303a47; border-radius: 0 0 7px 7px; color: #cbd5e1; }
 #stMsg:empty { border-color: transparent; background: none; }
-.ctxform label { display: flex; flex-direction: column; gap: 4px; font-size: .74rem; color: #8c98a8; }
 .ctxmenu .ctxren { margin-top: 0; border-top: 0; border-radius: 7px; }
 
 /* ===========================================================

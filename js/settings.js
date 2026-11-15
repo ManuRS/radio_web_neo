@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stationClose, stationDlg, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -201,11 +201,11 @@ function showCfgMsg(lines, isError) {
   const cls = 'cfgmsg' + (isError ? ' err' : ' ok');
   cfgMsg.className = stMsg.className = cls;
   cfgMsg.textContent = stMsg.textContent = lastMsg = lines.join('\n');
-  if (!settingsDlg.open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
+  if (!settingsDlg.open && !stationDlg.open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
 }
 
-// Pestañas de la ventana: General (reloj y audio), Cadena (alta de emisoras), Configuración (el texto con los ajustes) y Registro
-const tabPanels = { general: tabGeneral, stations: tabStations, config: tabConfig, log: tabLog };
+// Pestañas de la ventana: General (reloj y audio), Configuración (el texto con los ajustes) y Registro (oculta salvo con "Mostrar registro")
+const tabPanels = { general: tabGeneral, stations: stationClose, stationDlg, config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
   settingsTabs.forEach(x => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', String(on)); });
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });
@@ -231,8 +231,8 @@ function openSettings() {
   outSelect.value = getOutMode();
   refreshNormSwitch();
   cfgText.value = S.configText;
-  cfgMsg.textContent = stMsg.textContent = '';
-  cfgMsg.className = stMsg.className = 'cfgmsg';
+  cfgMsg.textContent = '';
+  cfgMsg.className = 'cfgmsg';
   openDialog(settingsDlg);
 }
 
@@ -670,6 +670,8 @@ async function addStationFromForm() {
   try {
     const err = await createChain({ name: field('stName').value, short: field('stShort').value, group: field('stType').value, color: field('stColor').value, url });
     if (err) { showCfgMsg([err], true); return; }
+    closeDialog(stationDlg);
+    toast(lastMsg);
     stForm.reset();
     field('stColorPick').value = '#4da3ff';
   } finally {
@@ -679,6 +681,17 @@ async function addStationFromForm() {
   }
 }
 stAdd.addEventListener('click', addStationFromForm);
+
+// Ventana "Nueva cadena": se abre con el "+" del final de cada grupo de presintonías, con su tipo ya elegido
+editHooks.newChain = group => {
+  stMsg.textContent = '';
+  stMsg.className = 'cfgmsg';
+  if (group) field('stType').value = group;
+  openDialog(stationDlg);
+  field('stName').focus();
+};
+stationClose.addEventListener('click', () => closeDialog(stationDlg));
+stationDlg.addEventListener('click', e => { if (e.target === stationDlg) closeDialog(stationDlg); });
 stForm.addEventListener('submit', e => { e.preventDefault(); addStationFromForm(); });
 
 // Clic derecho en una emisora > "Añadir variante": se añade al final de sus URL (los números de las demás no cambian, así que se puede con algo sonando).

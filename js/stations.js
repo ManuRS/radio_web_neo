@@ -16,7 +16,7 @@ import { toast } from './ui.js';
 
 // Edición de las emisoras desde la rejilla (arrastrar para reordenar; clic derecho para añadir una variante o eliminar): settings.js rellena estas funciones y escribe el JSON
 // Cada función devuelve (o resuelve con) el texto del error, o nada si todo fue bien. addVariant(id, url, nombre) comprueba la URL; rename(id, nombre, corto, nombresVariantes) cambia los nombres
-export const editHooks = { move: null, remove: null, removeVariant: null, addVariant: null, rename: null };
+export const editHooks = { move: null, remove: null, removeVariant: null, addVariant: null, rename: null, newChain: null };   // newChain(grupo): abre la ventana "Nueva cadena"
 
 // Grabando, las emisoras sin CORS (modo degradado) no se pueden poner: su audio no llega a la grabación (ver recorder.js)
 const recBlocked = (st, vi) => S.recording && !corsAllowed(st, vi);
@@ -65,7 +65,7 @@ export function restoreLast() {
 // ===========================
 // == REJILLA DE EMISORAS ==
 // ===========================
-let groups = [];   // [{ id, list, grid, buttons, labels, more, expanded }]
+let groups = [];   // [{ id, list, grid, buttons, labels, more }]
 const expandedGroups = new Set();   // grupos con la rejilla desplegada: se conservan al redibujar (al reordenar, añadir o eliminar)
 
 // Despliega la rejilla de un grupo (al añadir una emisora, para que se vea el botón nuevo)
@@ -98,8 +98,11 @@ export function buildStations() {
     const more = document.createElement('button');
     more.className = 'preset more';
     more.type = 'button';
-    const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more, expanded: expandedGroups.has(g.id) };
-    more.addEventListener('click', () => { grp.expanded = !grp.expanded; if (grp.expanded) expandedGroups.add(g.id); else expandedGroups.delete(g.id); applyVisibility(); });
+    more.textContent = '+';
+    more.title = 'Añadir cadena';
+    more.setAttribute('aria-label', 'Añadir cadena ' + (g.id === 'musical' ? 'musical' : 'generalista'));
+    const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more };
+    more.addEventListener('click', () => { if (editHooks.newChain) editHooks.newChain(g.id); });   // "+": ventana "Nueva cadena" con el tipo del grupo
     grid.appendChild(more);
     wrap.append(title, grid);
     presetsBox.appendChild(wrap);
@@ -278,8 +281,7 @@ function openMenuOnce(x, y, st) {
 }
 
 let menuEl = null;
-let menuForm = false;   // con el formulario de la variante abierto, el menú no se cierra al redimensionar (teclado del móvil) ni al cambiar de ventana (para copiar el enlace)
-function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; menuForm = false; } }
+function closeMenu() { if (menuEl) { menuEl.remove(); menuEl = null; } }
 // Etiqueta de una variante en el menú: su nombre (por defecto, el formato; con número si hay dos iguales); la calidad, si se conoce, solo se ve junto al EQ
 function variantLabel(st, i) {
   const u = st.urls[i];
@@ -298,17 +300,20 @@ function placeMenu(m, x, y, center = false) {
   m.style.left = Math.max(6, center ? (window.innerWidth - r.width) / 2 : Math.min(x, window.innerWidth - r.width - 6)) + 'px';
   m.style.top = Math.max(6, Math.min(y, window.innerHeight - r.height - 6)) + 'px';
 }
-// Formulario dentro del menú (sustituye a las opciones). fields: [{ type, placeholder, label (texto pequeño encima, opcional), value, max, aria }];
-// run(valores) devuelve (promesa) el texto del error, o nada si todo fue bien (y el menú se cierra). Mientras tanto, los campos se bloquean.
-function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }) {
-  menuForm = true;
-  // En pantallas táctiles el formulario se coloca arriba y centrado: al salir el teclado, en cualquier otro sitio quedaría tapado
-  const touchUi = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-  if (touchUi) y = 16;
-  m.replaceChildren(head);
-  const form = document.createElement('form');
-  form.className = 'ctxform';
-  form.noValidate = true;
+// Formularios de la cadena (añadir emisora, cambiar nombre): ventana como la de ajustes, arriba, en vez del menú. fields: [{ type, placeholder,
+// label, value, max, wide }]; run(valores) devuelve (promesa) el texto del error, o nada si todo fue bien (y la ventana se cierra). Mientras tanto, los campos se bloquean
+const formDlg = document.getElementById('formDlg');
+const formTitle = document.getElementById('formDlgTitle');
+const formForm = document.getElementById('formDlgForm');
+const formMsg = document.getElementById('formMsg');
+const formGo = document.getElementById('formGo');
+let formRun = null, formBusy = false;
+function openFormDialog(title, { fields, button, busyText, failText, run }) {
+  formTitle.textContent = title;
+  formMsg.textContent = '';
+  formGo.textContent = button;
+  formGo.disabled = false;
+  formBusy = false;
   const inputs = fields.map(f => {
     const input = document.createElement('input');
     input.type = f.type || 'text';
@@ -317,58 +322,47 @@ function openMenuForm(m, head, x, y, { fields, button, busyText, failText, run }
     if (f.max) input.maxLength = f.max;
     input.spellcheck = false;
     input.autocomplete = 'off';
-    input.setAttribute('aria-label', f.aria || f.label || f.placeholder || '');
-    if (!f.label) return { input, node: input };
     const lab = document.createElement('label');
-    const t = document.createElement('span');
-    t.textContent = f.label;
-    lab.append(t, input);
+    if (f.wide) lab.className = 'wide';
+    lab.append(f.label, input);
     return { input, node: lab };
   });
-  const err = document.createElement('div');
-  err.className = 'ctxerr';
-  err.hidden = true;
-  const go = document.createElement('button');
-  go.type = 'submit';
-  go.textContent = button;
-  const box = document.createElement('div');   // los campos se desplazan por dentro; el aviso y el botón quedan siempre a la vista (hay cadenas con muchas emisoras)
-  box.className = 'ctxfields';
-  box.append(...inputs.map(i => i.node));
-  form.append(box, err, go);
-  const lock = on => { inputs.forEach(i => { i.input.disabled = on; }); go.disabled = on; };
-  let busy = false;
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    if (busy) return;
-    busy = true; lock(true); go.textContent = busyText || button; err.hidden = true;
-    let msg = null;
-    try { msg = await run(inputs.map(i => i.input.value)); } catch (_) { msg = failText; }
-    if (!msg) { if (menuEl === m) closeMenu(); return; }
-    if (menuEl !== m) return;   // el menú se cerró mientras tanto
-    busy = false; lock(false); go.textContent = button;
-    err.textContent = msg; err.hidden = false;
-    placeMenu(m, x, y, touchUi);
-    inputs[0].input.focus({ preventScroll: true });
-  });
-  m.appendChild(form);
-  placeMenu(m, x, y, touchUi);
-  inputs[0].input.focus({ preventScroll: true });
+  formForm.replaceChildren(...inputs.map(i => i.node));
+  formRun = { inputs, button, busyText, failText, run };
+  if (typeof formDlg.showModal === 'function') { if (!formDlg.open) formDlg.showModal(); } else formDlg.setAttribute('open', '');
+  inputs[0].input.focus();
   inputs[0].input.select();
 }
-const openVariantForm = (m, head, st, x, y) => openMenuForm(m, head, x, y, {
+const closeFormDialog = () => { if (typeof formDlg.close === 'function') formDlg.close(); else formDlg.removeAttribute('open'); };
+formForm.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!formRun || formBusy) return;
+  const r = formRun, lock = on => { r.inputs.forEach(i => { i.input.disabled = on; }); formGo.disabled = on; };
+  formBusy = true; lock(true); formGo.textContent = r.busyText || r.button; formMsg.textContent = '';
+  let msg = null;
+  try { msg = await r.run(r.inputs.map(i => i.input.value)); } catch (_) { msg = r.failText; }
+  if (formRun !== r) return;   // se abrió otro formulario mientras tanto
+  formBusy = false; lock(false); formGo.textContent = r.button;
+  if (!msg) { closeFormDialog(); return; }
+  formMsg.textContent = msg;
+  r.inputs[0].input.focus();
+});
+document.getElementById('formClose').addEventListener('click', closeFormDialog);
+formDlg.addEventListener('click', e => { if (e.target === formDlg) closeFormDialog(); });
+const openVariantForm = st => openFormDialog('Añadir emisora · ' + st.name, {
   fields: [
-    { type: 'url', placeholder: 'https://…/stream.aac', aria: 'Enlace de la emisora' },
-    { max: 30, placeholder: 'SER Málaga', aria: 'Nombre de la emisora (opcional)' },
+    { type: 'url', label: 'Enlace de la emisora', placeholder: 'https://…/stream.aac', wide: true },
+    { max: 30, label: 'Nombre de la emisora (opcional)', placeholder: 'SER Málaga', wide: true },
   ],
   button: 'Añadir', busyText: 'Comprobando…', failText: 'No se pudo añadir la emisora',
   run: ([url, name]) => editHooks.addVariant ? editHooks.addVariant(st.id, url, name) : 'No disponible',
 });
 // Nombre de la emisora, nombre corto del botón y el nombre de cada variante (vacío = el formato)
-const openRenameForm = (m, head, st, x, y) => openMenuForm(m, head, x, y, {
+const openRenameForm = st => openFormDialog('Cambiar nombre · ' + st.name, {
   fields: [
     { max: 40, value: st.name, label: 'Nombre de la cadena' },
     { max: 14, value: st.short || '', label: 'Nombre corto (botón)' },
-    ...st.urls.map((u, i) => ({ max: 30, value: u.label, placeholder: u.kind.toUpperCase(), label: (st.urls.length > 1 ? 'Emisora ' + (i + 1) : 'Emisora') + ' (' + u.kind.toUpperCase() + ')' })),
+    ...st.urls.map((u, i) => ({ max: 30, value: u.label, placeholder: u.kind.toUpperCase(), wide: true, label: (st.urls.length > 1 ? 'Emisora ' + (i + 1) : 'Emisora') + ' (' + u.kind.toUpperCase() + ')' })),
   ],
   button: 'Guardar', failText: 'No se pudo cambiar el nombre',
   run: ([name, short, ...labels]) => editHooks.rename ? editHooks.rename(st.id, name, short, labels) : 'No disponible',
@@ -381,7 +375,7 @@ function openMenu(x, y, st) {
   const m = document.createElement('div');
   m.className = 'ctxmenu';
   m.setAttribute('role', 'menu');
-  const head = document.createElement('div');   // cabecera gris: la del menú con varias emisoras y la de los formularios (añadir, cambiar nombre)
+  const head = document.createElement('div');   // cabecera gris del menú con varias emisoras
   head.className = 'ctxtitle';
   head.textContent = st.name;
   // "Eliminar" en dos pasos: la primera pulsación pide confirmación; la segunda quita la emisora i (con una sola, la cadena entera)
@@ -434,14 +428,14 @@ function openMenu(x, y, st) {
   add.className = 'ctxadd';
   add.setAttribute('role', 'menuitem');
   add.textContent = 'Añadir emisora…';
-  add.addEventListener('click', () => openVariantForm(m, head, st, x, y));
+  add.addEventListener('click', () => { closeMenu(); openVariantForm(st); });
   m.appendChild(add);
   const ren = document.createElement('button');
   ren.type = 'button';
   ren.className = 'ctxadd ctxren';
   ren.setAttribute('role', 'menuitem');
   ren.textContent = 'Cambiar nombre…';
-  ren.addEventListener('click', () => openRenameForm(m, head, st, x, y));
+  ren.addEventListener('click', () => { closeMenu(); openRenameForm(st); });
   m.appendChild(ren);
   document.body.appendChild(m);
   placeMenu(m, x, y);
@@ -451,8 +445,8 @@ function openMenu(x, y, st) {
 }
 document.addEventListener('pointerdown', e => { if (menuEl && !menuEl.contains(e.target)) closeMenu(); }, true);
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
-window.addEventListener('resize', () => { if (!menuForm) closeMenu(); });
-window.addEventListener('blur', () => { if (!menuForm) closeMenu(); });
+window.addEventListener('resize', closeMenu);
+window.addEventListener('blur', closeMenu);
 
 // Columnas de una rejilla (cambian con el ancho de la pantalla)
 const lastCols = new WeakMap();
@@ -465,19 +459,9 @@ function columns(grid) {
   if (n) lastCols.set(grid, n);
   return n || lastCols.get(grid) || 4;
 }
-// De cada grupo solo se ven las dos primeras filas: la última casilla es el "+" (que muestra las demás) y, con todas visibles, el "−" las oculta
+// Por ahora se ven todas las cadenas de cada grupo (el "+" del final ya no despliega: abre "Nueva cadena"). Queda pendiente otra forma de plegar
 function applyVisibility() {
-  groups.forEach(g => {
-    const capacity = columns(g.grid) * 2;
-    const needMore = g.buttons.length > capacity;
-    const visible = needMore && !g.expanded ? capacity - 1 : g.buttons.length;
-    g.buttons.forEach((b, i) => { b.hidden = i >= visible; });
-    g.more.hidden = !needMore;
-    g.more.textContent = g.expanded ? '−' : '+';
-    const label = g.expanded ? 'Ocultar cadenas' : 'Mostrar más cadenas';
-    g.more.title = label;
-    g.more.setAttribute('aria-label', label);
-  });
+  groups.forEach(g => { g.buttons.forEach(b => { b.hidden = false; }); g.more.hidden = false; });
 }
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(applyVisibility).observe(presetsBox);
 

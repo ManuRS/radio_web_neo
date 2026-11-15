@@ -40,7 +40,7 @@ Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación
 
 - Para añadirlo a una presintonía existente: 1. Sobre el panel deseado, hacer clic derecho en PC o mantener pulsado en el movil / 2. Seleccionar añadir emisora / 3. Indicar la URL y el nombre deseado
 
-- Para añadirlo creando una nueva presintonía: 1. Pulsar el engranaje de la cabecera para mostrar los ajustes / 2. Pulsar en la pestaña de Cadena / 3. Rellenar los datos solicitados
+- Para añadirlo creando una nueva presintonía: 1. Pulsar el botón + que hay al final de las presintonías (en Generalistas o en Musicales; el tipo ya viene elegido) / 2. Rellenar los datos solicitados en la ventana "Nueva cadena"
 
 ## Exportar configuración
 
