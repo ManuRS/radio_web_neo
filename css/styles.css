@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hf: 160px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hf: 176px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -49,7 +49,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
 header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: #262d37; }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
-.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); }
+.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin-top: calc(12px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
 .titles { flex: 1 1 auto; min-width: 0; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
@@ -71,7 +71,7 @@ p { color: #aeb9c8; line-height: 1.45; }
 /* ====================================================================
    == BARRA DE CONTROLES (EN LA CABECERA): REPRODUCIR/DETENER, INFORMACIÓN Y AJUSTES ==
    ==================================================================== */
-.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(10px * (1 - var(--p))); margin-bottom: calc(22px * (1 - var(--p))); border-radius: 12px; background: #1d242d; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
+.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 12px; background: #1d242d; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
 .bar button { border-radius: 0; padding: 0; background: none; height: 52px; -webkit-tap-highlight-color: transparent; }
 .bar button:active { background: rgba(255, 255, 255, .07); }
 @media (hover: hover) { .bar button:hover { background: rgba(255, 255, 255, .04); } .bar button:active { background: rgba(255, 255, 255, .07); } }
@@ -108,7 +108,7 @@ button:disabled { opacity: .45; cursor: default; }
 .vols .volume + .volume { margin-top: 12px; }
 .volume label { flex: 0 0 4.6em; white-space: nowrap; position: relative; top: -2px; height: 24px; line-height: 24px; font-size: .86rem; font-weight: 700; color: #aeb9c8; }
 .volume label[for="newsVolume"] { letter-spacing: .285px; }   /* "Noticias" mide 2,3 px menos que "Volumen" (Barlow): así los dos ocupan lo mismo y el hueco hasta la barra es igual */
-.volume span { flex: 0 0 3.4ch; white-space: nowrap; height: 24px; line-height: 24px; text-align: right; font-size: .86rem; font-weight: 700; color: #edf2f7; font-variant-numeric: tabular-nums; }
+.volume span { flex: 0 0 3.4ch; white-space: nowrap; height: 24px; line-height: 24px; text-align: left; font-size: .86rem; font-weight: 700; color: #edf2f7; font-variant-numeric: tabular-nums; }
 input { width: 100%; accent-color: var(--accent); }
 /* Deslizadores propios: el nativo de Chrome dibuja un contorno gris alrededor del relleno. --r (0-1) lo pone ui.js (paintRange); el relleno llega al centro del pulgar (18 px) */
 input[type="range"] { -webkit-appearance: none; appearance: none; height: 24px; margin: 0; background: transparent; cursor: pointer; --r: 1; }
@@ -478,8 +478,8 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* =============================
    == PIE: CRÉDITOS Y ENLACES ==
    ============================= */
-.foot { margin: 30px 0 0; padding: 0; text-align: center; font-size: .72rem; line-height: 1.5; color: #7d899a; }
-.foot .love { display: block; margin-bottom: 4px; font-size: 1rem; font-weight: 700; color: #aeb9c8; }
+.foot { margin: 30px 0 0; padding: 0; text-align: center; font-size: .94rem; line-height: 1.5; color: #7d899a; }
+.foot .love { display: block; margin-bottom: 5px; font-size: 1.0625rem; font-weight: 700; color: #aeb9c8; }
 .foot a { color: inherit; text-decoration: none; }
 .foot a, .foot .nw { white-space: nowrap; }   /* si no cabe en una línea, se parte entre elementos, nunca dentro de uno */
 @media (hover: hover) { .foot a:hover { text-decoration: underline; text-underline-offset: 3px; } }
