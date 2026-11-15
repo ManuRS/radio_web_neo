@@ -371,7 +371,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#da291c"
+      "color": "#1e90ff"
     },
     {
       "id": "melodiafm",
@@ -412,7 +412,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff5a3c"
+      "color": "#ff5aa5"
     },
     {
       "id": "kissfm",
@@ -450,7 +450,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff4d6d"
+      "color": "#7cc242"
     },
     {
       "id": "los40dance",
@@ -558,7 +558,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff7b2c"
+      "color": "#00c389"
     }
   ],
   "newsStation": "ser",
