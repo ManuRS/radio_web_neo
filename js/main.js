@@ -31,7 +31,6 @@ function applyConfig(cfg) {
   S.configLoaded = cfg.stations.length > 0;
   document.body.classList.toggle('no-config', !S.configLoaded);   // sin ajustes, los paneles quedan vacíos
   refreshVolumeUi();                                               // y los volúmenes, bloqueados
-  S.accent = cfg.accent || '';                                     // color de énfasis general (vacío = verde por defecto)
   const eq = cfg.eq || { modes: [] };
   if (started && JSON.stringify(eq) !== JSON.stringify(S.eq)) resetEq();   // ajustes distintos o borrados: se olvida el modo guardado
   S.eq = eq;

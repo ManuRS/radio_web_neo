@@ -7,7 +7,7 @@
 import { S, endNewsState } from './state.js';
 import { emisoraName, emisoraSub } from './utils.js';
 import { presetsBox, psText, psValue } from './dom.js';
-import { applyAccent, setText } from './ui.js';
+import { applyAccent, paletteColor, setText } from './ui.js';
 import { switchStation } from './transitions.js';
 import { play, stopAll, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
@@ -546,12 +546,13 @@ export function stepStation(dir) {
 // ============================
 // == COLOR DE ÉNFASIS ==
 // ============================
-// El de la emisora que suena (campo "color" de los ajustes) o, si no tiene, el general
+// Con "Color personalizado" activado, el de la cadena que suena (campo "color" de los ajustes o, si no tiene, uno de la lista);
+// apagado, el color por defecto (Ajustes > General)
 let accentShown = null;
 export function refreshAccent() {
   if (S.pending) return;   // mientras se espera la confirmación del cambio, el color se queda como estaba
   const st = S.stationColors ? S.current : null;
-  const hex = (st && st.color) || S.accent;
+  const hex = st ? st.color || paletteColor(st.name) : S.accent;   // sin color en los ajustes, uno de la lista (ver paletteColor)
   if (hex === accentShown) return;
   accentShown = hex;
   applyAccent(hex);

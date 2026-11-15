@@ -73,8 +73,17 @@ if (document.fonts) { document.fonts.ready.then(measurePlayBtn); document.fonts.
 // ===========================
 // == COLOR DE ÉNFASIS (CSS) ==
 // ===========================
-// El verde por defecto vive en styles.css (--accent). Con un color en los ajustes se sustituye en la página y en las barras;
+// El verde por defecto vive en styles.css (--accent). Con otro color (Ajustes > General: color por defecto o el de la emisora) se sustituye en la página y en las barras;
 // vacío = vuelve al verde por defecto. Los demás tonos (texto sobre el color, fondos suaves) los deriva el CSS de --accent.
+
+// Colores para las emisoras sin color propio en los ajustes (con "Color personalizado" activado): se elige uno de la lista al azar,
+// siempre el mismo para cada emisora (sale de su nombre), para que no cambie cada vez que se sintoniza
+const STATION_PALETTE = ['#38bdf8', '#f472b6', '#fbbf24', '#a78bfa', '#fb923c', '#34d399', '#22d3ee', '#a3e635', '#e879f9', '#facc15', '#60a5fa', '#2dd4bf'];
+export function paletteColor(key) {
+  let h = 2166136261;
+  for (const ch of String(key)) { h ^= ch.codePointAt(0); h = Math.imul(h, 16777619); }
+  return STATION_PALETTE[(h >>> 0) % STATION_PALETTE.length];
+}
 
 export function applyAccent(hex) {
   const root = document.documentElement;

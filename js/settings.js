@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -55,7 +55,7 @@ export async function fetchDefaultConfigText() {
 // ===============================
 // Ajustes vacíos: lo que se aplica si no hay ninguno válido
 const emptyConfig = () => ({
-  accent: '', eq: { modes: [] }, defaultDelayS: DEFAULT_DELAY_S,
+  eq: { modes: [] }, defaultDelayS: DEFAULT_DELAY_S,
   stations: [], newsStationId: null, news: [],
 });
 export const emptyConfigFn = emptyConfig;
@@ -91,8 +91,6 @@ export function validateConfig(text) {
     return a.toLowerCase();
   };
 
-  // color de énfasis (opcional): "#rrggbb"; si falta, se queda el verde por defecto (el de styles.css)
-  if (raw.accent !== undefined && raw.accent !== null && raw.accent !== '') cfg.accent = color(raw.accent, 'accent') || '';
 
   // retraso del stream de la emisora de noticias respecto a la emisión (s): solo sirve para calcular la hora de las franjas del modo boletines
   if (raw.defaultDelayS !== undefined) {
@@ -379,8 +377,41 @@ colorSwitch.addEventListener('change', () => {
   S.stationColors = colorSwitch.checked;
   try { localStorage.setItem(COLOR_KEY, S.stationColors ? '1' : '0'); } catch (_) {}
   log('Color personalizado por la cadena: ' + (S.stationColors ? 'activado' : 'desactivado'));
+  syncAccentRow();
   refreshAccent();
 });
+
+// Color por defecto (Ajustes > General): Verde (el de styles.css), Azul o uno personalizado con el selector. Solo cuenta con
+// "Color personalizado" apagado (encendido, cada emisora lleva el suyo). Se guarda en el navegador (rn_accent: "green", "blue" o "#rrggbb")
+const ACCENT_KEY = 'rn_accent';
+const ACCENT_BLUE = '#38bdf8';
+function accentHex(v) { return v === 'blue' ? ACCENT_BLUE : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ''; }   // '' = el verde por defecto
+let accentSaved = 'green';
+try { accentSaved = localStorage.getItem(ACCENT_KEY) || 'green'; } catch (_) {}
+S.accent = accentHex(accentSaved);
+accentSelect.value = accentSaved === 'green' || accentSaved === 'blue' ? accentSaved : 'custom';
+if (accentSelect.value === 'custom') accentPick.value = S.accent || '#58dfa3';
+function syncAccentRow() {
+  accentRow.classList.toggle('off', S.stationColors);
+  accentSelect.disabled = accentPick.disabled = S.stationColors;
+  accentPick.hidden = accentSelect.value !== 'custom';
+}
+function setDefaultAccent(v) {
+  try { localStorage.setItem(ACCENT_KEY, v); } catch (_) {}
+  S.accent = accentHex(v);
+  refreshAccent();
+}
+accentSelect.addEventListener('change', () => {
+  syncAccentRow();
+  setDefaultAccent(accentSelect.value === 'custom' ? accentPick.value : accentSelect.value);
+  log('Color por defecto: ' + accentSelect.options[accentSelect.selectedIndex].text);
+});
+accentPick.addEventListener('input', () => {
+  if (luminance(accentPick.value) < ACCENT_MIN_LUM) return;   // demasiado oscuro sobre el fondo: se queda el anterior
+  setDefaultAccent(accentPick.value);
+});
+accentPick.addEventListener('change', () => { if (luminance(accentPick.value) < ACCENT_MIN_LUM) accentPick.value = S.accent || '#58dfa3'; });
+syncAccentRow();
 
 settingsClose.addEventListener('click', closeSettings);
 
