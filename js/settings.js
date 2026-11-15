@@ -233,6 +233,8 @@ function openSettings() {
   cfgText.value = S.configText;
   cfgMsg.textContent = '';
   cfgMsg.className = 'cfgmsg';
+  genMsg.textContent = '';
+  disarmClear();
   openDialog(settingsDlg);
 }
 
@@ -456,15 +458,32 @@ customInput.addEventListener('change', async () => {
   refreshCustomBtn();
 });
 
+// Aviso de los botones de abajo de General (recargar sonidos, borrar ajustes)
+const genMsg = document.getElementById('genMsg');
+function showGenMsg(text, isError) {
+  genMsg.className = 'cfgmsg' + (isError ? ' err' : ' ok');
+  genMsg.textContent = text;
+}
+// "Borrar ajustes" pide una segunda pulsación ("¿Seguro?"); si no llega en 4 s, vuelve a su estado
+let clearArmed = 0;
+function armClear() {
+  if (cfgClear.classList.contains('armed')) { clearTimeout(clearArmed); disarmClear(); return true; }
+  cfgClear.classList.add('armed');
+  cfgClear.textContent = '¿Seguro? Pulsa otra vez';
+  clearArmed = setTimeout(disarmClear, 4000);
+  return false;
+}
+function disarmClear() { cfgClear.classList.remove('armed'); cfgClear.textContent = 'Borrar ajustes'; }
 cfgClearSounds.addEventListener('click', async () => {
-  try { await caches.delete(SOUND_CACHE); showCfgMsg(['Caché de sonidos vaciada. Se volverán a descargar'], false); prefetchSounds(); }
-  catch (_) { showCfgMsg(['Este navegador no tiene caché de sonidos (solo funciona en páginas https)'], true); }
+  try { await caches.delete(SOUND_CACHE); prefetchSounds(); showGenMsg('Caché de sonidos recargada: los sonidos se han vuelto a descargar', false); }
+  catch (_) { showGenMsg('Este navegador no tiene caché de sonidos (solo funciona en páginas https)', true); }
 });
 
 // Borrar los ajustes guardados: se vuelve a los de por defecto (stations.json)
 cfgClear.addEventListener('click', async () => {
-  if (S.trans || S.newsOn) { showCfgMsg(['No se pueden borrar los ajustes durante un boletín o una transición'], true); return; }
-  if (S.session !== 'off') { showCfgMsg(['Detén la reproducción para cambiar los ajustes'], true); return; }
+  if (!armClear()) return;
+  if (S.trans || S.newsOn) { showGenMsg('No se pueden borrar los ajustes durante un boletín o una transición', true); return; }
+  if (S.session !== 'off') { showGenMsg('Detén la reproducción para cambiar los ajustes', true); return; }
   clearConfigStorage();
   forgetNoCors();
   const text = await fetchDefaultConfigText();
@@ -473,12 +492,12 @@ cfgClear.addEventListener('click', async () => {
     applyConfigFn(r.cfg);
     S.configText = JSON.stringify(r.parsed, null, 2);
     cfgText.value = S.configText;
-    showCfgMsg(['Ajustes guardados borrados: se usan los de por defecto'], false);
+    showGenMsg('Ajustes guardados borrados: se usan los de por defecto', false);
   } else {
     applyConfigFn(emptyConfig());
     S.configText = '';
     cfgText.value = '';
-    showCfgMsg(['Ajustes borrados, pero no se pudieron cargar los de por defecto'], true);
+    showGenMsg('Ajustes borrados, pero no se pudieron cargar los de por defecto', true);
   }
 });
 

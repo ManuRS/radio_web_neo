@@ -320,6 +320,13 @@
             </label>
           </div>
         </div>
+        <div class="group genacts">
+          <div class="dlg-actions">
+            <button id="cfgClearSounds" type="button">Recargar caché de sonidos</button>
+            <button id="cfgClear" class="danger" type="button">Borrar ajustes</button>
+          </div>
+          <div id="genMsg" class="cfgmsg" role="status"></div>
+        </div>
       </div>
       <div class="tab" id="tabConfig" hidden>
         <textarea id="cfgText" aria-label="Configuración" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
@@ -329,17 +336,12 @@
           <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
           <button id="cfgSave" class="primary" type="button">Guardar</button>
         </div>
-        <div class="dlg-links">
-          <button id="cfgClearSounds" class="link" type="button">Vaciar caché de sonidos</button>
-          <button id="cfgClear" class="link" type="button">Borrar ajustes</button>
-        </div>
       </div>
       <div class="tab" id="tabLog" hidden>
         <textarea id="log" readonly spellcheck="false">Listo</textarea>
         <div class="dlg-actions">
           <button id="copyLog" type="button">Copiar</button>
         </div>
-        <div class="dlg-links ghost" aria-hidden="true"><button class="link" type="button" tabindex="-1">.</button></div>
       </div>
     </div>
   </dialog>
@@ -354,8 +356,8 @@
         <button id="tdtClose" class="x" type="button" aria-label="Cerrar">✕</button>
       </div>
       <!-- Con el "+" de las presintonías o "Añadir emisora…" de una cadena: dos pestañas, el catálogo (el buscador) y un enlace propio -->
-      <div class="seg tdttabs" id="tdtTabs" role="tablist" hidden>
-        <button id="tdtTabCat" class="on" type="button" role="tab" aria-selected="true">Consultar catálogo</button>
+      <div class="tabs tdttabs" id="tdtTabs" role="tablist" hidden>
+        <button id="tdtTabCat" class="active" type="button" role="tab" aria-selected="true">Consultar catálogo</button>
         <button id="tdtTabUrl" type="button" role="tab" aria-selected="false">Tengo un enlace</button>
       </div>
       <div class="tdtcat" id="tdtCat">

@@ -267,6 +267,13 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .group { display: flex; flex-direction: column; gap: 12px; }
 .clockrow button { flex: none; padding: 6px 12px; font-size: .85rem; color: #e8edf5; background: #394454; }
 .clockrow button.danger { color: #fff; background: #b8414d; }
+/* General, abajo del todo: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila, con su aviso debajo */
+.genacts { margin-top: auto; }
+.genacts .dlg-actions button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; }
+.genacts .dlg-actions button.danger { color: #ff8a8a; background: #3a2227; }
+.genacts .dlg-actions button.danger.armed { color: #fff; background: #b8414d; }
+.genacts .cfgmsg { min-height: 0; }
+.genacts .cfgmsg:empty { display: none; }
 /* Color por defecto (General): selector y muestra del color personalizado; apagado mientras manda el color de cada emisora */
 .clockrow input[type="color"] { width: 40px; height: 32px; padding: 2px; box-sizing: border-box; border: 1px solid #303a47; border-radius: 8px; background: #11161d; cursor: pointer; }
 .clockrow input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -283,7 +290,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .dlg-actions button:not(.primary) { color: #e8edf5; background: #394454; }
 .dlg-links { display: flex; justify-content: space-between; gap: 10px; }
 .dlg-links[hidden] { display: none; }
-.dlg-links.ghost { visibility: hidden; }   /* en Registro ocupa el sitio de los enlaces de Configuración, para que "Copiar" quede a la altura de Cargar y Guardar */
 .dlg-links .link { flex: none; padding: 2px 0; background: none; color: #8c98a8; font-size: .78rem; font-weight: 500; text-decoration: underline; }
 
 /* =======================
@@ -422,8 +428,7 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdturl .dlg-actions { justify-content: flex-end; }
 .tdturl .dlg-actions .primary { flex: 0 1 auto; min-width: 140px; }
 .tdttabs { flex: none; }
-.tdttabs[hidden], .tdtact .seg[hidden] { display: none; }
-.tdttabs button { flex: 1; padding: 10px 6px; font-size: .86rem; }
+.tdttabs[hidden], .tdtact .seg[hidden] { display: none; }   /* las pestañas son las de los ajustes (.tabs) */
 .tdtq { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .9rem; }
 .tdtq::placeholder { color: #5c6877; }
 .tdtstatus { font-size: .78rem; color: #8c98a8; line-height: 1.4; }

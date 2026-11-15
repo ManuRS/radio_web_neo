@@ -293,7 +293,7 @@ function setCtx(c) {
 function showTab(t) {
   catBox.hidden = t !== 'cat';
   urlBox.hidden = t !== 'url';
-  [[tabCat, 'cat'], [tabUrl, 'url']].forEach(([b, k]) => { b.classList.toggle('on', k === t); b.setAttribute('aria-selected', String(k === t)); });
+  [[tabCat, 'cat'], [tabUrl, 'url']].forEach(([b, k]) => { b.classList.toggle('active', k === t); b.setAttribute('aria-selected', String(k === t)); });
   if (t === 'url') (ctx && ctx.kind === 'old' ? $('varUrl') : $('stName')).focus();
   else if (dlg.open) q2.focus();
 }
