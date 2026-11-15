@@ -71,6 +71,15 @@ const luminance = hex => {
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 const ACCENT_MIN_LUM = 0.15;   // por debajo, el color se pierde sobre el fondo oscuro y el texto oscuro de los botones no se lee
+// Ecualizador por defecto: el que se usa si los ajustes no traen el bloque "eq" (con "eq" pero sin modos, no hay ecualizador)
+const DEFAULT_EQ = {
+  lowHz: 100, midHz: 1000, midQ: 0.8, highHz: 8000, defaultMode: 1,
+  modes: [
+    { label: 'EQ Graves', low: 8, mid: 0, high: 2, pre: 0 },
+    { label: 'EQ Dinámico', low: 5, mid: -1, high: 4, pre: 0 },
+    { label: 'Frecuencia Modulada', low: -18, mid: 8, high: -18, pre: 0 },
+  ],
+};
 
 function stripJsonComments(text) {
   return text
@@ -130,8 +139,9 @@ export function validateConfig(text) {
     cfg.stations.push(item);
   });
 
-  // ecualizador (opcional): sin bloque "eq" o sin modos no hay ecualizador; con modos hacen falta las cuatro frecuencias/Q
-  if (raw.eq && typeof raw.eq === 'object') {
+  // ecualizador (opcional): sin bloque "eq", el de por defecto (DEFAULT_EQ); con "eq" sin modos, no hay ecualizador; con modos hacen falta las cuatro frecuencias/Q
+  if (raw.eq === undefined) cfg.eq = structuredClone(DEFAULT_EQ);
+  else if (raw.eq && typeof raw.eq === 'object') {
     const e = raw.eq, modes = Array.isArray(e.modes) ? e.modes : [];
     const num = (v, lo, hi, name, required) => {
       if (v === undefined) { if (required) errors.push('"eq.' + name + '": falta'); return required ? null : 0; }
@@ -383,7 +393,7 @@ colorSwitch.addEventListener('change', () => {
 });
 
 // Color por defecto (Ajustes > General): Verde (el de styles.css), Azul o uno personalizado con el selector. Solo cuenta con
-// "Color personalizado" apagado (encendido, cada emisora lleva el suyo). Se guarda en el navegador (rn_accent: "green", "blue" o "#rrggbb")
+// siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "green", "blue" o "#rrggbb")
 const ACCENT_KEY = 'rn_accent';
 const ACCENT_BLUE = '#38bdf8';
 function accentHex(v) { return v === 'blue' ? ACCENT_BLUE : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ''; }   // '' = el verde por defecto
@@ -393,8 +403,6 @@ S.accent = accentHex(accentSaved);
 accentSelect.value = accentSaved === 'green' || accentSaved === 'blue' ? accentSaved : 'custom';
 if (accentSelect.value === 'custom') accentPick.value = S.accent || '#58dfa3';
 function syncAccentRow() {
-  accentRow.classList.toggle('off', S.stationColors);
-  accentSelect.disabled = accentPick.disabled = S.stationColors;
   accentPick.hidden = accentSelect.value !== 'custom';
 }
 function setDefaultAccent(v) {
