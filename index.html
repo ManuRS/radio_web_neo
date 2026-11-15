@@ -341,7 +341,6 @@
         <div class="dlg-actions">
           <button id="copyLog" type="button">Copiar</button>
         </div>
-        <div class="cfgacts ghost" aria-hidden="true"><button type="button" tabindex="-1">Recargar caché de sonidos</button><button type="button" tabindex="-1">Borrar ajustes</button></div>
       </div>
     </div>
   </dialog>
@@ -365,25 +364,6 @@
       <div id="tdtStatus" class="tdtstatus" role="status"></div>
       <div id="tdtList" class="tdtlist"></div>
       <div id="tdtInfo" class="tdtinfo"></div>
-      <div id="tdtAct" class="tdtact" hidden>
-        <div class="tdtsel"><span id="tdtSelName"></span><button id="tdtSelClose" class="tdtselx" type="button" aria-label="Quitar la selección">&times;</button></div>
-        <div class="seg" role="group" aria-label="Destino">
-          <button id="tdtModeOld" class="on" type="button">En una cadena existente</button>
-          <button id="tdtModeNew" type="button">En una cadena nueva</button>
-        </div>
-        <div class="stform tdtform" id="tdtForm">
-          <label id="tdtOldRow">Cadena<select id="tdtChain"></select></label>
-          <div class="tdtnew stform" id="tdtNewRow" hidden>
-            <label>Nombre de la cadena<input id="tdtNName" type="text" maxlength="40" placeholder="Cadena SER"></label>
-            <label>Nombre corto<input id="tdtNShort" type="text" maxlength="14" placeholder="SER"></label>
-            <label>Tipo<select id="tdtNType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
-            <label>Color<span class="stcolor"><input id="tdtNColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="tdtNColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
-          </div>
-          <label id="tdtLabelRow">Nombre de la emisora<input id="tdtLabel" type="text" maxlength="30" placeholder="SER Málaga"></label>
-        </div>
-        <div id="tdtMsg" class="cfgmsg" role="status"></div>
-        <div class="dlg-actions"><button id="tdtAdd" class="primary" type="button">Añadir</button></div>
-      </div>
       </div>
       <div class="tdturl" id="tdtUrl" hidden>
         <form class="stform" id="stForm" autocomplete="off" novalidate>
@@ -406,6 +386,37 @@
       </div>
     </div>
   </dialog>
+
+  <!-- Al elegir una opción del catálogo: otra ventana, encima de la lista, para decidir dónde va y con qué nombre -->
+  <dialog id="tdtAddDlg" class="settings sheet tdtadd" aria-labelledby="tdtAddTitle">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b id="tdtAddTitle">Añadir emisora</b>
+        <button id="tdtAddClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="tdtpick"><b id="tdtSelName"></b><span id="tdtSelInfo"></span></div>
+      <div class="tabs" id="tdtDest" role="tablist" aria-label="Destino">
+        <button id="tdtModeOld" class="active" type="button" role="tab" aria-selected="true">Cadena existente</button>
+        <button id="tdtModeNew" type="button" role="tab" aria-selected="false">Cadena nueva</button>
+      </div>
+      <div class="stform tdtform" id="tdtForm">
+        <label id="tdtOldRow">Cadena<select id="tdtChain"></select></label>
+        <div class="tdtnew stform" id="tdtNewRow" hidden>
+          <label>Nombre de la cadena<input id="tdtNName" type="text" maxlength="40" placeholder="Cadena SER"></label>
+          <label>Nombre corto<input id="tdtNShort" type="text" maxlength="14" placeholder="SER"></label>
+          <label>Tipo<select id="tdtNType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
+          <label>Color<span class="stcolor"><input id="tdtNColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="tdtNColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
+        </div>
+        <label id="tdtLabelRow">Nombre de la emisora<input id="tdtLabel" type="text" maxlength="30" placeholder="SER Málaga"></label>
+      </div>
+      <div id="tdtMsg" class="cfgmsg" role="status"></div>
+      <div class="dlg-actions">
+        <button id="tdtBack" type="button">Volver</button>
+        <button id="tdtAdd" class="primary" type="button">Añadir</button>
+      </div>
+    </div>
+  </dialog>
+
 
   <!-- ===================================================== -->
   <!-- == PREGUNTA (GRABACIÓN EN CURSO, GRABACIÓN SIN TERMINAR) == -->

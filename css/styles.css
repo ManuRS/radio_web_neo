@@ -267,12 +267,11 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .group { display: flex; flex-direction: column; gap: 12px; }
 .clockrow button { flex: none; padding: 6px 12px; font-size: .85rem; color: #e8edf5; background: #394454; }
 .clockrow button.danger { color: #fff; background: #b8414d; }
-/* Configuración, bajo Cargar y Guardar: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila; en Registro, el mismo hueco vacío */
+/* Configuración, bajo Cargar y Guardar: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila */
 .cfgacts { flex: none; display: flex; gap: 10px; }
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 .cfgacts button.danger.armed { color: #fff; background: #b8414d; }
-.cfgacts.ghost { visibility: hidden; }
 /* Color por defecto (General): selector y muestra del color personalizado; apagado mientras manda el color de cada emisora */
 .clockrow input[type="color"] { width: 40px; height: 32px; padding: 2px; box-sizing: border-box; border: 1px solid #303a47; border-radius: 8px; background: #11161d; cursor: pointer; }
 .clockrow input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -427,7 +426,7 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdturl .dlg-actions { justify-content: flex-end; }
 .tdturl .dlg-actions .primary { flex: 0 1 auto; min-width: 140px; }
 .tdttabs { flex: none; }
-.tdttabs[hidden], .tdtact .seg[hidden] { display: none; }   /* las pestañas son las de los ajustes (.tabs) */
+.tdttabs[hidden], #tdtDest[hidden] { display: none; }   /* las pestañas son las de los ajustes (.tabs) */
 .tdtq { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .9rem; }
 .tdtq::placeholder { color: #5c6877; }
 .tdtstatus { font-size: .78rem; color: #8c98a8; line-height: 1.4; }
@@ -445,31 +444,23 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdthead .tag { padding: 1px 6px; border: 1px solid #3d4959; border-radius: 6px; font-size: .66rem; color: #9fabb9; }
 .tdthead .geo { color: #f2b84b; border-color: #5a4720; }
 .tdtopt { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 0; border: 0; border-top: 1px solid #364254; border-radius: 0; background: none; color: #cbd5e1; font-size: .82rem; font-weight: 500; text-align: left; }
-.tdtopt::before { content: ''; flex: none; width: 9px; height: 9px; box-sizing: border-box; border: 1.5px solid #6f7b8b; border-radius: 50%; }
 .tdtopt .fmt { flex: 1; min-width: 0; font-weight: 650; }
-.tdtopt:hover { color: #fff; }
-.tdtopt:hover::before { border-color: #cbd5e1; }
-.tdtopt.sel { color: var(--accent); }
+.tdtopt::after { content: '›'; flex: none; margin-left: auto; padding-left: 8px; font-size: 1.25rem; line-height: 1; color: #6f7b8b; }   /* cada opción abre la ventana de añadir */
+.tdtopt:hover, .tdtopt:hover::after { color: #fff; }
 .tdtch.solo { padding-top: 2px; }
 .tdtch.solo .tdtopt { border-top: 0; }
 .tdtch.solo .tdthead { margin-bottom: 0; }
-.tdtopt.sel::before { border-color: var(--accent); background: var(--accent); }
 .tdtopt .fmt:not(.tdthead) .tag { margin-left: 8px; padding: 1px 6px; border: 1px solid #3d4959; border-radius: 6px; font-size: .66rem; font-weight: 500; color: #9fabb9; vertical-align: 1px; }
-.tdtopt.sel .fmt:not(.tdthead) .tag { color: var(--accent); border-color: var(--accent); }
 /* con el panel de añadir abierto, lo de atrás se apaga (la tarjeta elegida se queda clara y todo sigue siendo pulsable para cambiar de opción) */
-.tdtq, .tdtstatus, .tdtsec, .tdtch { transition: opacity .2s; }
-.tdt.picking .tdtq, .tdt.picking .tdtstatus, .tdt.picking .tdtsec, .tdt.picking .tdtch:not(:has(.tdtopt.sel)) { opacity: .35; }
-.tdt.picking .tdtch:not(:has(.tdtopt.sel)):hover { opacity: .75; }
-.tdtact { display: flex; flex-direction: column; gap: 12px; flex: none; margin-top: 14px; padding: 12px 14px 14px; border-radius: 12px; background: #1c232d; box-shadow: 0 0 0 1.5px var(--accent), 0 -10px 18px -6px rgba(0,0,0,.45); }
-.tdtact[hidden] { display: none; }
-.tdtsel { display: flex; align-items: center; gap: 8px; font-size: .88rem; font-weight: 700; color: var(--accent); }
-.tdtsel span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.tdtselx { flex: none; width: 28px; height: 28px; padding: 0; border-radius: 50%; background: #2a3441; color: #aeb9c8; font-size: 1.25rem; line-height: 1; }
-.tdtselx:hover { color: #fff; }
-.seg { display: flex; gap: 6px; }
-.seg button { padding: 8px 6px; font-size: .8rem; font-weight: 600; background: #2a3441; color: #aeb9c8; border-radius: 8px; }
-.seg button.on { background: var(--accent-bg); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
 .tdtform { gap: 12px 14px; }
+/* Ventana de añadir una opción del catálogo: lo elegido arriba, en una tarjeta; debajo, las pestañas del destino y el formulario */
+.tdtpick { flex: none; display: flex; flex-direction: column; gap: 3px; padding: 12px 14px; border-radius: 12px; background: #11161d; }
+.tdtpick b { font-size: 1rem; color: #edf2f7; overflow-wrap: anywhere; }
+.tdtpick span { font-size: .8rem; color: #9fabb9; }
+.tdtpick span:empty { display: none; }
+.tdtadd .tdtform { overflow: visible; }
+.tdtadd .dlg-actions { justify-content: stretch; }
+.tdtadd .dlg-actions button { flex: 1 1 0; }
 .tdtnew { grid-column: 1 / -1; gap: 12px 14px; }
 .tdtnew[hidden], #tdtOldRow[hidden] { display: none; }
 .tdtform.isnew #tdtLabelRow { grid-column: 1 / -1; }

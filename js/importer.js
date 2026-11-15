@@ -15,13 +15,13 @@ import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optio
 const $ = id => document.getElementById(id);
 const panel = $('tdtPanel'), query = $('tdtQuery'), go = $('tdtGo');
 const dlg = $('tdtDlg'), q2 = $('tdtQ'), statusEl = $('tdtStatus'), listEl = $('tdtList'), infoEl = $('tdtInfo');
-const act = $('tdtAct'), selName = $('tdtSelName'), msg = $('tdtMsg');
+const addDlg = $('tdtAddDlg'), addTitle = $('tdtAddTitle'), selName = $('tdtSelName'), selInfo = $('tdtSelInfo'), dest = $('tdtDest'), msg = $('tdtMsg');
 const modeOld = $('tdtModeOld'), modeNew = $('tdtModeNew'), oldRow = $('tdtOldRow'), newRow = $('tdtNewRow');
 const chainSel = $('tdtChain'), labelIn = $('tdtLabel'), addBtn = $('tdtAdd');
 const nName = $('tdtNName'), nShort = $('tdtNShort'), nType = $('tdtNType'), nColor = $('tdtNColor'), nColorPick = $('tdtNColorPick');
 const fileBtn = $('tdtFileBtn'), fileIn = $('tdtFile');
 const titleEl = $('tdtTitle'), tabs = $('tdtTabs'), tabCat = $('tdtTabCat'), tabUrl = $('tdtTabUrl'), catBox = $('tdtCat'), urlBox = $('tdtUrl');
-const stForm = $('stForm'), varForm = $('varForm'), stMsg = $('stMsg'), stAdd = $('stAdd'), seg = act.querySelector('.seg');
+const stForm = $('stForm'), varForm = $('varForm'), stMsg = $('stMsg'), stAdd = $('stAdd');
 
 const MAX_SHOWN = 60;
 const httpOk = location.protocol !== 'https:';
@@ -140,8 +140,7 @@ function renderResults() {
         f.appendChild(el('span', 'tag', fmtName(o)));
         b.appendChild(f);
       }
-      if (keep && keep === ch && picked.i === i) { b.classList.add('sel'); picked = { ch, i }; }
-      b.addEventListener('click', () => (picked && picked.ch === ch && picked.i === i ? clearPick() : pick(ch, i, b)));   // pulsar la elegida la deselecciona
+      b.addEventListener('click', () => pick(ch, i));
       card.appendChild(b);
     });
     listEl.appendChild(card);
@@ -155,10 +154,7 @@ function renderResults() {
 // ================
 function clearPick() {
   picked = null;
-  listEl.querySelectorAll('.tdtopt.sel').forEach(b => b.classList.remove('sel'));
-  act.hidden = true;
-  dlg.classList.remove('picking');
-  infoEl.hidden = false;
+  if (addDlg.open) closeDialog(addDlg);
   setMsg('');
 }
 
@@ -192,19 +188,18 @@ function fillChains(selectedId) {
 
 function setMode(m) {
   mode = m;
-  modeOld.classList.toggle('on', m === 'old');
-  modeNew.classList.toggle('on', m === 'new');
+  [[modeOld, 'old'], [modeNew, 'new']].forEach(([b, k]) => { b.classList.toggle('active', m === k); b.setAttribute('aria-selected', String(m === k)); });
   oldRow.hidden = m !== 'old';
   newRow.hidden = m !== 'new';
   $('tdtForm').classList.toggle('isnew', m === 'new');
 }
 
-function pick(ch, i, btn) {
-  listEl.querySelectorAll('.tdtopt.sel').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
+function pick(ch, i) {
   picked = { ch, i };
-  const o = ch.o[i];
-  selName.textContent = isSolo(ch) ? ch.n + (optionSuffix(ch, i) ? ' (' + optionSuffix(ch, i) + ')' : '') : ch.n + ' · ' + (ch.k === 'neo' ? optLabel(ch, i) : urlTail(ch.o[i].u) + ' (' + fmtName(ch.o[i]) + ')');
+  // arriba, lo elegido: el canal y, debajo, la opción (emisora o enlace y formato) y de qué catálogo viene
+  selName.textContent = ch.n;
+  const opt = isSolo(ch) ? (ch.k === 'neo' ? '' : fmtName(ch.o[i])) : ch.k === 'neo' ? optLabel(ch, i) : urlTail(ch.o[i].u) + ' · ' + fmtName(ch.o[i]);
+  selInfo.textContent = [opt, ch.k === 'neo' ? 'Catálogo Radio Web Neo' : 'TDTChannels'].filter(Boolean).join(' · ');
   labelIn.value = optionName(ch, i);
   // el catálogo interno ya trae el nombre corto, el tipo y el color de la cadena; las listas de TDTChannels, no
   nName.value = ch.n.slice(0, 40);
@@ -219,12 +214,11 @@ function pick(ch, i, btn) {
     fillChains(guess ? guess.id : '');
     setMode(guess ? 'old' : 'new');
   }
-  seg.hidden = !!ctx;   // con un contexto, el destino no se elige
-  act.hidden = false;
-  dlg.classList.add('picking');   // oscurece lo que queda detrás del panel de añadir
-  infoEl.hidden = true;   // con el formulario abierto, el espacio es para la lista
+  dest.hidden = !!ctx;   // con un contexto, el destino no se elige
+  addTitle.textContent = !ctx ? 'Añadir emisora' : ctx.kind === 'new' ? 'Crear nueva presintonía' : 'Nueva emisora en ' + ctx.st.name;
   setMsg('');
-  act.scrollIntoView({ block: 'nearest' });
+  openDialog(addDlg);   // otra ventana encima de la lista
+  (mode === 'new' ? nName : labelIn).focus();
 }
 
 async function add() {
@@ -245,16 +239,13 @@ async function add() {
     } else {
       const name = nName.value.trim();
       err = await createChain({ name, short: nShort.value, group: nType.value, color: nColor.value, url: o.u, label });
-      if (!err) {
-        setMsg('Cadena añadida: ' + name);
-        const made = [...S.stations].reverse().find(x => x.name === name);
-        fillChains(made ? made.id : '');   // la cadena nueva ya existe: se pueden añadir más emisoras a ella
-        setMode('old');
-      }
+      if (!err) setMsg('Cadena añadida: ' + name);
     }
     if (err) { setMsg(err, true); return; }
     log('TDTChannels: ' + picked.ch.n + ' (' + o.f + ') importada');
-    if (ctx) { toast(msg.textContent); closeDialog(dlg); }
+    toast(msg.textContent);
+    closeDialog(addDlg);   // vuelve a la lista (para añadir más) o, si se vino del "+" o del menú de una cadena, se cierra todo
+    if (ctx) closeDialog(dlg);
   } finally {
     busy = false;
     addBtn.disabled = false;
@@ -360,7 +351,10 @@ dlg.addEventListener('close', () => { if (!ctx) query.value = q2.value.trim(); }
 modeOld.addEventListener('click', () => setMode('old'));
 modeNew.addEventListener('click', () => setMode('new'));
 addBtn.addEventListener('click', add);
-$('tdtSelClose').addEventListener('click', clearPick);
+$('tdtAddClose').addEventListener('click', () => closeDialog(addDlg));
+$('tdtBack').addEventListener('click', () => closeDialog(addDlg));
+addDlg.addEventListener('click', e => { if (e.target === addDlg) closeDialog(addDlg); });
+addDlg.addEventListener('close', () => { picked = null; });
 nColorPick.addEventListener('input', () => { nColor.value = nColorPick.value; });
 nColor.addEventListener('input', () => { if (/^#[0-9a-f]{6}$/i.test(nColor.value.trim())) nColorPick.value = nColor.value.trim(); });
 
