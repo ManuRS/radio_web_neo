@@ -58,7 +58,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ffc72c"
+      "color": "#ffd400"
     },
     {
       "id": "cope",
@@ -76,7 +76,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#4b9dff"
+      "color": "#256ded"
     },
     {
       "id": "ondacero",
@@ -89,7 +89,7 @@
           "kind": "hls"
         }
       ],
-      "color": "#4cc36a"
+      "color": "#1fb45a"
     },
     {
       "id": "rne",
@@ -113,7 +113,7 @@
           "kind": "hls"
         }
       ],
-      "color": "#ff4b55"
+      "color": "#e31b2d"
     },
     {
       "id": "rac1",
@@ -139,7 +139,7 @@
           "kind": "aac"
         }
       ],
-      "color": "#cc5a74"
+      "color": "#cc3352"
     },
     {
       "id": "marca",
@@ -153,7 +153,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff3d3d"
+      "color": "#e30613"
     },
     {
       "id": "radio3",
@@ -166,7 +166,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#f06292"
+      "color": "#e31b2d"
     },
     {
       "id": "catalunya",
@@ -317,7 +317,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff6a2a"
+      "color": "#e63d32"
     },
     {
       "id": "los40classic",
@@ -331,7 +331,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#6cb4ee"
+      "color": "#00bfd6"
     },
     {
       "id": "megastar",
@@ -344,7 +344,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ffe135"
+      "color": "#ffe716"
     },
     {
       "id": "hitfm",
@@ -358,7 +358,7 @@
         }
       ],
       "cors": false,
-      "color": "#ff4fa3"
+      "color": "#fe5000"
     },
     {
       "id": "rockfm",
@@ -371,7 +371,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#ff4040"
+      "color": "#da291c"
     },
     {
       "id": "melodiafm",
@@ -385,7 +385,7 @@
           "kind": "aac"
         }
       ],
-      "color": "#4aa8ff"
+      "color": "#ff7712"
     },
     {
       "id": "europafm",
@@ -399,7 +399,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#32c8c8"
+      "color": "#ff6a00"
     },
     {
       "id": "cadena100",
@@ -426,7 +426,7 @@
         }
       ],
       "cors": false,
-      "color": "#ff3c7e"
+      "color": "#ed1c3b"
     },
     {
       "id": "dial",
@@ -464,7 +464,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#b06cff"
+      "color": "#3ccf4e"
     },
     {
       "id": "los40urban",
@@ -531,7 +531,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#d4a24c"
+      "color": "#e31b2d"
     },
     {
       "id": "radiole",
