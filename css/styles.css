@@ -489,3 +489,17 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media (hover: hover) { .foot a:hover { text-decoration: underline; text-underline-offset: 3px; } }
 .foot a:focus-visible { text-decoration: underline; outline: 0; }
 .foot .fsep { margin: 0 .4em; opacity: .6; }
+/* Primera línea: las frases se cruzan (la que sale sube y se va; la que entra sube desde abajo) y al aparecer, bote de los emojis
+   o brillo del color de énfasis en el texto (ver foot.js) */
+.foot .love { display: grid; justify-items: center; overflow: hidden; padding-top: 10px; margin-top: -10px; }   /* el hueco de arriba deja sitio al bote de los emojis */
+.foot .love > .fp { grid-area: 1 / 1; white-space: nowrap; }
+.fp .fe { display: inline-block; }
+.fp.out { animation: fp-out .45s ease-in forwards; }
+.fp.in { animation: fp-in .5s ease-out both; }
+@keyframes fp-out { to { opacity: 0; transform: translateY(-70%); } }
+@keyframes fp-in { from { opacity: 0; transform: translateY(70%); } }
+.fp-emoji.play .fe { animation: fe-bounce .9s cubic-bezier(.3, .7, .4, 1) calc(var(--k) * .14s) both; }
+@keyframes fe-bounce { 0% { transform: none; } 25% { transform: translateY(-9px) scale(1.18); } 45% { transform: translateY(0) scale(.94, 1.06); } 62% { transform: translateY(-4px); } 80%, 100% { transform: none; } }
+.fp-text.play { background: linear-gradient(100deg, #aeb9c8 0 38%, var(--accent) 50%, #aeb9c8 62% 100%) 100% 0 / 260% 100% no-repeat; -webkit-background-clip: text; background-clip: text; color: transparent; animation: fp-shine 1.8s ease-in-out; }
+@keyframes fp-shine { 0% { background-position: 100% 0; text-shadow: none; } 50% { text-shadow: 0 0 14px color-mix(in srgb, var(--accent) 45%, transparent); } 100% { background-position: 0 0; text-shadow: none; } }
+@media (prefers-reduced-motion: reduce) { .fp.out, .fp.in, .fp-emoji.play .fe, .fp-text.play { animation: none; } }

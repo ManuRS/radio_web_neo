@@ -19,6 +19,7 @@ import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
 import './importer.js';
 import './intro.js';
+import { setFootPhrases } from './foot.js';
 
 // ===============================
 // == APLICACIÓN DE LOS AJUSTES ==
@@ -74,6 +75,7 @@ function applyLive(cfg) {
 
 initSettingsDialog(applyConfig, applyLive);
 initClock();
+setFootPhrases(['Con ❤️ por la 📻', '¡Viva la radio siempre!']);   // pie: se alternan cada 30 s
 refreshVolumeUi();
 toggle.addEventListener('click', () => play());
 stop.addEventListener('click', () => requestStop());   // grabando, se pregunta antes (ver recorder.js)
