@@ -76,7 +76,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#256ded"
+      "color": "#1e90ff"
     },
     {
       "id": "ondacero",
@@ -371,7 +371,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#1e90ff"
+      "color": "#3f6bff"
     },
     {
       "id": "melodiafm",
@@ -450,7 +450,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#7cc242"
+      "color": "#00c389"
     },
     {
       "id": "los40dance",
@@ -558,7 +558,7 @@
           "kind": "mp3"
         }
       ],
-      "color": "#00c389"
+      "color": "#7cc242"
     }
   ],
   "newsStation": "ser",
