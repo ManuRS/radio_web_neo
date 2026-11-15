@@ -79,7 +79,7 @@ const DEFAULT_EQ = {
     { label: 'EQ Dinámico', low: 5, mid: -1, high: 4, pre: 0 },
     { label: 'Frecuencia Modulada', low: -18, mid: 8, high: -18, pre: 0 },
     { label: 'EQ Voz', low: -4, mid: 3, high: 2, pre: 0 },                 // tertulias y boletines: menos graves, más presencia
-    { label: 'EQ Especial móvil', low: -3, mid: 2, high: 3, pre: 0 },      // altavoz del móvil: no gasta en graves que no puede dar
+    { label: 'EQ Especial Móvil', low: -3, mid: 2, high: 3, pre: 0 },      // altavoz del móvil: no gasta en graves que no puede dar
   ],
 };
 
