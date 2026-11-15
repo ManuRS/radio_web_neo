@@ -200,21 +200,23 @@
         <b id="introTitle">Radio Web Neo</b>
         <button id="introClose" class="x" type="button" aria-label="Cerrar">✕</button>
       </div>
-      <section class="intro-step" data-step="0">
-        <img class="intro-img" src="img/cap1-wide.webp" alt="La aplicación en el móvil: reproductor con presintonías" width="1600" height="900">
-        <h2>Bienvenido</h2>
-        <p>Un reproductor de radio ligero, rápido y sin rastreos. Pulsa una cadena desde las presintonías para escucharla. Con un clic derecho o una pulsación larga puedes ver sus emisoras. Se pueden reordenar arrastrándolas.</p>
-      </section>
-      <section class="intro-step" data-step="1" hidden>
-        <img class="intro-img" src="img/cap2-wide.webp" alt="El buscador de emisoras con resultados de Salamanca" width="1600" height="900" loading="lazy">
-        <h2>Buscar emisoras</h2>
-        <p>Escribe el nombre de una emisora en el buscador y elige una opción del catálogo. Puedes añadir tu elección a una cadena ya existente o crear una nueva. Si tienes el enlace de sonido, puedes crear una cadena con el botón + del final de las presintonías.</p>
-      </section>
-      <section class="intro-step" data-step="2" hidden>
-        <img class="intro-img" src="img/cap3-wide.webp" alt="Visualizadores de sonido en pantalla completa" width="1600" height="900" loading="lazy">
-        <h2>Modo boletines</h2>
-        <p>El modo boletines conecta con las noticias de la SER de 8 a 20 horas. En los Ajustes puedes cambiar esta configuración, así como exportarla e importarla en otros dispositivos.</p>
-      </section>
+      <div class="intro-steps">   <!-- los tres pasos ocupan la misma celda: la ventana mide siempre lo del más alto -->
+        <section class="intro-step" data-step="0">
+          <img class="intro-img" src="img/cap1-wide.webp" alt="La aplicación en el móvil: reproductor con presintonías" width="1600" height="900">
+          <h2>Bienvenido</h2>
+          <p>Un reproductor de radio ligero, rápido y sin rastreos. Pulsa una cadena desde las presintonías para escucharla. Con un clic derecho o una pulsación larga puedes ver sus emisoras. Se pueden reordenar arrastrándolas.</p>
+        </section>
+        <section class="intro-step" data-step="1" hidden>
+          <img class="intro-img" src="img/cap2-wide.webp" alt="El buscador de emisoras con resultados de Salamanca" width="1600" height="900" loading="lazy">
+          <h2>Buscar emisoras</h2>
+          <p>Escribe el nombre de una emisora en el buscador y elige una opción del catálogo. Puedes añadir tu elección a una cadena ya existente o crear una nueva. Si tienes el enlace de sonido, puedes crear una cadena con el botón + del final de las presintonías.</p>
+        </section>
+        <section class="intro-step" data-step="2" hidden>
+          <img class="intro-img" src="img/cap3-wide.webp" alt="Visualizadores de sonido en pantalla completa" width="1600" height="900" loading="lazy">
+          <h2>Modo boletines</h2>
+          <p>El modo boletines conecta con las noticias de la SER de 8 a 20 horas. En los Ajustes puedes cambiar esta configuración, así como exportarla e importarla en otros dispositivos.</p>
+        </section>
+      </div>
       <div class="intro-dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
       <div class="dlg-actions">
         <button id="introBack" type="button">Saltar</button>
@@ -320,13 +322,6 @@
             </label>
           </div>
         </div>
-        <div class="group genacts">
-          <div class="dlg-actions">
-            <button id="cfgClearSounds" type="button">Recargar caché de sonidos</button>
-            <button id="cfgClear" class="danger" type="button">Borrar ajustes</button>
-          </div>
-          <div id="genMsg" class="cfgmsg" role="status"></div>
-        </div>
       </div>
       <div class="tab" id="tabConfig" hidden>
         <textarea id="cfgText" aria-label="Configuración" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
@@ -336,12 +331,17 @@
           <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
           <button id="cfgSave" class="primary" type="button">Guardar</button>
         </div>
+        <div class="cfgacts">
+          <button id="cfgClearSounds" type="button">Recargar caché de sonidos</button>
+          <button id="cfgClear" class="danger" type="button">Borrar ajustes</button>
+        </div>
       </div>
       <div class="tab" id="tabLog" hidden>
         <textarea id="log" readonly spellcheck="false">Listo</textarea>
         <div class="dlg-actions">
           <button id="copyLog" type="button">Copiar</button>
         </div>
+        <div class="cfgacts ghost" aria-hidden="true"><button type="button" tabindex="-1">Recargar caché de sonidos</button><button type="button" tabindex="-1">Borrar ajustes</button></div>
       </div>
     </div>
   </dialog>

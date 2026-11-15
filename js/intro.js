@@ -20,7 +20,11 @@ function set(k, v) { try { localStorage.setItem(k, v); } catch { /* sin almacena
 // Muestra el paso n: el botón de la izquierda es "Saltar" en el primero y "Atrás" en los demás; el de la derecha, "Siguiente" y, en el último, "Empezar"
 function show(n) {
   step = Math.max(0, Math.min(steps.length - 1, n));
-  steps.forEach((s, i) => { s.hidden = i !== step; });
+  steps.forEach((s, i) => {
+    s.hidden = i !== step;
+    s.classList.remove('in');
+    if (i === step) { void s.offsetWidth; s.classList.add('in'); }   // la entrada suave, cada vez
+  });
   dots.forEach((d, i) => d.classList.toggle('on', i === step));
   back.textContent = step === 0 ? 'Saltar' : 'Atrás';
   next.textContent = step === steps.length - 1 ? 'Empezar' : 'Siguiente';

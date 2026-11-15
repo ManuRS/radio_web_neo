@@ -267,13 +267,12 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .group { display: flex; flex-direction: column; gap: 12px; }
 .clockrow button { flex: none; padding: 6px 12px; font-size: .85rem; color: #e8edf5; background: #394454; }
 .clockrow button.danger { color: #fff; background: #b8414d; }
-/* General, abajo del todo: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila, con su aviso debajo */
-.genacts { margin-top: auto; }
-.genacts .dlg-actions button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; }
-.genacts .dlg-actions button.danger { color: #ff8a8a; background: #3a2227; }
-.genacts .dlg-actions button.danger.armed { color: #fff; background: #b8414d; }
-.genacts .cfgmsg { min-height: 0; }
-.genacts .cfgmsg:empty { display: none; }
+/* Configuración, bajo Cargar y Guardar: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila; en Registro, el mismo hueco vacío */
+.cfgacts { flex: none; display: flex; gap: 10px; }
+.cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
+.cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
+.cfgacts button.danger.armed { color: #fff; background: #b8414d; }
+.cfgacts.ghost { visibility: hidden; }
 /* Color por defecto (General): selector y muestra del color personalizado; apagado mientras manda el color de cada emisora */
 .clockrow input[type="color"] { width: 40px; height: 32px; padding: 2px; box-sizing: border-box; border: 1px solid #303a47; border-radius: 8px; background: #11161d; cursor: pointer; }
 .clockrow input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -488,8 +487,10 @@ dialog.ask::backdrop { background: rgba(0, 0, 0, .65); }
    ========================================== */
 dialog.intro { width: min(430px, 94vw); max-height: 94dvh; overflow-y: auto; margin: auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.intro::backdrop { background: rgba(0, 0, 0, .65); }
-.intro-step { display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-height: 380px; padding: 2px 0; text-align: left; animation: intro-in .25s ease; }
-.intro-step[hidden] { display: none; }
+.intro-steps { display: grid; }
+.intro-step { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 2px 0; text-align: left; }
+.intro-step[hidden] { display: flex; visibility: hidden; }   /* oculto pero ocupando su sitio: así no hay saltos de tamaño entre pasos */
+.intro-step.in { animation: intro-in .25s ease; }
 .intro-step h2 { margin: 0; font-size: 1.3rem; }
 .intro-step p { margin: 0; line-height: 1.5; color: #c3cdd9; }
 .intro-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; margin-bottom: 4px; border-radius: 12px; background: #11161d; }

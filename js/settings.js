@@ -233,7 +233,6 @@ function openSettings() {
   cfgText.value = S.configText;
   cfgMsg.textContent = '';
   cfgMsg.className = 'cfgmsg';
-  genMsg.textContent = '';
   disarmClear();
   openDialog(settingsDlg);
 }
@@ -458,12 +457,8 @@ customInput.addEventListener('change', async () => {
   refreshCustomBtn();
 });
 
-// Aviso de los botones de abajo de General (recargar sonidos, borrar ajustes)
-const genMsg = document.getElementById('genMsg');
-function showGenMsg(text, isError) {
-  genMsg.className = 'cfgmsg' + (isError ? ' err' : ' ok');
-  genMsg.textContent = text;
-}
+// Aviso de los botones de debajo de Cargar y Guardar (recargar sonidos, borrar ajustes): en el cuadro de mensajes de Configuración
+const showGenMsg = (text, isError) => showCfgMsg([text], isError);
 // "Borrar ajustes" pide una segunda pulsación ("¿Seguro?"); si no llega en 4 s, vuelve a su estado
 let clearArmed = 0;
 function armClear() {
