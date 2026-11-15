@@ -123,9 +123,8 @@ export function layoutCheck() {
 
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutCheck).observe(mainEl);
 
-// Zona de abajo con scroll propio: cuanto más sube, más ancho el desvanecido bajo el espectro (ver .scroller en styles.css)
+// Zona de abajo con scroll propio (ver .scroller en styles.css): pasa por debajo de la cabecera, que va fija encima, y se corta en su línea
 const scroller = document.querySelector('.scroller');
-scroller.addEventListener('scroll', () => scroller.style.setProperty('--fade', Math.min(96, scroller.scrollTop * 2.4) + 'px'), { passive: true });
 
 // Cabecera que se encoge al deslizar (ver header en styles.css): --p va de 0 (grande) a 1 (encogida) según lo que se ha bajado
 // con el scroll de la zona de abajo o, si la página es corta y hace scroll entera, el de la ventana. Con "reducir movimiento" salta de una a otra

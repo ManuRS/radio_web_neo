@@ -11,8 +11,8 @@
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen) */
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
-/* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js); --hb: dónde acaba ahora la cabecera */
-:root { --hf: 142px; --p: 0; --hb: calc(var(--hf) - 86px * var(--p)); }
+/* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
+:root { --hf: 142px; --p: 0; }
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -40,8 +40,6 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
   main > :not(.scroller) { flex: none; }
   .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 6px 28px; }
   .scroller::-webkit-scrollbar { display: none; }
-  /* lo que sube por debajo del espectro se va desvaneciendo en vez de cortarse (--fade lo pone ui.js según el scroll) */
-  .scroller { -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--hb) + var(--fade, 0px) * .3), #000 calc(var(--hb) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--hb) + var(--fade, 0px) * .3), #000 calc(var(--hb) + var(--fade, 0px))); }
 }
 
 /* ==========================================
@@ -169,7 +167,8 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.news { margin-inline: 2px; background: #2a3441; }
 .panel.news { margin-top: 14px; }
 /* Buscador de emisoras (importador de TDTChannels): otro panel de gris claro, con el campo de texto y la lupa; justo encima, el de boletines baja a la separación normal */
-.panel.search { margin: 22px 2px 0; background: #2a3441; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
+.ptitle.ptitle-main { margin: 22px 2px 8px 4px; }   /* el título "Presintonías" encima del buscador, como los de Generalistas y Musicales */
+.panel.search { margin: 0 2px; background: #2a3441; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
 .panel.search + .panel.news { margin-top: 14px; }   /* el buscador a 22 px de las barras y boletines a 14 px del buscador */
 .panel.search input { flex: 1 1 auto; min-width: 0; height: 38px; padding: 0 2px; border: 0; outline: 0; background: none; color: #edf2f7; font: inherit; font-size: .92rem; -webkit-appearance: none; appearance: none; }
 .panel.search input::placeholder { color: #8c98a8; }
