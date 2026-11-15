@@ -7,9 +7,9 @@
 // del proyecto (la base de datos de bbdd/), que también entra en la búsqueda: las cadenas y emisoras conocidas se pueden recuperar aunque no estén en los ajustes.
 
 import { S } from './state.js';
-import { closeDialog, log, openDialog } from './ui.js';
+import { closeDialog, log, openDialog, toast } from './ui.js';
 import { editHooks } from './stations.js';
-import { createChain } from './settings.js';
+import { addChainFromForm, createChain, lastSettingsMsg } from './settings.js';
 import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optionName, optionSuffix, search } from './tdt.js';
 
 const $ = id => document.getElementById(id);
@@ -20,6 +20,8 @@ const modeOld = $('tdtModeOld'), modeNew = $('tdtModeNew'), oldRow = $('tdtOldRo
 const chainSel = $('tdtChain'), labelIn = $('tdtLabel'), addBtn = $('tdtAdd');
 const nName = $('tdtNName'), nShort = $('tdtNShort'), nType = $('tdtNType'), nColor = $('tdtNColor'), nColorPick = $('tdtNColorPick');
 const fileBtn = $('tdtFileBtn'), fileIn = $('tdtFile');
+const titleEl = $('tdtTitle'), tabs = $('tdtTabs'), tabCat = $('tdtTabCat'), tabUrl = $('tdtTabUrl'), catBox = $('tdtCat'), urlBox = $('tdtUrl');
+const stForm = $('stForm'), varForm = $('varForm'), stMsg = $('stMsg'), stAdd = $('stAdd'), seg = act.querySelector('.seg');
 
 const MAX_SHOWN = 60;
 const httpOk = location.protocol !== 'https:';
@@ -28,6 +30,7 @@ let loading = null;      // descarga en curso (promesa)
 let picked = null;       // { ch, i }: la opción elegida
 let mode = 'old';        // 'old' = emisora de una cadena existente; 'new' = cadena nueva
 let busy = false;
+let ctx = null;          // de dónde se abrió: null = el buscador; { kind: 'new', group } = el "+" de un grupo; { kind: 'old', st } = "Añadir emisora…" de una cadena
 
 const setMsg = (text, isError) => {
   msg.textContent = text || '';
@@ -209,9 +212,14 @@ function pick(ch, i, btn) {
   nType.value = ch.t || 'general';
   nColor.value = ch.c || '';
   if (ch.c) nColorPick.value = ch.c;
-  const guess = guessChain(ch.n);
-  fillChains(guess ? guess.id : '');
-  setMode(guess ? 'old' : 'new');
+  if (ctx && ctx.kind === 'new') { fillChains(''); setMode('new'); if (ctx.group) nType.value = ctx.group; }
+  else if (ctx) { fillChains(ctx.st.id); setMode('old'); oldRow.hidden = true; }   // la cadena ya está elegida
+  else {
+    const guess = guessChain(ch.n);
+    fillChains(guess ? guess.id : '');
+    setMode(guess ? 'old' : 'new');
+  }
+  seg.hidden = !!ctx;   // con un contexto, el destino no se elige
   act.hidden = false;
   dlg.classList.add('picking');   // oscurece lo que queda detrás del panel de añadir
   infoEl.hidden = true;   // con el formulario abierto, el espacio es para la lista
@@ -246,6 +254,7 @@ async function add() {
     }
     if (err) { setMsg(err, true); return; }
     log('TDTChannels: ' + picked.ch.n + ' (' + o.f + ') importada');
+    if (ctx) { toast(msg.textContent); closeDialog(dlg); }
   } finally {
     busy = false;
     addBtn.disabled = false;
@@ -259,6 +268,7 @@ async function add() {
 let debounce = 0;
 async function openSearch() {
   const text = query.value.trim();
+  setCtx(null);
   q2.value = text;
   openDialog(dlg);
   clearPick();
@@ -268,6 +278,76 @@ async function openSearch() {
   if (!text) q2.focus();
 }
 
+// =========================================================
+// == CREAR PRESINTONÍA / NUEVA EMISORA: CATÁLOGO O ENLACE ==
+// =========================================================
+// La misma ventana, con dos pestañas: "Consultar catálogo" (el buscador, con el destino ya fijado) y "Tengo un enlace" (el formulario de siempre)
+function setCtx(c) {
+  ctx = c;
+  tabs.hidden = !c;
+  titleEl.textContent = !c ? 'Buscar emisoras' : c.kind === 'new' ? 'Crear nueva presintonía' : 'Nueva emisora en ' + c.st.name;
+  stForm.hidden = !c || c.kind !== 'new';
+  varForm.hidden = !c || c.kind !== 'old';
+  showTab('cat');
+}
+function showTab(t) {
+  catBox.hidden = t !== 'cat';
+  urlBox.hidden = t !== 'url';
+  [[tabCat, 'cat'], [tabUrl, 'url']].forEach(([b, k]) => { b.classList.toggle('on', k === t); b.setAttribute('aria-selected', String(k === t)); });
+  if (t === 'url') (ctx && ctx.kind === 'old' ? $('varUrl') : $('stName')).focus();
+  else if (dlg.open) q2.focus();
+}
+async function openAdd(c) {
+  setCtx(c);
+  q2.value = '';
+  stMsg.textContent = '';
+  stMsg.className = 'cfgmsg';
+  varForm.reset();
+  if (c.kind === 'new' && c.group) $('stType').value = c.group;
+  openDialog(dlg);
+  clearPick();
+  listEl.textContent = '';
+  q2.focus();
+  try { await ensureLists(); } catch (err) { log('TDTChannels: ' + ((err && err.message) || err)); }
+  renderResults();
+}
+editHooks.newChain = group => openAdd({ kind: 'new', group });
+editHooks.newVariant = st => openAdd({ kind: 'old', st });
+tabCat.addEventListener('click', () => showTab('cat'));
+tabUrl.addEventListener('click', () => showTab('url'));
+
+// "Tengo un enlace": cadena nueva (el formulario de settings.js) o emisora nueva de la cadena elegida
+let urlBusy = false;
+async function addFromUrl() {
+  if (!ctx || urlBusy) return;
+  if (ctx.kind === 'new') {
+    if (await addChainFromForm()) { toast(lastSettingsMsg()); closeDialog(dlg); }
+    return;
+  }
+  urlBusy = true;
+  stAdd.disabled = true;
+  stAdd.textContent = 'Comprobando…';
+  stMsg.className = 'cfgmsg';
+  stMsg.textContent = '';
+  try {
+    const st = ctx.st, name = $('varName').value;
+    const err = editHooks.addVariant ? await editHooks.addVariant(st.id, $('varUrl').value, name) : 'No disponible';
+    if (err) { stMsg.className = 'cfgmsg err'; stMsg.textContent = err; return; }
+    toast('Emisora añadida a ' + st.name + (name.trim() ? ': ' + name.trim() : ''));
+    closeDialog(dlg);
+  } catch (_) {
+    stMsg.className = 'cfgmsg err';
+    stMsg.textContent = 'No se pudo añadir la emisora';
+  } finally {
+    urlBusy = false;
+    stAdd.disabled = false;
+    stAdd.textContent = 'Añadir';
+  }
+}
+stAdd.addEventListener('click', addFromUrl);
+stForm.addEventListener('submit', e => { e.preventDefault(); addFromUrl(); });
+varForm.addEventListener('submit', e => { e.preventDefault(); addFromUrl(); });
+
 go.addEventListener('click', openSearch);
 query.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); openSearch(); } });
 panel.addEventListener('click', e => { if (e.target === panel) query.focus(); });
@@ -275,7 +355,7 @@ q2.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeo
 q2.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); renderResults(); } });
 $('tdtClose').addEventListener('click', () => closeDialog(dlg));
 dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(dlg); });
-dlg.addEventListener('close', () => { query.value = q2.value.trim(); });
+dlg.addEventListener('close', () => { if (!ctx) query.value = q2.value.trim(); });   // el texto vuelve al buscador de la página solo si se abrió desde él
 
 modeOld.addEventListener('click', () => setMode('old'));
 modeNew.addEventListener('click', () => setMode('new'));

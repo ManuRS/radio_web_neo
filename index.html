@@ -224,25 +224,8 @@
   </dialog>
 
   <!-- ======================================================================== -->
-  <!-- == NUEVA CADENA (botón + de las presintonías) Y FORMULARIOS DEL MENÚ DE UNA CADENA == -->
+  <!-- == FORMULARIOS DEL MENÚ DE UNA CADENA (CAMBIAR NOMBRE) ==                            -->
   <!-- ======================================================================== -->
-  <dialog id="stationDlg" class="settings sheet" aria-labelledby="stationDlgTitle">
-    <div class="dlg">
-      <div class="dlg-head">
-        <b id="stationDlgTitle">Nueva cadena</b>
-        <button id="stationClose" class="x" type="button" aria-label="Cerrar">✕</button>
-      </div>
-      <form class="stform" id="stForm" autocomplete="off" novalidate>
-          <label>Nombre<input id="stName" type="text" maxlength="40" placeholder="Cadena SER"></label>
-          <label>Nombre corto<input id="stShort" type="text" maxlength="14" placeholder="SER"></label>
-          <label>Tipo<select id="stType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
-          <label>Color<span class="stcolor"><input id="stColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="stColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
-          <label class="wide">Enlace del stream<input id="stUrl" type="url" placeholder="https://…/stream.mp3" spellcheck="false"></label>
-        </form>
-      <div id="stMsg" class="cfgmsg" role="status"></div>
-      <div class="dlg-actions"><button id="stAdd" class="primary" type="button">Añadir</button></div>
-    </div>
-  </dialog>
   <dialog id="formDlg" class="settings sheet" aria-labelledby="formDlgTitle">
     <div class="dlg">
       <div class="dlg-head">
@@ -367,9 +350,15 @@
   <dialog id="tdtDlg" class="settings tdt">
     <div class="dlg">
       <div class="dlg-head">
-        <b>Buscar emisoras</b>
+        <b id="tdtTitle">Buscar emisoras</b>
         <button id="tdtClose" class="x" type="button" aria-label="Cerrar">✕</button>
       </div>
+      <!-- Con el "+" de las presintonías o "Añadir emisora…" de una cadena: dos pestañas, el catálogo (el buscador) y un enlace propio -->
+      <div class="seg tdttabs" id="tdtTabs" role="tablist" hidden>
+        <button id="tdtTabCat" class="on" type="button" role="tab" aria-selected="true">Consultar catálogo</button>
+        <button id="tdtTabUrl" type="button" role="tab" aria-selected="false">Tengo un enlace</button>
+      </div>
+      <div class="tdtcat" id="tdtCat">
       <input id="tdtQ" class="tdtq" type="search" placeholder="Nombre de la emisora" aria-label="Nombre de la emisora" autocomplete="off" autocapitalize="off" spellcheck="false">
       <div id="tdtStatus" class="tdtstatus" role="status"></div>
       <div id="tdtList" class="tdtlist"></div>
@@ -392,6 +381,22 @@
         </div>
         <div id="tdtMsg" class="cfgmsg" role="status"></div>
         <div class="dlg-actions"><button id="tdtAdd" class="primary" type="button">Añadir</button></div>
+      </div>
+      </div>
+      <div class="tdturl" id="tdtUrl" hidden>
+        <form class="stform" id="stForm" autocomplete="off" novalidate>
+          <label>Nombre<input id="stName" type="text" maxlength="40" placeholder="Cadena SER"></label>
+          <label>Nombre corto<input id="stShort" type="text" maxlength="14" placeholder="SER"></label>
+          <label>Tipo<select id="stType"><option value="general">Generalista</option><option value="musical">Musical</option></select></label>
+          <label>Color<span class="stcolor"><input id="stColor" type="text" maxlength="7" placeholder="#rrggbb" spellcheck="false"><input id="stColorPick" type="color" value="#4da3ff" aria-label="Elegir color"></span></label>
+          <label class="wide">Enlace del stream<input id="stUrl" type="url" placeholder="https://…/stream.mp3" spellcheck="false"></label>
+        </form>
+        <form class="stform" id="varForm" autocomplete="off" novalidate hidden>
+          <label class="wide">Enlace de la emisora<input id="varUrl" type="url" placeholder="https://…/stream.aac" spellcheck="false"></label>
+          <label class="wide">Nombre de la emisora (opcional)<input id="varName" type="text" maxlength="30" placeholder="SER Málaga" spellcheck="false"></label>
+        </form>
+        <div id="stMsg" class="cfgmsg" role="status"></div>
+        <div class="dlg-actions"><button id="stAdd" class="primary" type="button">Añadir</button></div>
       </div>
       <div class="dlg-links" hidden>   <!-- botón oculto de momento; la carga por archivo sigue funcionando en importer.js -->
         <button id="tdtFileBtn" class="link" type="button">Cargar radio.json / tv.json desde archivo…</button>

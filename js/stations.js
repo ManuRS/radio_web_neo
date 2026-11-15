@@ -16,7 +16,7 @@ import { toast } from './ui.js';
 
 // Edición de las emisoras desde la rejilla (arrastrar para reordenar; clic derecho para añadir una variante o eliminar): settings.js rellena estas funciones y escribe el JSON
 // Cada función devuelve (o resuelve con) el texto del error, o nada si todo fue bien. addVariant(id, url, nombre) comprueba la URL; rename(id, nombre, corto, nombresVariantes) cambia los nombres
-export const editHooks = { move: null, remove: null, removeVariant: null, addVariant: null, rename: null, newChain: null };   // newChain(grupo): abre la ventana "Nueva cadena"
+export const editHooks = { move: null, remove: null, removeVariant: null, addVariant: null, rename: null, newChain: null, newVariant: null };   // newChain(grupo) y newVariant(cadena): abren la ventana del catálogo (importer.js)
 
 // Grabando, las emisoras sin CORS (modo degradado) no se pueden poner: su audio no llega a la grabación (ver recorder.js)
 const recBlocked = (st, vi) => S.recording && !corsAllowed(st, vi);
@@ -99,14 +99,14 @@ export function buildStations() {
     more.className = 'preset more';
     more.type = 'button';
     more.textContent = '+';
-    more.title = 'Añadir cadena';
-    more.setAttribute('aria-label', 'Añadir cadena ' + (g.id === 'musical' ? 'musical' : 'generalista'));
+    more.title = 'Crear nueva presintonía';
+    more.setAttribute('aria-label', 'Crear nueva presintonía ' + (g.id === 'musical' ? 'musical' : 'generalista'));
     const bar = document.createElement('button');
     bar.className = 'mbar';
     bar.type = 'button';
     bar.innerHTML = '<span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more, bar };
-    more.addEventListener('click', () => { if (editHooks.newChain) editHooks.newChain(g.id); });   // "+": ventana "Nueva cadena" con el tipo del grupo
+    more.addEventListener('click', () => { if (editHooks.newChain) editHooks.newChain(g.id); });   // "+": "Crear nueva presintonía" con el tipo del grupo
     bar.addEventListener('click', () => { if (expandedGroups.has(g.id)) expandedGroups.delete(g.id); else expandedGroups.add(g.id); applyVisibility(); });
     grid.appendChild(more);
     wrap.append(title, grid, bar);
@@ -305,7 +305,7 @@ function placeMenu(m, x, y, center = false) {
   m.style.left = Math.max(6, center ? (window.innerWidth - r.width) / 2 : Math.min(x, window.innerWidth - r.width - 6)) + 'px';
   m.style.top = Math.max(6, Math.min(y, window.innerHeight - r.height - 6)) + 'px';
 }
-// Formularios de la cadena (añadir emisora, cambiar nombre): ventana como la de ajustes, arriba, en vez del menú. fields: [{ type, placeholder,
+// Formulario de la cadena (cambiar nombre): ventana como la de ajustes, arriba, en vez del menú. fields: [{ type, placeholder,
 // label, value, max, wide }]; run(valores) devuelve (promesa) el texto del error, o nada si todo fue bien (y la ventana se cierra). Mientras tanto, los campos se bloquean
 const formDlg = document.getElementById('formDlg');
 const formTitle = document.getElementById('formDlgTitle');
@@ -354,14 +354,6 @@ formForm.addEventListener('submit', async e => {
 });
 document.getElementById('formClose').addEventListener('click', closeFormDialog);
 formDlg.addEventListener('click', e => { if (e.target === formDlg) closeFormDialog(); });
-const openVariantForm = st => openFormDialog('Añadir emisora · ' + st.name, {
-  fields: [
-    { type: 'url', label: 'Enlace de la emisora', placeholder: 'https://…/stream.aac', wide: true },
-    { max: 30, label: 'Nombre de la emisora (opcional)', placeholder: 'SER Málaga', wide: true },
-  ],
-  button: 'Añadir', busyText: 'Comprobando…', failText: 'No se pudo añadir la emisora',
-  run: ([url, name]) => editHooks.addVariant ? editHooks.addVariant(st.id, url, name) : 'No disponible',
-});
 // Nombre de la emisora, nombre corto del botón y el nombre de cada variante (vacío = el formato)
 const openRenameForm = st => openFormDialog('Cambiar nombre · ' + st.name, {
   fields: [
@@ -433,7 +425,7 @@ function openMenu(x, y, st) {
   add.className = 'ctxadd';
   add.setAttribute('role', 'menuitem');
   add.textContent = 'Añadir emisora…';
-  add.addEventListener('click', () => { closeMenu(); openVariantForm(st); });
+  add.addEventListener('click', () => { closeMenu(); if (editHooks.newVariant) editHooks.newVariant(st); });
   m.appendChild(add);
   const ren = document.createElement('button');
   ren.type = 'button';

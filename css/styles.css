@@ -415,6 +415,15 @@ dialog.settings.sheet { min-height: 0; }
    =========================================================== */
 dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-height: min(760px, calc(100dvh - 44px)); }
 .tdt .dlg { flex: 1 1 auto; min-height: 0; }
+.tdtcat { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.tdtcat[hidden], .tdturl[hidden], .tdturl .stform[hidden] { display: none; }
+.tdturl { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.tdturl .cfgmsg:empty { display: none; }
+.tdturl .dlg-actions { justify-content: flex-end; }
+.tdturl .dlg-actions .primary { flex: 0 1 auto; min-width: 140px; }
+.tdttabs { flex: none; }
+.tdttabs[hidden], .tdtact .seg[hidden] { display: none; }
+.tdttabs button { flex: 1; padding: 10px 6px; font-size: .86rem; }
 .tdtq { width: 100%; box-sizing: border-box; padding: 11px 12px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; font-size: .9rem; }
 .tdtq::placeholder { color: #5c6877; }
 .tdtstatus { font-size: .78rem; color: #8c98a8; line-height: 1.4; }

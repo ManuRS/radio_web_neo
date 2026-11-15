@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stationClose, stationDlg, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -201,11 +201,11 @@ function showCfgMsg(lines, isError) {
   const cls = 'cfgmsg' + (isError ? ' err' : ' ok');
   cfgMsg.className = stMsg.className = cls;
   cfgMsg.textContent = stMsg.textContent = lastMsg = lines.join('\n');
-  if (!settingsDlg.open && !stationDlg.open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
+  if (!settingsDlg.open && !document.getElementById('tdtDlg').open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
 }
 
 // Pestañas de la ventana: General (reloj y audio), Configuración (el texto con los ajustes) y Registro (oculta salvo con "Mostrar registro")
-const tabPanels = { general: tabGeneral, stations: stationClose, stationDlg, config: tabConfig, log: tabLog };
+const tabPanels = { general: tabGeneral, config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
   settingsTabs.forEach(x => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', String(on)); });
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });
@@ -655,44 +655,33 @@ export async function createChain(opts) {
   return '';
 }
 
+// "Tengo un enlace" al crear una presintonía (ventana del catálogo, ver importer.js): cadena nueva con los datos del formulario.
+// Los avisos van al cuadro de debajo del formulario; devuelve true si se creó
 let adding = false;
-async function addStationFromForm() {
-  if (adding) return;
-  if (!field('stName').value.trim()) { showCfgMsg(['Escribe el nombre de la cadena'], true); field('stName').focus(); return; }
+export async function addChainFromForm() {
+  if (adding) return false;
+  if (!field('stName').value.trim()) { showCfgMsg(['Escribe el nombre de la cadena'], true); field('stName').focus(); return false; }
   const url = field('stUrl').value.trim();
-  if (!url) { showCfgMsg(['Escribe el enlace del stream'], true); field('stUrl').focus(); return; }
+  if (!url) { showCfgMsg(['Escribe el enlace del stream'], true); field('stUrl').focus(); return false; }
   const bad = urlProblem(url);
-  if (bad) { showCfgMsg([bad], true); field('stUrl').focus(); return; }
+  if (bad) { showCfgMsg([bad], true); field('stUrl').focus(); return false; }
   adding = true;
   stAdd.disabled = true;
   stAdd.textContent = 'Comprobando…';
   showCfgMsg(['Comprobando el enlace…'], false);
   try {
     const err = await createChain({ name: field('stName').value, short: field('stShort').value, group: field('stType').value, color: field('stColor').value, url });
-    if (err) { showCfgMsg([err], true); return; }
-    closeDialog(stationDlg);
-    toast(lastMsg);
+    if (err) { showCfgMsg([err], true); return false; }
     stForm.reset();
     field('stColorPick').value = '#4da3ff';
+    return true;
   } finally {
     adding = false;
     stAdd.disabled = false;
     stAdd.textContent = 'Añadir';
   }
 }
-stAdd.addEventListener('click', addStationFromForm);
-
-// Ventana "Nueva cadena": se abre con el "+" del final de cada grupo de presintonías, con su tipo ya elegido
-editHooks.newChain = group => {
-  stMsg.textContent = '';
-  stMsg.className = 'cfgmsg';
-  if (group) field('stType').value = group;
-  openDialog(stationDlg);
-  field('stName').focus();
-};
-stationClose.addEventListener('click', () => closeDialog(stationDlg));
-stationDlg.addEventListener('click', e => { if (e.target === stationDlg) closeDialog(stationDlg); });
-stForm.addEventListener('submit', e => { e.preventDefault(); addStationFromForm(); });
+export const lastSettingsMsg = () => lastMsg;
 
 // Clic derecho en una emisora > "Añadir variante": se añade al final de sus URL (los números de las demás no cambian, así que se puede con algo sonando).
 // Devuelve el texto del error (el menú lo muestra) o nada si se añadió

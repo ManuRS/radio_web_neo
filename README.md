@@ -38,9 +38,11 @@ La manera más facil de añadir una emisora es pulsando en la barra de búsqueda
 
 Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación:
 
-- Para añadirlo a una presintonía existente: 1. Sobre el panel deseado, hacer clic derecho en PC o mantener pulsado en el movil / 2. Seleccionar añadir emisora / 3. Indicar la URL y el nombre deseado
+- Para añadirlo a una presintonía existente: 1. Sobre el panel deseado, hacer clic derecho en PC o mantener pulsado en el movil / 2. Seleccionar "Añadir emisora…" / 3. En la pestaña "Tengo un enlace", indicar la URL y el nombre deseado
 
-- Para añadirlo creando una nueva presintonía: 1. Pulsar el botón + que hay al final de las presintonías (en Generalistas o en Musicales; el tipo ya viene elegido) / 2. Rellenar los datos solicitados en la ventana "Nueva cadena"
+- Para añadirlo creando una nueva presintonía: 1. Pulsar el botón + que hay al final de las presintonías (en Generalistas o en Musicales; el tipo ya viene elegido) / 2. En la pestaña "Tengo un enlace" de la ventana "Crear nueva presintonía", rellenar los datos solicitados
+
+En esas dos mismas ventanas, la pestaña "Consultar catálogo" es el buscador: lo que elijas va directamente a la presintonía nueva o a la cadena desde la que la abriste
 
 ## Exportar configuración
 
