@@ -65,10 +65,10 @@ export function restoreLast() {
 // ===========================
 // == REJILLA DE EMISORAS ==
 // ===========================
-let groups = [];   // [{ id, list, grid, buttons, labels, more }]
+let groups = [];   // [{ id, list, grid, buttons, labels, more, bar }]
 const expandedGroups = new Set();   // grupos con la rejilla desplegada: se conservan al redibujar (al reordenar, añadir o eliminar)
 
-// Despliega la rejilla de un grupo (al añadir una emisora, para que se vea el botón nuevo)
+// Despliega la rejilla de un grupo (al añadir una cadena, para que se vea el botón nuevo)
 export function expandGroup(id) { expandedGroups.add(id); }
 
 export function buildStations() {
@@ -101,10 +101,15 @@ export function buildStations() {
     more.textContent = '+';
     more.title = 'Añadir cadena';
     more.setAttribute('aria-label', 'Añadir cadena ' + (g.id === 'musical' ? 'musical' : 'generalista'));
-    const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more };
+    const bar = document.createElement('button');
+    bar.className = 'mbar';
+    bar.type = 'button';
+    bar.innerHTML = '<span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more, bar };
     more.addEventListener('click', () => { if (editHooks.newChain) editHooks.newChain(g.id); });   // "+": ventana "Nueva cadena" con el tipo del grupo
+    bar.addEventListener('click', () => { if (expandedGroups.has(g.id)) expandedGroups.delete(g.id); else expandedGroups.add(g.id); applyVisibility(); });
     grid.appendChild(more);
-    wrap.append(title, grid);
+    wrap.append(title, grid, bar);
     presetsBox.appendChild(wrap);
     groups.push(grp);
   });
@@ -459,9 +464,23 @@ function columns(grid) {
   if (n) lastCols.set(grid, n);
   return n || lastCols.get(grid) || 4;
 }
-// Por ahora se ven todas las cadenas de cada grupo (el "+" del final ya no despliega: abre "Nueva cadena"). Queda pendiente otra forma de plegar
+// Texto de la barra: plegado, cuántas presintonías quedan ocultas (o solo "Mostrar más" si lo único oculto es el "+"); desplegado, "Mostrar menos"
+function barLabel(bar, open, hiddenN) {
+  bar.classList.toggle('open', open);
+  bar.setAttribute('aria-expanded', String(open));
+  bar.firstChild.textContent = open ? 'Mostrar menos' : hiddenN ? 'Mostrar ' + hiddenN + ' más' : 'Mostrar más';
+}
+// De cada grupo se ven dos filas enteras de cadenas; si con el "+" no caben todas, la barra de debajo despliega el resto (y el "+", siempre el último)
 function applyVisibility() {
-  groups.forEach(g => { g.buttons.forEach(b => { b.hidden = false; }); g.more.hidden = false; });
+  groups.forEach(g => {
+    const capacity = columns(g.grid) * 2;
+    const fold = g.buttons.length + 1 > capacity;
+    const open = fold && expandedGroups.has(g.id);
+    g.buttons.forEach((b, i) => { b.hidden = fold && !open && i >= capacity; });
+    g.more.hidden = fold && !open;
+    g.bar.hidden = !fold;
+    if (fold) barLabel(g.bar, open, Math.max(0, g.buttons.length - capacity));
+  });
 }
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(applyVisibility).observe(presetsBox);
 

@@ -211,6 +211,14 @@ body.no-config .panel.vols > * { visibility: visible; }
 .pgroup:first-child { margin-top: 22px; }   /* el primer título (Generalistas) a 22 px de boletines, como Frecuencias en Proxy y Presintonías sobre el buscador */
 .ptitle { margin: 0 0 8px 2px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8c98a8; }
 .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; }
+/* Plegar y desplegar: de cada grupo se ven dos filas enteras de presintonías y, si hay más (o el "+" no cabe), debajo la barra
+   "Mostrar N más" / "Mostrar menos". El "+" va siempre el último, así que plegado no se ve */
+.mbar { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 38px; margin-top: 8px; padding: 0; border-radius: 10px; background: #1f2632; color: #cbd5e1; font-size: .82rem; font-weight: 700; -webkit-tap-highlight-color: transparent; }
+.mbar[hidden] { display: none; }
+.mbar svg { width: 14px; height: 14px; transition: transform .2s ease; }
+.mbar.open svg { transform: rotate(180deg); }
+@media (hover: hover) { .mbar:hover { color: #edf2f7; background: #252d3a; } }
+.mbar:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pgrid .preset { border-radius: 12px; }
 /* Pulsación larga en el móvil (abre el menú de la cadena): sin selección de texto ni el menú de copiar y pegar del navegador. En toda la zona de las cadenas
    (títulos y huecos incluidos): si la selección empezaba en un título, al arrastrar Android teñía de color de selección cada casilla, en rectángulos */
