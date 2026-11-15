@@ -105,7 +105,7 @@ button:disabled { opacity: .45; cursor: default; }
 .panel.vols { display: block; margin-top: 10px; padding: 17px 15px; box-shadow: var(--lift); }
 .vols .volume { margin-top: 0; }
 .vols .volume + .volume { margin-top: 12px; }
-.volume label { flex: 0 0 4.6em; position: relative; top: -1px; height: 24px; line-height: 24px; font-size: .86rem; font-weight: 700; color: #aeb9c8; }
+.volume label { flex: 0 0 4.6em; position: relative; top: -2px; height: 24px; line-height: 24px; font-size: .86rem; font-weight: 700; color: #aeb9c8; }
 .volume span { flex: 0 0 3.4ch; height: 24px; line-height: 24px; text-align: right; font-size: .86rem; font-weight: 700; color: #edf2f7; font-variant-numeric: tabular-nums; }
 input { width: 100%; accent-color: var(--accent); }
 /* Deslizadores propios: el nativo de Chrome dibuja un contorno gris alrededor del relleno. --r (0-1) lo pone ui.js (paintRange); el relleno llega al centro del pulgar (22 px) */
@@ -179,7 +179,7 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.search { margin: 0 2px; background: #1f2632; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
 .panel.search + .panel.news { margin-top: 8px; }   /* boletines a 8 px del buscador: el mismo hueco que entre filas de presintonías (.pgrid) */
 .panel.search input { flex: 1 1 auto; min-width: 0; height: 38px; padding: 0 2px; border: 0; outline: 0; background: none; color: #edf2f7; font: inherit; font-size: .92rem; -webkit-appearance: none; appearance: none; }
-.panel.search input::placeholder { color: #8c98a8; }
+.panel.search input::placeholder { color: #8c98a8; font-weight: 700; }
 .panel.search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .panel.search:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 70%, transparent); }
 .panel.search .badge { flex: none; width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; order: 2; }   /* min-width 38 y alto 38 vienen de .panel .badge */
