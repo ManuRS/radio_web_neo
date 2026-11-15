@@ -129,9 +129,8 @@ scroller.addEventListener('scroll', () => scroller.style.setProperty('--fade', M
 
 // Cabecera que se encoge al deslizar (ver header en styles.css): --p va de 0 (grande) a 1 (encogida) según lo que se ha bajado
 // con el scroll de la zona de abajo o, si la página es corta y hace scroll entera, el de la ventana. Con "reducir movimiento" salta de una a otra
-const hdr = document.getElementById('hdr');
 const ctlBar = document.getElementById('ctlBar');
-const HDR_DIST = 80;   // px de scroll hasta que queda del todo encogida
+const HDR_DIST = 86;   // px de scroll hasta que queda del todo encogida: lo que mide de menos (así el contenido sube a la vez que baja la cabecera)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let hdrP = -1;
 function hdrUpdate() {
@@ -140,7 +139,7 @@ function hdrUpdate() {
   p = Math.round(p * 100) / 100;
   if (p === hdrP) return;
   hdrP = p;
-  hdr.style.setProperty('--p', p);
+  document.documentElement.style.setProperty('--p', p);
   ctlBar.inert = p > .5;   // con la cabecera encogida la barra no se ve: tampoco se pulsa ni se llega con el tabulador
 }
 scroller.addEventListener('scroll', hdrUpdate, { passive: true });

@@ -11,6 +11,9 @@
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen) */
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
+/* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js); --hb: dónde acaba ahora la cabecera */
+:root { --hf: 142px; --p: 0; --hb: calc(var(--hf) - 86px * var(--p)); }
+
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
@@ -28,25 +31,26 @@
    cuando la barra del navegador cambiaba de tamaño */
 html { background: #1a2029; }
 body { margin: 0; display: grid; place-items: start center; background: #1a2029; color: #edf2f7; }
-main { width: min(520px, 100%); box-sizing: border-box; padding: 22px 20px 28px; }
+main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 28px; }
 /* Con altura suficiente la página no hace scroll: lo hace por dentro la parte de abajo (boletines y emisoras), sin barra visible.
    Con poca altura (móvil apaisado, ventanas bajas) se queda como una página normal */
 @media (min-height: 600px) {
   html { overflow: hidden; }
-  main { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-bottom: 0; }
+  main { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: 0; padding-bottom: 0; }
   main > :not(.scroller) { flex: none; }
-  .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; padding: 0 6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding-bottom: 28px; }
+  .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 6px 28px; }
   .scroller::-webkit-scrollbar { display: none; }
   /* lo que sube por debajo del espectro se va desvaneciendo en vez de cortarse (--fade lo pone ui.js según el scroll) */
-  .scroller { -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--fade, 0px) * .3), #000 var(--fade, 0px)); mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--fade, 0px) * .3), #000 var(--fade, 0px)); }
+  .scroller { -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--hb) + var(--fade, 0px) * .3), #000 calc(var(--hb) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent 0, transparent calc(var(--hb) + var(--fade, 0px) * .3), #000 calc(var(--hb) + var(--fade, 0px))); }
 }
 
 /* ==========================================
    == CABECERA, ESTADO DE CONEXIÓN Y RELOJ ==
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
-   Se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --p: 0; --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); box-sizing: border-box; margin: -22px -20px 0; padding: 0 20px; background: #262d37; box-shadow: 0 0 0 100vmax #262d37; clip-path: inset(0 -100vmax); }
+   Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: #262d37; }
+.hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px * (1 - var(--p))); height: calc(48px * (1 - var(--p))); margin-right: calc(12px * (1 - var(--p))); border-radius: 27%; opacity: clamp(0, calc(1 - 1.6 * var(--p)), 1); }
 .titles { flex: 1 1 auto; min-width: 0; }
@@ -71,7 +75,8 @@ p { color: #aeb9c8; line-height: 1.45; }
    ==================================================================== */
 .bar { display: flex; height: calc(52px * (1 - var(--p))); margin-bottom: calc(14px * (1 - var(--p))); border-radius: 12px; background: #1d242d; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
 .bar button { border-radius: 0; padding: 0; background: none; height: 52px; -webkit-tap-highlight-color: transparent; }
-.bar button:hover { background: rgba(255, 255, 255, .04); }
+.bar button:active { background: rgba(255, 255, 255, .07); }
+@media (hover: hover) { .bar button:hover { background: rgba(255, 255, 255, .04); } .bar button:active { background: rgba(255, 255, 255, .07); } }
 .bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 .sep { flex: 0 0 1px; margin: 12px 0; background: rgba(255, 255, 255, .09); }
 .ibtn { flex: 0 0 54px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; }

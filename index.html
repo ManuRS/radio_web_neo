@@ -87,6 +87,7 @@
   <!-- == CABECERA, SUBTÍTULO Y RELOJ == -->
   <!-- ================================= -->
   <header id="hdr">
+   <div class="hin">
     <div class="hrow">
       <img class="logo" src="icon-192.png" alt="" width="48" height="48">
       <div class="titles">
@@ -105,12 +106,13 @@
     <!-- Los botones de siempre siguen aquí, ocultos: la presentación, la notificación y el resto del código leen su estado (disabled) y los pulsan -->
     <button id="toggle" type="button" hidden>▶ Reproducir</button>
     <button id="stop" type="button" hidden disabled>■ Detener</button>
+   </div>
   </header>
-  <h3 id="especial"></h3>
   <!-- ================================================================================= -->
   <!-- == ZONA CON SCROLL: EMISORA, VISUALIZADOR, VOLÚMENES, BOLETINES Y EMISORAS == -->
   <!-- ================================================================================= -->
   <div class="scroller">
+  <h3 id="especial"></h3>
   <div class="now">
     <div class="ps idle" id="psValue"><span id="psText">—</span></div>
     <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
