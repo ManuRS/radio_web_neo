@@ -87,22 +87,26 @@
   <!-- == CABECERA, SUBTÍTULO Y RELOJ == -->
   <!-- ================================= -->
   <header id="hdr">
-    <img class="logo" src="icon-192.png" alt="" width="48" height="48">
-    <div class="titles">
-      <h1 id="title">Radio Web Neo</h1>
-      <p class="subtitle">La radio siempre contigo</p>
+    <div class="hrow">
+      <img class="logo" src="icon-192.png" alt="" width="48" height="48">
+      <div class="titles">
+        <h1 id="title">Radio Web Neo</h1>
+        <p class="subtitle">La radio siempre contigo</p>
+      </div>
+      <div class="status" id="statusBox" title="Desconectado"><span class="dot" id="dot"></span><span id="clock">--:--:--</span></div>
     </div>
-    <div class="status" id="statusBox" role="button" tabindex="0" aria-label="Ajustes y registro" title="Desconectado"><span class="dot" id="dot"></span><span id="clock">--:--:--</span></div>
+    <!-- Barra de controles (solo con la cabecera desplegada): un único botón que alterna Reproducir y Detener, información y ajustes -->
+    <div class="bar" id="ctlBar" role="toolbar" aria-label="Controles">
+      <button id="playBtn" type="button" data-state="play" aria-label="Reproducir"><span class="pi" aria-hidden="true"></span><span class="pl" aria-hidden="true"><span class="l1">Reproducir</span><span class="l2">Detener</span></span></button>
+      <span class="sep" aria-hidden="true"></span>
+      <button id="infoBtn" class="ibtn" type="button" aria-label="Información" title="Información"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg></button>
+      <button id="settingsBtn" class="ibtn" type="button" aria-label="Ajustes" title="Ajustes"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
+    </div>
+    <!-- Los botones de siempre siguen aquí, ocultos: la presentación, la notificación y el resto del código leen su estado (disabled) y los pulsan -->
+    <button id="toggle" type="button" hidden>▶ Reproducir</button>
+    <button id="stop" type="button" hidden disabled>■ Detener</button>
   </header>
   <h3 id="especial"></h3>
-  <!-- ============= -->
-  <!-- == BOTONES == -->
-  <!-- ============= -->
-  <div class="buttons">
-    <button id="toggle">▶ Reproducir</button>
-    <button id="stop" disabled>■ Detener</button>
-  </div>
-
   <!-- ================================================================================= -->
   <!-- == ZONA CON SCROLL: EMISORA, VISUALIZADOR, VOLÚMENES, BOLETINES Y EMISORAS == -->
   <!-- ================================================================================= -->
@@ -182,6 +186,38 @@
     <button id="presPipBtn" class="pres-close pres-pipbtn" type="button" aria-label="Imagen en imagen" title="Imagen en imagen" hidden><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="11.5" y="11" width="7" height="5.5" rx="1" fill="currentColor"/></svg></button>
     <button id="presClose" class="pres-close" type="button" aria-label="Salir de la presentación">✕</button>
   </div>
+
+  <!-- ==================================================== -->
+  <!-- == INFORMACIÓN: TUTORIAL DE TRES PASOS (SE ABRE SOLO LA PRIMERA VEZ) == -->
+  <!-- ==================================================== -->
+  <dialog id="intro" class="intro" aria-labelledby="introTitle">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b id="introTitle">Radio Web Neo</b>
+        <button id="introClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <section class="intro-step" data-step="0">
+        <img class="intro-tile intro-icon" src="icon-192.png" alt="" width="64" height="64">
+        <h2>Bienvenido</h2>
+        <p>Un reproductor de radio ligero, rápido y sin rastreos. Pulsa una cadena para escucharla; con clic derecho o pulsación larga ves sus emisoras, y puedes reordenarlas arrastrando.</p>
+      </section>
+      <section class="intro-step" data-step="1" hidden>
+        <div class="intro-tile" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5 21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></div>
+        <h2>Buscar emisoras</h2>
+        <p>Escribe parte del nombre en el buscador y elige una opción del catálogo: puedes añadirla a una cadena que ya tengas o crear una nueva. Con un enlace, usa clic derecho o pulsación larga en una cadena y Añadir emisora.</p>
+      </section>
+      <section class="intro-step" data-step="2" hidden>
+        <div class="intro-tile" aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><rect x="3" y="12" width="3.4" height="8" rx="1.2"/><rect x="8" y="6" width="3.4" height="14" rx="1.2"/><rect x="13" y="9" width="3.4" height="11" rx="1.2"/><rect x="18" y="4" width="3.4" height="16" rx="1.2"/></svg></div>
+        <h2>Y además</h2>
+        <p>El modo boletines salta a las noticias a su hora y vuelve a tu emisora al acabar. El visualizador tiene 7 efectos y pantalla completa. En Ajustes, el engranaje, puedes cambiar opciones y exportar tu configuración.</p>
+      </section>
+      <div class="intro-dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+      <div class="dlg-actions">
+        <button id="introBack" type="button">Saltar</button>
+        <button id="introNext" type="button" class="primary" autofocus>Siguiente</button>
+      </div>
+    </div>
+  </dialog>
 
   <!-- ========================================================== -->
   <!-- == VENTANA DE AJUSTES Y REGISTRO (PULSA EL PUNTO Y LA HORA) == -->

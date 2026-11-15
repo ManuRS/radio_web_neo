@@ -18,6 +18,7 @@ import { initClock, setCfgStreamDelay } from './clock.js';
 import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
 import './importer.js';
+import './intro.js';
 
 // ===============================
 // == APLICACIÓN DE LOS AJUSTES ==

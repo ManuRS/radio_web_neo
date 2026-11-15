@@ -4,7 +4,7 @@
 // Registro de eventos (ventana), estado de conexión, botones y maquetación de la página.
 
 import { clockNow } from './state.js';
-import { copyBtn, dot, logBox, statusBox, stop, toastEl, toggle } from './dom.js';
+import { copyBtn, dot, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
 import { viz } from './audio.js';
 
 // ===================================
@@ -33,7 +33,31 @@ export function setStatus(message, state = '') {
 export function updateButtons(connected, canPlay = false) {
   toggle.disabled = connected && !canPlay;
   stop.disabled = !connected;
+  setPlayBtn(connected);
 }
+
+// El botón único de la cabecera: con sesión de escucha es Detener y sin ella, Reproducir (como el de la pantalla completa). Al cambiar, se lanza el efecto (clase "swap")
+function setPlayBtn(connected) {
+  const state = connected ? 'stop' : 'play';
+  if (playBtn.dataset.state === state) return;
+  playBtn.dataset.state = state;
+  playBtn.setAttribute('aria-label', connected ? 'Detener' : 'Reproducir');
+  playBtn.classList.remove('swap');
+  void playBtn.offsetWidth;   // reinicia la animación si se cambia otra vez antes de que acabe
+  playBtn.classList.add('swap');
+}
+playBtn.addEventListener('animationend', () => playBtn.classList.remove('swap'));
+playBtn.addEventListener('click', () => (stop.disabled ? toggle : stop).click());   // se pulsa el de siempre (oculto): grabando, Detener pregunta antes (ver recorder.js)
+
+// Ancho de cada texto del botón, para que el hueco crezca y encoja con el cambio y el icono quede siempre junto al texto (se vuelve a medir al cargar la fuente)
+function measurePlayBtn() {
+  const w = el => { const r = document.createRange(); r.selectNodeContents(el); return Math.ceil(r.getBoundingClientRect().width) + 2; };
+  const l1 = playBtn.querySelector('.l1'), l2 = playBtn.querySelector('.l2');
+  playBtn.style.setProperty('--w1', w(l1) + 'px');
+  playBtn.style.setProperty('--w2', w(l2) + 'px');
+}
+measurePlayBtn();
+if (document.fonts) { document.fonts.ready.then(measurePlayBtn); document.fonts.addEventListener('loadingdone', measurePlayBtn); }
 
 // ===========================
 // == COLOR DE ÉNFASIS (CSS) ==
@@ -106,7 +130,8 @@ scroller.addEventListener('scroll', () => scroller.style.setProperty('--fade', M
 // Cabecera que se encoge al deslizar (ver header en styles.css): --p va de 0 (grande) a 1 (encogida) según lo que se ha bajado
 // con el scroll de la zona de abajo o, si la página es corta y hace scroll entera, el de la ventana. Con "reducir movimiento" salta de una a otra
 const hdr = document.getElementById('hdr');
-const HDR_DIST = 60;   // px de scroll hasta que queda del todo encogida
+const ctlBar = document.getElementById('ctlBar');
+const HDR_DIST = 80;   // px de scroll hasta que queda del todo encogida
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let hdrP = -1;
 function hdrUpdate() {
@@ -116,6 +141,7 @@ function hdrUpdate() {
   if (p === hdrP) return;
   hdrP = p;
   hdr.style.setProperty('--p', p);
+  ctlBar.inert = p > .5;   // con la cabecera encogida la barra no se ve: tampoco se pulsa ni se llega con el tabulador
 }
 scroller.addEventListener('scroll', hdrUpdate, { passive: true });
 window.addEventListener('scroll', hdrUpdate, { passive: true });

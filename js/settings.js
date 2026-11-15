@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, colorSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsClose, settingsDlg, settingsTabs, statusBox, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, colorSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, tabStations, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -332,9 +332,7 @@ export async function syncDefaults() {
   saveBase(def);
 }
 
-statusBox.addEventListener('click', openSettings);
-
-statusBox.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSettings(); } });
+settingsBtn.addEventListener('click', openSettings);
 
 delayInput.addEventListener('input', () => {
   if (delayInput.value.trim() === '') { setManualDelay(0); return; }

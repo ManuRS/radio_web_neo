@@ -6,6 +6,10 @@
 export const toggle = document.getElementById('toggle');
 export const stop = document.getElementById('stop');
 export const statusBox = document.getElementById('statusBox');
+export const playBtn = document.getElementById('playBtn');
+export const settingsBtn = document.getElementById('settingsBtn');
+export const infoBtn = document.getElementById('infoBtn');
+export const introDlg = document.getElementById('intro');
 export const dot = document.getElementById('dot');
 export const logBox = document.getElementById('log');
 export const volume = document.getElementById('volume');
