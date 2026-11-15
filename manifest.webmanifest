@@ -50,18 +50,18 @@
 
   "screenshots": [
     {
+      "src": "img/cap1.webp",
+      "sizes": "530x900",
+      "type": "image/webp",
+      "form_factor": "narrow",
+      "label": "Reproductor con presintonías, volúmenes y ecualizador"
+    },
+    {
       "src": "img/cap2.webp",
       "sizes": "530x900",
       "type": "image/webp",
       "form_factor": "narrow",
       "label": "Buscador de emisoras"
-    },
-    {
-      "src": "img/cap1.webp",
-      "sizes": "530x900",
-      "type": "image/webp",
-      "form_factor": "narrow",
-      "label": "Reproductor con las cadenas de radio y el ecualizador"
     },
     {
       "src": "img/cap3.webp",
@@ -71,18 +71,18 @@
       "label": "Siete visualizadores a pantalla completa"
     },
     {
+      "src": "img/cap1-wide.webp",
+      "sizes": "1600x900",
+      "type": "image/webp",
+      "form_factor": "wide",
+      "label": "Reproductor con presintonías, volúmenes y ecualizador"
+    },
+    {
       "src": "img/cap2-wide.webp",
       "sizes": "1600x900",
       "type": "image/webp",
       "form_factor": "wide",
       "label": "Buscador de emisoras"
-    },
-    {
-      "src": "img/cap1-wide.webp",
-      "sizes": "1600x900",
-      "type": "image/webp",
-      "form_factor": "wide",
-      "label": "Reproductor con las cadenas de radio y el ecualizador"
     },
     {
       "src": "img/cap3-wide.webp",

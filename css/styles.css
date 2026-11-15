@@ -50,8 +50,8 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
 header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: #262d37; }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); }
-.logo { display: block; flex: 0 0 auto; width: calc(48px * (1 - var(--p))); height: calc(48px * (1 - var(--p))); margin-right: calc(12px * (1 - var(--p))); border-radius: 27%; opacity: clamp(0, calc(1 - 1.6 * var(--p)), 1); }
-.titles { flex: 1 1 auto; min-width: 0; }
+.logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
+.titles { flex: 1 1 auto; min-width: 0; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
 h1 { font-size: calc(var(--t0) - (var(--t0) - 1.25rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
@@ -105,16 +105,18 @@ button:disabled { opacity: .45; cursor: default; }
 .panel.vols { display: block; margin-top: 10px; padding: 17px 15px; box-shadow: var(--lift); }
 .vols .volume { margin-top: 0; }
 .vols .volume + .volume { margin-top: 12px; }
-.volume label { flex: 0 0 4.6em; }
-.volume span { flex: 0 0 3ch; text-align: right; font-variant-numeric: tabular-nums; }
+.volume label { flex: 0 0 4.6em; height: 24px; line-height: 24px; font-size: .95rem; color: #aeb9c8; }
+.volume span { flex: 0 0 3.4ch; height: 24px; line-height: 24px; text-align: right; font-size: .95rem; font-weight: 600; color: #edf2f7; font-variant-numeric: tabular-nums; }
 input { width: 100%; accent-color: var(--accent); }
-/* Deslizadores propios: el nativo de Chrome dibuja un contorno gris alrededor del relleno. --r (0-1) lo pone ui.js (paintRange); el relleno llega al centro del pulgar (20 px) */
-input[type="range"] { -webkit-appearance: none; appearance: none; height: 22px; margin: 0; background: transparent; cursor: pointer; --r: 1; }
-input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--accent) calc(10px + (100% - 20px) * var(--r)), #3a4452 0); }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -7px; border: 0; border-radius: 50%; background: var(--accent); }
-input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: #3a4452; }
-input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent); }
-input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: var(--accent); }
+/* Deslizadores propios: el nativo de Chrome dibuja un contorno gris alrededor del relleno. --r (0-1) lo pone ui.js (paintRange); el relleno llega al centro del pulgar (22 px) */
+input[type="range"] { -webkit-appearance: none; appearance: none; height: 24px; margin: 0; background: transparent; cursor: pointer; --r: 1; }
+input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent) calc(11px + (100% - 22px) * var(--r)), #2c3542 0); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 3px #0008; transition: box-shadow .15s ease; }
+input[type="range"]:active::-webkit-slider-thumb { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 24%, transparent), 0 1px 3px #0008; }
+input[type="range"]::-moz-range-track { height: 8px; border-radius: 4px; background: #2c3542; }
+input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--accent); }
+input[type="range"]::-moz-range-thumb { width: 22px; height: 22px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent), 0 1px 3px #0008; }
+input[type="range"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 3px; border-radius: 12px; }
 input[type="range"]:disabled { opacity: .4; }
 
 /* ===================================
@@ -176,7 +178,7 @@ input[type="range"]:disabled { opacity: .4; }
 /* Buscador de emisoras (importador de TDTChannels): otro panel de gris claro, con el campo de texto y la lupa; justo encima, el de boletines baja a la separación normal */
 .ptitle.ptitle-main { margin: 22px 2px 8px 4px; }   /* el título "Presintonías" encima del buscador, como los de Generalistas y Musicales */
 .panel.search { margin: 0 2px; background: #1f2632; }   /* mismo padding (15 px), hueco (12 px) y alto (68 px) que el de boletines: la lupa es un cuadrado de 38 px como su icono */
-.panel.search + .panel.news { margin-top: 14px; }   /* el buscador a 22 px de las barras y boletines a 14 px del buscador */
+.panel.search + .panel.news { margin-top: 8px; }   /* boletines a 8 px del buscador: el mismo hueco que entre filas de presintonías (.pgrid) */
 .panel.search input { flex: 1 1 auto; min-width: 0; height: 38px; padding: 0 2px; border: 0; outline: 0; background: none; color: #edf2f7; font: inherit; font-size: .92rem; -webkit-appearance: none; appearance: none; }
 .panel.search input::placeholder { color: #8c98a8; }
 .panel.search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
@@ -457,13 +459,13 @@ dialog.ask::backdrop { background: rgba(0, 0, 0, .65); }
 /* ==========================================
    == INFORMACIÓN: TUTORIAL DE TRES PASOS ==
    ========================================== */
-dialog.intro { width: min(430px, 94vw); margin: auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+dialog.intro { width: min(430px, 94vw); max-height: 94dvh; overflow-y: auto; margin: auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.intro::backdrop { background: rgba(0, 0, 0, .65); }
-.intro-step { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; min-height: 300px; padding: 6px 4px; text-align: center; animation: intro-in .25s ease; }
+.intro-step { display: flex; flex-direction: column; align-items: stretch; gap: 10px; min-height: 380px; padding: 2px 0; text-align: left; animation: intro-in .25s ease; }
 .intro-step[hidden] { display: none; }
-.intro-step h2 { margin: 0; font-size: 1.35rem; }
-.intro-step p { margin: 0; line-height: 1.5; }
-.intro-tile { display: grid; place-items: center; width: 64px; height: 64px; border-radius: 18px; background: #11161d; color: var(--accent); }
+.intro-step h2 { margin: 0; font-size: 1.3rem; }
+.intro-step p { margin: 0; line-height: 1.5; color: #c3cdd9; }
+.intro-img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; margin-bottom: 4px; border-radius: 12px; background: #11161d; }
 .intro-dots { display: flex; justify-content: center; gap: 8px; }
 .intro-dots i { width: 8px; height: 8px; border-radius: 50%; background: #3a4452; transition: background .25s ease; }
 .intro-dots i.on { background: var(--accent); }
