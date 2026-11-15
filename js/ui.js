@@ -7,6 +7,17 @@ import { clockNow } from './state.js';
 import { copyBtn, dot, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
 import { viz } from './audio.js';
 
+// ==================
+// == DESLIZADORES ==
+// ==================
+// El relleno de color de cada deslizador lo marca --r (0-1); se actualiza al moverlo y cuando otro código cambia su valor.
+export function paintRange(el) {
+  const min = Number(el.min) || 0, max = Number(el.max) || 100;
+  el.style.setProperty('--r', String(Math.min(1, Math.max(0, (Number(el.value) - min) / (max - min || 1)))));
+}
+document.addEventListener('input', e => { if (e.target.type === 'range') paintRange(e.target); }, true);
+document.querySelectorAll('input[type="range"]').forEach(paintRange);
+
 // ===================================
 // == REGISTRO Y ESTADO DE CONEXIÓN ==
 // ===================================

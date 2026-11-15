@@ -22,7 +22,7 @@ import {
   presCanvas, presClock, presSpin, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
   presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue, pipBtn, presPipBtn, presPipRow, presPip
 } from './dom.js';
-import { setText } from './ui.js';
+import { paintRange, setText } from './ui.js';
 import { viz } from './audio.js';
 import { shownStation, shownVariant } from './stations.js';
 import { emisoraName } from './utils.js';
@@ -897,7 +897,7 @@ let playing = null, dragging = null;
 
 // Las copias de los volúmenes no se tocan mientras se están moviendo
 function syncRange(copy, orig, label, origLabel) {
-  if (dragging !== copy && document.activeElement !== copy && copy.value !== orig.value) copy.value = orig.value;
+  if (dragging !== copy && document.activeElement !== copy && copy.value !== orig.value) { copy.value = orig.value; paintRange(copy); }
   copy.disabled = orig.disabled;
   setText(label, origLabel.textContent);
 }
