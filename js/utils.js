@@ -42,6 +42,13 @@ export function pickWeighted(list) {
 // Nombre corto de un sonido a partir de su URL (sin ruta, sin ?versión y sin extensión)
 export const soundName = src => src.split('?')[0].split('/').pop().replace(/\.[a-z0-9]+$/i, '');
 
+// Nombre de emisora para buscar su cortinilla: igual "Los 40", "LOS40" o "los 40" (sin mayúsculas, tildes ni espacios);
+// "Classic" y "Los 40 Classic" (se escriba como se escriba) son la misma
+export function soundKey(name) {
+  const n = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return n === 'los40classic' ? 'classic' : n;
+}
+
 // Instante del "golpe final" de un sonido: la última vez que su nivel está a menos de dbBelowPeak dB de su máximo
 // (después viene la cola que se va apagando). Se usa con "hit": "auto" en los ajustes.
 const hitCache = new WeakMap();   // el modo boletines lo pregunta cada segundo por cada franja: se calcula una vez por sonido

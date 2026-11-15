@@ -7,7 +7,7 @@
 // las noticias entran en el stream en inicio + retraso y salen en fin + retraso (igual que en Radio Web Fast). Con la emisora de noticias conectada en
 // silencio desde NEWS_PRECONNECT_S antes, la entrada es inmediata: fundido de la música, sonido local y fundido de entrada de las noticias.
 
-import { madridClock, madridSeconds, pickWeighted, soundName, toSeconds } from './utils.js';
+import { madridClock, madridSeconds, pickWeighted, soundKey, soundName, toSeconds } from './utils.js';
 import { S, clockNow, endNewsState, NEWS_FADE_S, NEWS_IN_OVERLAP_S, NEWS_LOAD_MARGIN_S, NEWS_OUT_OVERLAP_S, NEWS_PRECONNECT_S } from './state.js';
 import { clockEl, newsBox, newsToggle } from './dom.js';
 import { log } from './ui.js';
@@ -214,7 +214,7 @@ function newsTick(nowMs) {
       endNewsState();
       endNewsWhileHeld(back, vi);
     } else if (back) {
-      const list = SOUNDS_FROM_NEWS_BY_NAME[back.name] || SOUNDS_FROM_NEWS_DEFAULT;
+      const list = SOUNDS_FROM_NEWS_BY_NAME[soundKey(back.name)] || SOUNDS_FROM_NEWS_DEFAULT;
       switchStation({ station: back, variant: vi }, {
         label: 'Fin de noticias',
         volMode: 'music',

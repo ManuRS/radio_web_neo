@@ -3,7 +3,7 @@
 // =====================
 // Sonidos locales: descarga, caché del navegador, decodificación y duración audible.
 
-import { effectiveDuration, finalHit, soundName } from './utils.js';
+import { effectiveDuration, finalHit, soundKey, soundName } from './utils.js';
 import { S, HIT_DB, SILENCE_DB, SOUND_CACHE } from './state.js';
 import { log } from './ui.js';
 
@@ -26,7 +26,7 @@ const TO_NEWS = [   // de música a noticias: se sortea uno por cada emisión
 const FROM_NEWS_DEFAULT = [   // de noticias a música
   { file: 'desco_fin_hxh', hit: 'auto' },
 ];
-const FROM_NEWS_BY_NAME = {   // de noticias a una emisora concreta (por su nombre)
+const FROM_NEWS_BY_NAME = {   // de noticias a una emisora concreta (por su nombre, comparado con soundKey: LOS40 = Los 40; Classic = LOS40 CLASSIC)
   'LOS40': [{ file: 'los40_a', hit: 'auto' }, { file: 'los40_b', hit: 'auto' }],
   'LOS40 CLASSIC': [{ file: 'los40c_a', hit: 'auto' }],
 };
@@ -38,7 +38,7 @@ const withUrl = list => list.map(o => {
 });
 export const SOUNDS_TO_NEWS = withUrl(TO_NEWS);
 export const SOUNDS_FROM_NEWS_DEFAULT = withUrl(FROM_NEWS_DEFAULT);
-export const SOUNDS_FROM_NEWS_BY_NAME = Object.fromEntries(Object.entries(FROM_NEWS_BY_NAME).map(([name, list]) => [name, withUrl(list)]));
+export const SOUNDS_FROM_NEWS_BY_NAME = Object.fromEntries(Object.entries(FROM_NEWS_BY_NAME).map(([name, list]) => [soundKey(name), withUrl(list)]));
 
 export const soundBuffers = new Map();
 // Duración audible de un sonido (hasta el último instante por encima de SILENCE_DB)
