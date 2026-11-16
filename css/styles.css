@@ -74,7 +74,8 @@ p { color: #aeb9c8; line-height: 1.45; }
 .bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 12px; background: #1d242d; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
 .bar button { border-radius: 0; padding: 0; background: none; height: 52px; -webkit-tap-highlight-color: transparent; }
 .bar button:active { background: rgba(255, 255, 255, .07); }
-@media (hover: hover) { .bar button:hover { background: rgba(255, 255, 255, .04); } .bar button:active { background: rgba(255, 255, 255, .07); } }
+/* Con el ratón no se pinta un bloque encima del botón (casi del mismo tono que la barra): se aviva su icono o su texto */
+@media (hover: hover) { .bar button:hover { background: none; filter: brightness(1.25); } .bar .ibtn:hover, .bar .sbtn:hover { color: #fff; } .bar button:active { background: rgba(255, 255, 255, .07); } }
 .bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 .sep { flex: 0 0 1px; margin: 12px 0; background: rgba(255, 255, 255, .09); }
 .ibtn { flex: 0 0 54px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; }
@@ -255,7 +256,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .clockrow select { padding: 6px 8px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"] { width: 56px; padding: 6px 4px; box-sizing: border-box; text-align: center; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"]:disabled { opacity: .6; }
-#cfgText { width: 100%; flex: 1 0 auto; height: 0; min-height: 120px; resize: vertical; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px solid #303a47; background: #11161d; color: #cbd5e1; font: 12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
 /* Pestañas: texto con línea inferior (la activa lleva el color de énfasis); los botones de acción siguen siendo botones rellenos */
 .tabs { display: flex; border-bottom: 1px solid #303a47; }
 .tabs button { flex: 1; padding: 8px 6px 10px; margin-bottom: -1px; border-radius: 0; border-bottom: 2px solid transparent; background: none; color: #8c98a8; font-size: .92rem; }
@@ -269,6 +269,11 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .clockrow button.danger { color: #fff; background: #b8414d; }
 /* Configuración, bajo Cargar y Guardar: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila */
 .cfgacts { flex: none; display: flex; gap: 10px; }
+#tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de los botones solo cuando hay algo que decir */
+#tabConfig .cfgmsg:empty { display: none; }
+/* Exportar e Importar ocupan lo mismo que los antiguos Cargar y Guardar: en el móvil el texto va en dos líneas dentro de la misma altura */
+#tabConfig .dlg-actions button { height: 41px; padding: 0 10px; line-height: 1.05; }
+@media (max-width: 600px) { #tabConfig .dlg-actions button { font-size: .92rem; } }
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 .cfgacts button.danger.armed { color: #fff; background: #b8414d; }

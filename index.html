@@ -324,17 +324,17 @@
         </div>
       </div>
       <div class="tab" id="tabConfig" hidden>
-        <textarea id="cfgText" aria-label="Configuración" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
-        <div id="cfgMsg" class="cfgmsg" role="status"></div>
+        <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->
         <div class="dlg-actions">
-          <button id="cfgFile" type="button">Cargar</button>
+          <button id="cfgExport" type="button">Exportar configuración</button>
+          <button id="cfgFile" class="primary" type="button">Importar configuración</button>
           <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
-          <button id="cfgSave" class="primary" type="button">Guardar</button>
         </div>
         <div class="cfgacts">
           <button id="cfgClearSounds" type="button">Recargar caché de sonidos</button>
           <button id="cfgClear" class="danger" type="button">Borrar ajustes</button>
         </div>
+        <div id="cfgMsg" class="cfgmsg" role="status"></div>
       </div>
       <div class="tab" id="tabLog" hidden>
         <textarea id="log" readonly spellcheck="false">Listo</textarea>

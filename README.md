@@ -50,10 +50,9 @@ En el origen:
 
 1. Pulsa el engranaje de la cabecera para mostrar los ajustes
 2. Pulsa en la pestaña de Configuración
-3. Copia el texto del cuadro de edición y guardaló en un archivo
+3. Pulsa "Exportar configuración": se descarga el archivo radio_web_neo.json
 
 En el destino:
 
-1. Abre de nuevo los ajustes y la configuración
-2. Pega el texto con tu configuración
-3. Aprieta guardar
+1. Abre los ajustes y la pestaña de Configuración
+2. Pulsa "Importar configuración" y elige ese archivo

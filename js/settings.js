@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgMsg, cfgSave, cfgText, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -242,7 +242,7 @@ function openSettings() {
   refreshDelayUi();
   outSelect.value = getOutMode();
   refreshNormSwitch();
-  cfgText.value = S.configText;
+  refreshExportBtn();
   cfgMsg.textContent = '';
   cfgMsg.className = 'cfgmsg';
   disarmClear();
@@ -253,7 +253,7 @@ function closeSettings() {
   closeDialog(settingsDlg);
 }
 
-// Valida, aplica y guarda (en el navegador) unos ajustes escritos o cargados desde archivo
+// Valida, aplica y guarda (en el navegador) unos ajustes importados desde archivo (o cambiados por la propia app)
 // "live": cambio de emisoras ya comprobado como seguro (ver editConfig), que se puede hacer con la reproducción en marcha; el resto exige pararla
 function saveSettingsFrom(text, live = false) {
   const r = validateConfig(text);
@@ -266,7 +266,6 @@ function saveSettingsFrom(text, live = false) {
   if (busy) applyLiveFn(r.cfg); else applyConfigFn(r.cfg);
   S.configText = JSON.stringify(r.parsed, null, 2);
   const stored = saveConfigText(JSON.stringify(r.parsed));
-  cfgText.value = S.configText;
   const info = r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas';
   if (!stored) {
     showCfgMsg(['Aplicado, pero NO se pudo guardar en este navegador (almacenamiento bloqueado): valdrá solo hasta cerrar la página'], true);
@@ -274,7 +273,7 @@ function saveSettingsFrom(text, live = false) {
     return false;
   }
   if (!loadBase() && lastDefaultStations) saveBase(lastDefaultStations);   // primera vez que se guarda: se anota de qué cadenas por defecto se partió
-  showCfgMsg(['Guardado: ' + info], false);
+  showCfgMsg(['Configuración importada: ' + info], false);
   log('Ajustes guardados: ' + info);
   return true;
 }
@@ -428,7 +427,20 @@ settingsClose.addEventListener('click', closeSettings);
 
 settingsDlg.addEventListener('click', e => { if (e.target === settingsDlg) closeSettings(); });
 
-cfgSave.addEventListener('click', () => saveSettingsFrom(cfgText.value));
+// Exportar: descarga los ajustes actuales como un JSON legible (sin los comentarios que pudiera tener el archivo importado)
+const EXPORT_NAME = 'radio_web_neo.json';
+function refreshExportBtn() { cfgExport.disabled = !S.configText; }
+cfgExport.addEventListener('click', () => {
+  if (!S.configText) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([S.configText + '\n'], { type: 'application/json' }));
+  a.download = EXPORT_NAME;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  showCfgMsg(['Configuración exportada: ' + EXPORT_NAME], false);
+});
 
 cfgFile.addEventListener('click', () => cfgFileInput.click());
 
@@ -436,9 +448,8 @@ cfgFileInput.addEventListener('change', async () => {
   const file = cfgFileInput.files && cfgFileInput.files[0];
   if (!file) return;
   try {
-    const text = await file.text();
-    cfgText.value = text;
-    saveSettingsFrom(text);
+    saveSettingsFrom(await file.text());
+    refreshExportBtn();
   } catch (err) { showCfgMsg(['No se pudo leer el archivo: ' + err.message], true); }
   cfgFileInput.value = '';
 });
@@ -467,7 +478,7 @@ customInput.addEventListener('change', async () => {
   refreshCustomBtn();
 });
 
-// Aviso de los botones de debajo de Cargar y Guardar (recargar sonidos, borrar ajustes): en el cuadro de mensajes de Configuración
+// Aviso de los botones de debajo de Exportar e Importar (recargar sonidos, borrar ajustes): en el cuadro de mensajes de Configuración
 const showGenMsg = (text, isError) => showCfgMsg([text], isError);
 // "Borrar ajustes" pide una segunda pulsación ("¿Seguro?"); si no llega en 4 s, vuelve a su estado
 let clearArmed = 0;
@@ -496,12 +507,11 @@ cfgClear.addEventListener('click', async () => {
   if (r && !r.errors.length) {
     applyConfigFn(r.cfg);
     S.configText = JSON.stringify(r.parsed, null, 2);
-    cfgText.value = S.configText;
+      refreshExportBtn();
     showGenMsg('Ajustes guardados borrados: se usan los de por defecto', false);
   } else {
     applyConfigFn(emptyConfig());
     S.configText = '';
-    cfgText.value = '';
     showGenMsg('Ajustes borrados, pero no se pudieron cargar los de por defecto', true);
   }
 });
@@ -510,7 +520,7 @@ cfgClear.addEventListener('click', async () => {
 // ==============================================================
 // == EMISORAS: AÑADIR, AÑADIR VARIANTE, REORDENAR Y ELIMINAR (ESCRIBE EL JSON) ==
 // ==============================================================
-// Todas las operaciones modifican el JSON de los ajustes (el mismo de la pestaña Configuración), lo validan y lo guardan como si se hubiera escrito a mano.
+// Todas las operaciones modifican el JSON de los ajustes (el que se exporta e importa en la pestaña Configuración), lo validan y lo guardan como si se hubiera escrito a mano.
 const NOOP = Symbol('noop');
 const slugOf = n => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cadena';
 const kindOfUrl = url => (/\.m3u8(\?|#|$)/i.test(url) ? 'hls' : /\.(aac|acc)(\?|#|$)/i.test(url) ? 'aac' : 'mp3');
@@ -536,7 +546,7 @@ function editConfig(mutate) {
   if (!text) raw = { stations: [] };
   else {
     try { raw = JSON.parse(stripJsonComments(text)); }
-    catch (e) { showCfgMsg(['Los ajustes actuales no son un JSON válido; corrígelos antes en Configuración (' + e.message + ')'], true); return false; }
+    catch (e) { showCfgMsg(['Los ajustes actuales no son un JSON válido; importa una configuración correcta (' + e.message + ')'], true); return false; }
   }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { showCfgMsg(['Los ajustes actuales deben ser un objeto { ... }'], true); return false; }
   if (!Array.isArray(raw.stations)) raw.stations = [];
@@ -569,7 +579,7 @@ function removeStation(raw, id) {
     if (S.trans || S.newsOn) return 'Hay un cambio de cadena o un boletín en curso: inténtalo en unos segundos';
     if (inUse(id)) return 'Esa cadena está en uso (suena o se retomará después): cambia de cadena o detén la reproducción para eliminarla';
   }
-  if (raw.newsStation === id) return 'Es la cadena de noticias: elige otra en "newsStation" (pestaña Configuración) antes de eliminarla';
+  if (raw.newsStation === id) return 'Es la cadena de noticias: cambia "newsStation" en la configuración (exportar, editar el archivo e importar) antes de eliminarla';
   raw.stations = raw.stations.filter(x => !(x && x.id === id));
 }
 
@@ -654,7 +664,7 @@ export async function createChain(opts) {
   if (bad) return bad;
   const p = await probeStream(url);
   if (!p.reachable) return 'No se pudo conectar con ese enlace: revísalo o inténtalo de nuevo';
-  // las musicales enlazan con el boletín de la cadena de noticias; las generalistas no (las que son de noticias, a mano en Configuración con "news": true)
+  // las musicales enlazan con el boletín de la cadena de noticias; las generalistas no (las que son de noticias, con "news": true en el archivo de configuración)
   const st = { name };
   const short = (opts.short || '').trim();
   if (short) st.short = short;
