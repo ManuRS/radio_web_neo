@@ -507,6 +507,10 @@ dialog.intro::backdrop { background: rgba(0, 0, 0, .65); }
 @media (prefers-reduced-motion: reduce) { .intro-step { animation: none; } }
 /* Salir con la radio sonando (botón atrás): la misma ventana que la bienvenida, con el aviso en letra más pequeña */
 .exit-note { margin: 0; font-size: .86rem; line-height: 1.45; color: #9fabb9; }
+.exit-q { margin: 0; font-size: 1.15rem; }
+.lichead .x { margin-left: auto; }
+.lichead { justify-content: flex-start; gap: 12px; }
+.lichead img { flex: none; border-radius: 27%; }   /* el icono de la aplicación, como en la cabecera */
 dialog.ask b { font-size: 1.05rem; }
 dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 
