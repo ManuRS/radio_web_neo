@@ -253,6 +253,11 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .dlg-head { display: flex; align-items: center; justify-content: space-between; font-size: 1.05rem; }
 .dlg .x { flex: none; padding: 4px 10px; background: #2a3441; color: #cbd5e1; border-radius: 8px; }
 .clockrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: .88rem; color: #cbd5e1; }
+/* En todas las pestañas de Ajustes, como una lista: el texto a la izquierda y su control (interruptor, campo, desplegable o botón) a la derecha,
+   con la misma altura en todas las filas */
+#settings .clockrow { min-height: 36px; }
+#settings .clockrow > :first-child { margin-right: auto; }
+#settings .clockrow select { min-width: 132px; }
 .clockrow select { padding: 6px 8px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"] { width: 56px; padding: 6px 4px; box-sizing: border-box; text-align: center; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"]:disabled { opacity: .6; }
@@ -271,7 +276,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .cfgacts { flex: none; display: flex; gap: 10px; }
 #tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de la lista solo cuando hay algo que decir */
 #tabConfig .cfgmsg:empty { display: none; }
-#tabConfig .clockrow > span:first-child { margin-right: auto; }   /* como en General: el texto a la izquierda y el botón a la derecha */
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 .cfgacts button.danger.armed { color: #fff; background: #b8414d; }
@@ -530,7 +534,6 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media (max-width: 600px) { #settings .tabs button { padding-inline: 6px; font-size: .84rem; } }
 @media (max-width: 380px) { #settings .tabs button { padding-inline: 4px; font-size: .8rem; } }
 #tabEq .cfgmsg, #tabNews .cfgmsg { min-height: 0; }
-#tabEq .clockrow > label:first-child, #tabNews .clockrow > label:first-child { margin-right: auto; }
 #tabEq .cfgmsg:empty, #tabNews .cfgmsg:empty { display: none; }
 
 /* Ecualizador: un botón por modo (1, 2...; los desactivados, solo con borde), el nombre, la gráfica y los cuatro deslizadores */
