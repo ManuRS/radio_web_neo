@@ -269,11 +269,9 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .clockrow button.danger { color: #fff; background: #b8414d; }
 /* Configuración, bajo Cargar y Guardar: "Recargar caché de sonidos" y "Borrar ajustes" (este pide confirmación) en una fila */
 .cfgacts { flex: none; display: flex; gap: 10px; }
-#tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de los botones solo cuando hay algo que decir */
+#tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de la lista solo cuando hay algo que decir */
 #tabConfig .cfgmsg:empty { display: none; }
-/* Exportar e Importar ocupan lo mismo que los antiguos Cargar y Guardar: en el móvil el texto va en dos líneas dentro de la misma altura */
-#tabConfig .dlg-actions button { height: 41px; padding: 0 10px; line-height: 1.05; }
-@media (max-width: 600px) { #tabConfig .dlg-actions button { font-size: .92rem; } }
+#tabConfig .clockrow > span:first-child { margin-right: auto; }   /* como en General: el texto a la izquierda y el botón a la derecha */
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 .cfgacts button.danger.armed { color: #fff; background: #b8414d; }
@@ -535,11 +533,13 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 #tabEq .clockrow > label:first-child, #tabNews .clockrow > label:first-child { margin-right: auto; }
 #tabEq .cfgmsg:empty, #tabNews .cfgmsg:empty { display: none; }
 
-/* Ecualizador: un botón por modo (1, 2...) y "+", el nombre, la gráfica y los cuatro deslizadores */
-.eqmodes { display: flex; flex-wrap: wrap; gap: 8px; }
-.eqmodes button { flex: 0 0 46px; height: 40px; padding: 0; color: #cbd5e1; background: #2a3441; font-variant-numeric: tabular-nums; }
+/* Ecualizador: un botón por modo (1, 2...; los desactivados, solo con borde), el nombre, la gráfica y los cuatro deslizadores */
+.eqmodes { display: flex; gap: 8px; }
+.eqmodes button { flex: 1 1 0; min-width: 0; height: 40px; padding: 0; color: #cbd5e1; background: #2a3441; font-variant-numeric: tabular-nums; }
 .eqmodes button.active { color: var(--on-accent); background: var(--accent); }
-.eqmodes button.add { color: #8c98a8; background: none; box-shadow: inset 0 0 0 1px #3a4554; }
+.eqmodes button.off { color: #6b7788; background: none; box-shadow: inset 0 0 0 1px #3a4554; }
+.eqmodes button.off.active { color: #edf2f7; background: #3a4554; box-shadow: none; }
+#eqEdit.off .eqcurve, #eqEdit.off .eqrow { opacity: .55; }
 #eqEdit[hidden] { display: none; }
 .clockrow.eqname input[type="text"] { flex: 1 1 160px; width: auto; min-width: 0; padding: 7px 10px; text-align: left; }
 .eqcurve { display: block; width: 100%; height: 150px; border-radius: 10px; background: #11161d; }
@@ -559,6 +559,8 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 .nseg button { flex: 1 1 0; padding: 6px 8px; font-size: .8rem; color: #cbd5e1; background: #2a3441; }
 .nseg button.active { color: var(--on-accent); background: var(--accent); }
 .nrow.off .nseg button.active { color: #edf2f7; background: #3a4554; }
+.nseg .nshort { display: none; }
+@media (max-width: 440px) { .nseg .nlong { display: none; } .nseg .nshort { display: inline; } }
 .nhead, .nrow.own { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 38px; gap: 10px; }
 .nhead { padding: 0 2px; font-size: .76rem; color: #8c98a8; }
 .nrow.own { padding: 0; background: none; }

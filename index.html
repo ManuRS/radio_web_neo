@@ -325,7 +325,7 @@
           </div>
         </div>
       </div>
-      <!-- Ecualizador: los modos que se eligen pulsando el visualizador (detrás del "normal", que no se toca). Se guardan en el bloque "eq" de los ajustes -->
+      <!-- Ecualizador: los modos que se eligen pulsando el visualizador (detrás del "normal", que no se toca); se activan o desactivan, no se borran. Bloque "eq" de los ajustes -->
       <div class="tab" id="tabEq" hidden>
         <div class="eqmodes" id="eqModes" role="group" aria-label="Modos del ecualizador"></div>
         <div class="group" id="eqEdit">
@@ -339,17 +339,17 @@
           <div class="eqrow"><label for="eqHigh">Agudos</label><input id="eqHigh" type="range" step="1"><span id="eqHighV"></span></div>
           <div class="eqrow"><label for="eqPre">Volumen</label><input id="eqPre" type="range" step="1"><span id="eqPreV"></span></div>
           <div class="clockrow">
-            <label for="eqDefault">Usar al abrir la aplicación</label>
+            <label for="eqDefault">Opción por defecto</label>
             <label class="switch"><input type="checkbox" id="eqDefault"><span class="track"></span></label>
           </div>
           <div class="cfgacts">
-            <button id="eqDel" class="danger" type="button">Eliminar modo</button>
-            <button id="eqReset" type="button">Volver a los de serie</button>
+            <button id="eqAct" type="button">Desactivar Modo 1</button>
+            <button id="eqReset" type="button">Restablecer Modo 1</button>
           </div>
         </div>
         <div id="eqMsg" class="cfgmsg" role="status"></div>
       </div>
-      <!-- Boletines: la cadena de las noticias y sus franjas ("newsStation" y "news" de los ajustes). Con la SER, su horario ya hecho -->
+      <!-- Boletines: quién da las noticias y sus franjas ("newsStation", "news", "newsGuided" y "newsSaved" de los ajustes). La SER guiada, con su horario ya hecho -->
       <div class="tab" id="tabNews" hidden>
         <div class="clockrow">
           <label for="newsSel">Cadena de los boletines</label>
@@ -357,18 +357,31 @@
         </div>
         <div class="nlist" id="newsList"></div>
         <button id="newsAdd" class="nadd" type="button">+ Añadir franja</button>
+        <button id="newsReset" class="nadd" type="button" hidden>Restablecer</button>
         <div id="newsMsg" class="cfgmsg" role="status"></div>
       </div>
       <div class="tab" id="tabConfig" hidden>
         <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->
-        <div class="dlg-actions">
-          <button id="cfgExport" type="button">Exportar configuración</button>
-          <button id="cfgFile" class="primary" type="button">Importar configuración</button>
-          <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
+        <div class="group">
+          <div class="clockrow">
+            <span>Exportar configuración</span>
+            <button id="cfgExport" type="button">Exportar</button>
+          </div>
+          <div class="clockrow">
+            <span>Importar configuración</span>
+            <button id="cfgFile" type="button">Importar</button>
+            <input id="cfgFileInput" type="file" accept=".json,.jsonc,.txt,application/json,text/plain" hidden>
+          </div>
         </div>
-        <div class="cfgacts">
-          <button id="cfgClearSounds" type="button">Recargar caché de sonidos</button>
-          <button id="cfgClear" class="danger" type="button">Borrar ajustes</button>
+        <div class="group">
+          <div class="clockrow">
+            <span>Caché de sonidos</span>
+            <button id="cfgClearSounds" type="button">Recargar</button>
+          </div>
+          <div class="clockrow">
+            <span>Ajustes de este dispositivo</span>
+            <button id="cfgClear" class="danger" type="button">Borrar</button>
+          </div>
         </div>
         <div id="cfgMsg" class="cfgmsg" role="status"></div>
       </div>

@@ -64,6 +64,7 @@ export const emptyConfigFn = emptyConfig;
 // Ecualizador: límites de las ganancias en dB (bandas y preamplificación)
 export const EQ_GAIN_MIN = -24;
 export const EQ_GAIN_MAX = 18;
+export const EQ_MAX_MODES = 6;   // modos del ecualizador (además del "normal")
 
 // Color de énfasis: luminosidad relativa (0 negro – 1 blanco) de un "#rrggbb"
 const luminance = hex => {
@@ -79,8 +80,9 @@ export const DEFAULT_EQ = {
     { label: 'EQ Graves', low: 10, mid: 0, high: 2, pre: 0 },
     { label: 'EQ Dinámico', low: 5, mid: -1, high: 4, pre: 0 },
     { label: 'Frecuencia Modulada', low: -18, mid: 8, high: -18, pre: 0 },
-    { label: 'EQ Voz', low: -4, mid: 3, high: 2, pre: 0 },                 // tertulias y boletines: menos graves, más presencia
-    { label: 'EQ Especial Móvil', low: -3, mid: 2, high: 3, pre: 0 },      // altavoz del móvil: no gasta en graves que no puede dar
+    { label: 'EQ Voz', low: -4, mid: 3, high: 2, pre: 0, active: false },             // tertulias y boletines: menos graves, más presencia
+    { label: 'EQ Especial Móvil', low: -3, mid: 2, high: 3, pre: 0, active: false },  // altavoz del móvil: no gasta en graves que no puede dar
+    { label: 'EQ Extra', low: 0, mid: 0, high: 0, pre: 0, active: false },            // libre para el gusto de cada uno
   ],
 };
 
@@ -131,7 +133,8 @@ export function validateConfig(text) {
     });
     if (!urls.length) { errors.push('"' + where + '": hace falta al menos una URL'); return; }
     ids.add(id);
-    const item = { id, name, group: s.group === 'musical' ? 'musical' : 'general', urls, cors: s.cors !== false, news: !!s.news };
+    // newsSource: generalista que puede dar los boletines (las que salen en la pestaña Boletines)
+    const item = { id, name, group: s.group === 'musical' ? 'musical' : 'general', urls, cors: s.cors !== false, news: !!s.news, newsSource: s.group !== 'musical' && !!s.newsSource };
     if (typeof s.short === 'string' && s.short.trim()) item.short = s.short.trim().slice(0, 14);   // nombre corto para el botón de la rejilla
     if (s.color !== undefined && s.color !== null && s.color !== '') { const c = color(s.color, where + '.color'); if (c) item.color = c; }
     cfg.stations.push(item);
@@ -147,12 +150,12 @@ export function validateConfig(text) {
       if (!isFinite(n) || n < lo || n > hi) { errors.push('"eq.' + name + '": debe estar entre ' + lo + ' y ' + hi); return required ? null : 0; }
       return n;
     };
-    if (modes.length > 5) errors.push('"eq.modes": máximo 5 modos');
+    if (modes.length > EQ_MAX_MODES) errors.push('"eq.modes": máximo ' + EQ_MAX_MODES + ' modos');
     // modo que se usa mientras no se elija otro pulsando el visualizador: posición en "modes" (0 = el primero; sin él, el ecualizador empieza plano)
     let defaultMode = -1;
     if (e.defaultMode !== undefined) {
       const n = Number(e.defaultMode);
-      if (!Number.isInteger(n) || n < 0 || n >= Math.min(modes.length, 5)) errors.push('"eq.defaultMode": debe ser un número entre 0 y ' + (Math.min(modes.length, 5) - 1) + ' (posición en "modes")');
+      if (!Number.isInteger(n) || n < 0 || n >= Math.min(modes.length, EQ_MAX_MODES)) errors.push('"eq.defaultMode": debe ser un número entre 0 y ' + (Math.min(modes.length, EQ_MAX_MODES) - 1) + ' (posición en "modes")');
       else defaultMode = n;
     }
     if (modes.length) {
@@ -162,12 +165,13 @@ export function validateConfig(text) {
         midQ: num(e.midQ, 0.1, 10, 'midQ', true),
         highHz: num(e.highHz, 2000, 16000, 'highHz', true),
         defaultMode,
-        modes: modes.slice(0, 5).map((m, i) => ({
+        modes: modes.slice(0, EQ_MAX_MODES).map((m, i) => ({
           label: m && m.label !== undefined ? String(m.label).slice(0, 24) : 'EQ ' + (i + 1),
           low: num(m && m.low, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].low'),
           mid: num(m && m.mid, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].mid'),
           high: num(m && m.high, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].high'),
           pre: num(m && m.pre, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].pre'),
+          active: !(m && m.active === false),   // "active": false = desactivado (no sale al pulsar el visualizador)
         })),
       };
     }
@@ -291,7 +295,7 @@ function saveSettingsFrom(text, live = false, opts = {}) {
 //  - una cadena nueva por defecto aparece, detrás de la que la precede en stations.json;
 //  - el orden del usuario se respeta, y las cadenas que desaparecen de stations.json no se le quitan.
 // Solo las cadenas: franjas, ecualizador, retraso, color general y cadena de noticias guardados no se tocan.
-const SYNC_FIELDS = ['name', 'short', 'group', 'color', 'cors', 'news', 'urls'];
+const SYNC_FIELDS = ['name', 'short', 'group', 'color', 'cors', 'news', 'newsSource', 'urls'];
 const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const copyJson = v => JSON.parse(JSON.stringify(v));
 // Cadenas ya validadas (con los valores por omisión puestos), por id: así se comparan sin que importe cómo estén escritas
@@ -490,11 +494,11 @@ let clearArmed = 0;
 function armClear() {
   if (cfgClear.classList.contains('armed')) { clearTimeout(clearArmed); disarmClear(); return true; }
   cfgClear.classList.add('armed');
-  cfgClear.textContent = '¿Seguro? Pulsa otra vez';
+  cfgClear.textContent = '¿Seguro?';
   clearArmed = setTimeout(disarmClear, 4000);
   return false;
 }
-function disarmClear() { cfgClear.classList.remove('armed'); cfgClear.textContent = 'Borrar ajustes'; }
+function disarmClear() { cfgClear.classList.remove('armed'); cfgClear.textContent = 'Borrar'; }
 cfgClearSounds.addEventListener('click', async () => {
   try { await caches.delete(SOUND_CACHE); prefetchSounds(); showGenMsg('Caché de sonidos recargada: los sonidos se han vuelto a descargar', false); }
   catch (_) { showGenMsg('Este navegador no tiene caché de sonidos (solo funciona en páginas https)', true); }

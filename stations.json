@@ -6,6 +6,7 @@
       "name": "Cadena SER",
       "short": "SER",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "SER Web",
@@ -64,6 +65,7 @@
       "id": "cope",
       "name": "Cope",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "COPE Web",
@@ -82,6 +84,7 @@
       "id": "ondacero",
       "name": "Onda Cero",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "Onda Cero Web",
@@ -96,6 +99,7 @@
       "name": "Radio Nacional",
       "short": "RNE",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "Radio Nacional",
@@ -119,6 +123,7 @@
       "id": "rac1",
       "name": "RAC1",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "RAC1 Web",
@@ -132,6 +137,7 @@
       "id": "esradio",
       "name": "esRadio",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "esRadio Web",
@@ -172,6 +178,7 @@
       "id": "catalunya",
       "name": "Cataluña",
       "group": "general",
+      "newsSource": true,
       "urls": [
         {
           "label": "Ràdio Barcelona",
@@ -597,7 +604,7 @@
     },
     {
       "start": "16:59:38",
-      "end": "17:05:20"
+      "end": "18:00:00"
     },
     {
       "start": "17:59:38",
@@ -610,6 +617,18 @@
     {
       "start": "19:59:38",
       "end": "20:25:10"
+    },
+    {
+      "start": "20:59:38",
+      "end": "21:04:00"
+    },
+    {
+      "start": "21:59:55",
+      "end": "22:04:00"
+    },
+    {
+      "start": "22:59:55",
+      "end": "23:04:00"
     }
   ]
 }

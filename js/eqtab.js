@@ -2,21 +2,21 @@
 // == PESTAÑA ECUALIZADOR ==
 // ===========================
 // Edita los modos del ecualizador (los que se eligen pulsando el visualizador, detrás del "normal"): nombre, graves, medios, agudos y volumen,
-// con una gráfica de cómo queda el sonido de graves a agudos. Lo que se edita suena al momento; se guarda en el bloque "eq" de los ajustes al soltar.
+// con una gráfica de cómo queda el sonido de graves a agudos. Los modos no se borran: se activan o desactivan (los desactivados no salen al pulsar
+// el visualizador) y cada uno se puede restablecer a como venía. Lo que se edita suena al momento; se guarda en el bloque "eq" de los ajustes al soltar.
 
 import { S } from './state.js';
 import { DEFAULT_EQ, EQ_GAIN_MAX, EQ_GAIN_MIN, editSettings } from './settings.js';
 import { currentEqMode, refreshEq, resetEq, setEqMode } from './audio.js';
 import { paintRange } from './ui.js';
 
-const MAX_MODES = 5;
 const panel = document.getElementById('tabEq');
 const modesBox = document.getElementById('eqModes');
 const edit = document.getElementById('eqEdit');
 const nameIn = document.getElementById('eqName');
 const canvas = document.getElementById('eqCurve');
 const defSw = document.getElementById('eqDefault');
-const delBtn = document.getElementById('eqDel');
+const actBtn = document.getElementById('eqAct');
 const resetBtn = document.getElementById('eqReset');
 const msg = document.getElementById('eqMsg');
 const SLIDERS = { low: 'eqLow', mid: 'eqMid', high: 'eqHigh', pre: 'eqPre' };
@@ -39,7 +39,7 @@ function rawEq() {
   const f = typeof eq.lowHz === 'number' ? eq : DEFAULT_EQ;
   const o = { lowHz: f.lowHz, midHz: f.midHz, midQ: f.midQ, highHz: f.highHz };
   if (eq.defaultMode >= 0 && eq.defaultMode < modes().length) o.defaultMode = eq.defaultMode;
-  o.modes = modes().map(m => ({ label: m.label, low: m.low, mid: m.mid, high: m.high, pre: m.pre }));
+  o.modes = modes().map(m => Object.assign({ label: m.label, low: m.low, mid: m.mid, high: m.high, pre: m.pre }, m.active === false ? { active: false } : {}));
   return o;
 }
 const busy = () => {
@@ -141,27 +141,17 @@ function render() {
     const b = document.createElement('button');
     b.type = 'button';
     b.textContent = String(i + 1);
-    b.title = m.label;
-    b.setAttribute('aria-label', 'Modo ' + (i + 1) + ': ' + m.label);
+    b.title = m.label + (m.active === false ? ' (desactivado)' : '');
+    b.setAttribute('aria-label', 'Modo ' + (i + 1) + ': ' + b.title);
     b.classList.toggle('active', i === sel);
+    b.classList.toggle('off', m.active === false);
     b.addEventListener('click', () => { sel = i; setEqMode(i + 1); clearMsg(); render(); });
     modesBox.appendChild(b);
   });
-  if (list.length < MAX_MODES) {
-    const add = document.createElement('button');
-    add.type = 'button';
-    add.className = 'add';
-    add.textContent = '+';
-    add.title = 'Añadir modo';
-    add.setAttribute('aria-label', 'Añadir modo');
-    add.addEventListener('click', addMode);
-    modesBox.appendChild(add);
-  }
   const m = list[sel];
   edit.hidden = !m;
-  if (!list.length) report(['Sin modos: el visualizador no cambia el sonido. Añade uno con "+" o vuelve a los de serie'], false);
-  if (!m) { resetBtn.hidden = false; modesBox.after(resetBtn); return; }
-  edit.querySelector('.cfgacts').appendChild(resetBtn);
+  if (!m) { report(['Los ajustes no traen modos de ecualizador'], false); return; }
+  const on = m.active !== false;
   if (document.activeElement !== nameIn) nameIn.value = m.label;
   for (const k of Object.keys(SLIDERS)) {
     sliders[k].min = String(EQ_GAIN_MIN);
@@ -170,19 +160,14 @@ function render() {
     paintRange(sliders[k]);
     values[k].textContent = fmtDb(m[k] || 0);
   }
-  defSw.checked = S.eq.defaultMode === sel;
+  defSw.checked = on && S.eq.defaultMode === sel;
+  defSw.disabled = !on;
+  actBtn.textContent = (on ? 'Desactivar' : 'Activar') + ' Modo ' + (sel + 1);
+  resetBtn.textContent = 'Restablecer Modo ' + (sel + 1);
+  edit.classList.toggle('off', !on);
   draw();
 }
 
-function addMode() {
-  if (modes().length >= MAX_MODES || busy()) return;
-  if (typeof S.eq.lowHz !== 'number') Object.assign(S.eq, { lowHz: DEFAULT_EQ.lowHz, midHz: DEFAULT_EQ.midHz, midQ: DEFAULT_EQ.midQ, highHz: DEFAULT_EQ.highHz });
-  if (!Array.isArray(S.eq.modes)) S.eq.modes = [];
-  S.eq.modes.push({ label: 'EQ ' + (S.eq.modes.length + 1), low: 0, mid: 0, high: 0, pre: 0 });
-  sel = S.eq.modes.length - 1;
-  if (save()) setEqMode(sel + 1);
-  render();
-}
 
 for (const k of Object.keys(SLIDERS)) {
   sliders[k].addEventListener('input', () => {   // suena y se dibuja al momento
@@ -209,20 +194,28 @@ defSw.addEventListener('change', () => {
   save();
   render();
 });
-delBtn.addEventListener('click', () => {
+// Activar o desactivar el modo (los desactivados no salen al pulsar el visualizador ni pueden ser la opción por defecto)
+actBtn.addEventListener('click', () => {
+  if (busy()) return;
+  const m = modes()[sel];
+  if (!m) return;
+  const on = m.active === false;
+  if (on) delete m.active; else m.active = false;
+  if (!on && S.eq.defaultMode === sel) S.eq.defaultMode = -1;
+  save();
+  setEqMode(on ? sel + 1 : 0);   // al activarlo suena; al desactivarlo se vuelve al normal
+  render();
+});
+// Restablecer el modo: nombre, valores y si viene activado, como en los de serie (si es uno que no está en ellos, plano)
+resetBtn.addEventListener('click', () => {
   if (busy()) return;
   const list = modes();
   if (!list[sel]) return;
-  list.splice(sel, 1);
-  const d = S.eq.defaultMode;
-  S.eq.defaultMode = d === sel ? -1 : d > sel ? d - 1 : d;
-  sel = Math.max(0, sel - 1);
+  const d = DEFAULT_EQ.modes[sel] || { label: 'EQ ' + (sel + 1), low: 0, mid: 0, high: 0, pre: 0 };
+  list[sel] = { ...d, active: d.active !== false };
+  if (list[sel].active === false && S.eq.defaultMode === sel) S.eq.defaultMode = -1;
   save();
-  setEqMode(list.length ? sel + 1 : 0);
-  render();
-});
-resetBtn.addEventListener('click', () => {
-  if (save(raw => { delete raw.eq; })) { sel = 0; resetEq(); }   // los de serie, y el modo de siempre al abrir (Dinámico)
+  setEqMode(sel + 1);
   render();
 });
 

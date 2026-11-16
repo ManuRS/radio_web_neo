@@ -48,8 +48,8 @@ En esas dos mismas ventanas, la pestaña "Consultar catálogo" es el buscador: l
 
 En los ajustes (engranaje de la cabecera):
 
-- Ecualizador: elige un modo (1, 2…) para cambiar su nombre, los graves, medios, agudos y el volumen; la gráfica enseña cómo queda el sonido y lo que tocas suena al momento. Con + se añade un modo (hasta 5) y "Volver a los de serie" recupera los de siempre
-- Boletines: elige la cadena de las noticias. Con la SER aparece su horario y se enciende o apaga cada boletín (a las 5, 6, 7, 8, 14 y 20 se elige además la duración); con otra cadena, escribe las franjas de Inicio a Fin y añade las que quieras con "+ Añadir franja"
+- Ecualizador: elige un modo (1 a 6) para cambiar su nombre, los graves, medios, agudos y el volumen; la gráfica enseña cómo queda el sonido y lo que tocas suena al momento. Los modos se activan o desactivan (los desactivados no salen al pulsar el visualizador; de serie, el 4, el 5 y el 6), uno puede ser la opción por defecto y cada uno se puede restablecer
+- Boletines: elige quién da las noticias, entre las generalistas que lo permiten. Con la Cadena SER guiada aparece su horario y se enciende o apaga cada boletín (en algunos se elige además la duración), con "Restablecer" para volver a la selección de siempre; con la SER en lista manual o con otra cadena, escribe las franjas de Inicio a Fin y añade las que quieras con "+ Añadir franja". Lo de cada opción se guarda al cambiar de una a otra
 
 ## Exportar configuración
 
