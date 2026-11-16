@@ -251,6 +251,8 @@
       </div>
       <div class="tabs" role="tablist">
         <button type="button" role="tab" data-tab="general" class="active" aria-selected="true">General</button>
+        <button type="button" role="tab" data-tab="eq" aria-selected="false">Ecualizador</button>
+        <button type="button" role="tab" data-tab="news" aria-selected="false">Boletines</button>
         <button type="button" role="tab" data-tab="config" aria-selected="false">Configuración</button>
         <button type="button" role="tab" data-tab="log" aria-selected="false" hidden>Registro</button>
       </div>
@@ -322,6 +324,40 @@
             </label>
           </div>
         </div>
+      </div>
+      <!-- Ecualizador: los modos que se eligen pulsando el visualizador (detrás del "normal", que no se toca). Se guardan en el bloque "eq" de los ajustes -->
+      <div class="tab" id="tabEq" hidden>
+        <div class="eqmodes" id="eqModes" role="group" aria-label="Modos del ecualizador"></div>
+        <div class="group" id="eqEdit">
+          <div class="clockrow eqname">
+            <label for="eqName">Nombre</label>
+            <input id="eqName" type="text" maxlength="24" autocomplete="off" spellcheck="false">
+          </div>
+          <canvas id="eqCurve" class="eqcurve" aria-label="Cómo cambia el sonido con este modo, de graves a agudos"></canvas>
+          <div class="eqrow"><label for="eqLow">Graves</label><input id="eqLow" type="range" step="1"><span id="eqLowV"></span></div>
+          <div class="eqrow"><label for="eqMid">Medios</label><input id="eqMid" type="range" step="1"><span id="eqMidV"></span></div>
+          <div class="eqrow"><label for="eqHigh">Agudos</label><input id="eqHigh" type="range" step="1"><span id="eqHighV"></span></div>
+          <div class="eqrow"><label for="eqPre">Volumen</label><input id="eqPre" type="range" step="1"><span id="eqPreV"></span></div>
+          <div class="clockrow">
+            <label for="eqDefault">Usar al abrir la aplicación</label>
+            <label class="switch"><input type="checkbox" id="eqDefault"><span class="track"></span></label>
+          </div>
+          <div class="cfgacts">
+            <button id="eqDel" class="danger" type="button">Eliminar modo</button>
+            <button id="eqReset" type="button">Volver a los de serie</button>
+          </div>
+        </div>
+        <div id="eqMsg" class="cfgmsg" role="status"></div>
+      </div>
+      <!-- Boletines: la cadena de las noticias y sus franjas ("newsStation" y "news" de los ajustes). Con la SER, su horario ya hecho -->
+      <div class="tab" id="tabNews" hidden>
+        <div class="clockrow">
+          <label for="newsSel">Cadena de los boletines</label>
+          <select id="newsSel"></select>
+        </div>
+        <div class="nlist" id="newsList"></div>
+        <button id="newsAdd" class="nadd" type="button">+ Añadir franja</button>
+        <div id="newsMsg" class="cfgmsg" role="status"></div>
       </div>
       <div class="tab" id="tabConfig" hidden>
         <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->

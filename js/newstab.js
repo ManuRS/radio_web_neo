@@ -1,0 +1,245 @@
+// ========================
+// == PESTAÑA BOLETINES ==
+// ========================
+// Elige la cadena de los boletines ("newsStation") y sus franjas ("news").
+//  - Con la SER: su horario ya hecho, una fila por boletín con su interruptor; donde hay dos duraciones (Portada o Tramo completo) se elige una.
+//  - Con cualquier otra: una lista de franjas (Inicio y Fin) que se escribe a mano; se añaden con "+" y se quitan con ✕ (si hay más de una).
+// Se guarda al momento en los ajustes; las franjas que se pisan o se tocan se unen al sonar (ver rebuildSlots).
+
+import { S } from './state.js';
+import { editSettings } from './settings.js';
+import { soundKey } from './utils.js';
+
+const panel = document.getElementById('tabNews');
+const sel = document.getElementById('newsSel');
+const list = document.getElementById('newsList');
+const addBtn = document.getElementById('newsAdd');
+const msg = document.getElementById('newsMsg');
+
+// Horario de la SER: [nombre, [opción, inicio, fin], ...]; con dos opciones se elige una (la corta, "Portada", o la larga)
+const S2 = (h, a, b) => ['Las noticias de las ' + h + 'h', ['', a, b]];
+const SER_ROWS = [
+  S2(2, '01:59:38', '02:05:00'),
+  S2(3, '02:59:38', '03:05:00'),
+  S2(4, '03:59:38', '04:05:00'),
+  ['Las noticias de las 5h', ['Noticias', '04:59:38', '05:05:00'], ['Todo por la radio', '04:59:38', '06:00:00']],
+  ['Las 6 de HxH', ['Portada', '05:59:38', '06:05:00'], ['Tramo completo', '05:59:38', '06:30:00']],
+  ['Las 7 de HxH', ['Portada', '06:59:38', '07:05:00'], ['Tramo completo', '06:59:38', '07:30:00']],
+  ['Las 8 de HxH', ['Portada', '07:59:55', '08:06:00'], ['Tramo completo', '07:59:55', '08:20:10']],
+  S2(9, '08:59:55', '09:04:00'),
+  S2(10, '09:59:55', '10:05:50'),
+  S2(11, '10:59:38', '11:05:50'),
+  S2(12, '11:59:38', '12:05:50'),
+  S2(13, '12:59:38', '13:06:40'),
+  ['Portada H14', ['Portada', '13:59:38', '14:06:10'], ['Tramo completo', '13:59:38', '14:30:00']],
+  ['Hora 14', ['', '14:30:00', '15:00:00']],
+  S2(16, '15:59:38', '16:05:20'),
+  S2(17, '16:59:38', '17:05:20'),
+  S2(18, '17:59:38', '18:05:20'),
+  S2(19, '18:59:38', '19:05:00'),
+  ['Hora 20', ['Portada', '19:59:38', '20:06:00'], ['Tramo completo', '19:59:38', '20:25:10']],
+  S2(21, '20:59:38', '21:04:00'),
+  S2(22, '21:59:55', '22:04:00'),
+  S2(23, '22:59:55', '23:04:00'),
+].map(([label, ...opts]) => ({ label, opts: opts.map(([name, start, end]) => ({ name, start, end })) }));
+// Selección de partida si la lista actual no es del horario de la SER: la de siempre
+const SER_DEFAULT = [['07:59:55', '08:20:10'], ['08:59:55', '09:04:00'], ['09:59:55', '10:05:50'], ['10:59:38', '11:05:50'], ['11:59:38', '12:05:50'],
+  ['12:59:38', '13:06:40'], ['13:59:38', '14:06:10'], ['15:59:38', '16:05:20'], ['16:59:38', '17:05:20'], ['17:59:38', '18:05:20'], ['18:59:38', '19:05:00'],
+  ['19:59:38', '20:25:10']].map(([start, end]) => ({ start, end }));
+
+const isSer = st => !!st && (st.id === 'ser' || ['ser', 'cadenaser'].includes(soundKey(st.name)));
+const same = (a, b) => a.start === b.start && a.end === b.end;
+
+let station = null;   // cadena elegida (objeto de S.stations)
+let pick = [];        // con la SER: opción elegida de cada fila (-1 = apagada)
+let last = [];        // con la SER: última opción usada en cada fila (para volver a ella al encenderla)
+let rows = [];        // con otra cadena: [{ start, end }] (puede haber filas a medio escribir)
+
+function report(lines, isError) {
+  msg.className = 'cfgmsg' + (isError ? ' err' : ' ok');
+  msg.textContent = lines.join('\n');
+}
+const clearMsg = () => { msg.className = 'cfgmsg'; msg.textContent = ''; };
+
+// Lo que hay en los ajustes, pasado a filas de la SER (null si alguna franja no es de su horario)
+function serPick(news) {
+  const out = SER_ROWS.map(() => -1);
+  for (const n of news) {
+    const r = SER_ROWS.findIndex(row => row.opts.some(o => same(o, n)));
+    if (r < 0) return null;
+    out[r] = SER_ROWS[r].opts.findIndex(o => same(o, n));
+  }
+  return out;
+}
+
+function save(news) {
+  if (S.newsOn || S.trans) { report(['No se pueden cambiar los boletines durante un boletín o una transición'], true); return false; }
+  const ok = editSettings(raw => {
+    raw.newsStation = station.id;
+    raw.news = news.map(n => ({ start: n.start, end: n.end }));
+  }, report);
+  if (ok) clearMsg();
+  return ok;
+}
+const saveSer = () => save(SER_ROWS.flatMap((row, i) => (pick[i] >= 0 ? [row.opts[pick[i]]] : [])));
+// Con otra cadena se guardan las filas completas (las vacías o a medias se quedan en pantalla hasta terminarlas)
+const hms = v => {
+  const m = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(v || '');
+  return m && +m[1] < 24 && +m[2] < 60 && +(m[3] || 0) < 60 ? m[1] + ':' + m[2] + ':' + (m[3] || '00') : '';
+};
+function saveOwn() {
+  const wrong = rows.find(r => (r.start && !hms(r.start)) || (r.end && !hms(r.end)));
+  if (wrong) { report(['Hora no válida: escribe hh:mm:ss (por ejemplo 08:59:50)'], true); return false; }
+  const done = rows.map(r => ({ start: hms(r.start), end: hms(r.end) })).filter(r => r.start && r.end);
+  const bad = done.find(r => r.start === r.end);
+  if (bad) { report(['La franja de las ' + bad.start + ' empieza y acaba a la misma hora'], true); return false; }
+  return save(done);
+}
+
+// =============
+// == PINTADO ==
+// =============
+function switchEl(checked, label, onChange) {
+  const sw = document.createElement('label');
+  sw.className = 'switch';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = checked;
+  input.setAttribute('aria-label', label);
+  input.addEventListener('change', () => onChange(input.checked));
+  const track = document.createElement('span');
+  track.className = 'track';
+  sw.append(input, track);
+  return sw;
+}
+
+function renderSer() {
+  list.textContent = '';
+  list.className = 'nlist ser';
+  SER_ROWS.forEach((row, i) => {
+    const on = pick[i] >= 0, o = row.opts[on ? pick[i] : last[i]];
+    const el = document.createElement('div');
+    el.className = 'nrow' + (on ? '' : ' off');
+    const text = document.createElement('div');
+    text.className = 'ntext';
+    const b = document.createElement('b');
+    b.textContent = row.label;
+    const t = document.createElement('span');
+    t.textContent = o.start + ' – ' + o.end;
+    text.append(b, t);
+    el.append(text, switchEl(on, row.label, v => { pick[i] = v ? last[i] : -1; saveSer(); renderSer(); }));
+    if (row.opts.length > 1) {
+      const seg = document.createElement('div');
+      seg.className = 'nseg';
+      row.opts.forEach((op, j) => {
+        const bt = document.createElement('button');
+        bt.type = 'button';
+        bt.textContent = op.name;
+        bt.classList.toggle('active', j === (on ? pick[i] : last[i]));
+        bt.addEventListener('click', () => { last[i] = j; pick[i] = j; saveSer(); renderSer(); });   // elegir una opción enciende la fila
+        seg.appendChild(bt);
+      });
+      el.appendChild(seg);
+    }
+    list.appendChild(el);
+  });
+  addBtn.hidden = true;
+}
+
+function renderOwn() {
+  list.textContent = '';
+  list.className = 'nlist own';
+  const head = document.createElement('div');
+  head.className = 'nhead';
+  head.innerHTML = '<span>Inicio</span><span>Fin</span>';
+  list.appendChild(head);
+  rows.forEach((r, i) => {
+    const el = document.createElement('div');
+    el.className = 'nrow own';
+    // hh:mm:ss en 24 h, igual en todos los navegadores: se teclean solo cifras y los dos puntos se ponen solos
+    const mk = (k, label) => {
+      const inp = document.createElement('input');
+      inp.type = 'text';
+      inp.inputMode = 'numeric';
+      inp.maxLength = 8;
+      inp.placeholder = 'hh:mm:ss';
+      inp.autocomplete = 'off';
+      inp.spellcheck = false;
+      inp.className = 'ntime';
+      inp.value = r[k];
+      inp.setAttribute('aria-label', label + ' de la franja ' + (i + 1));
+      inp.addEventListener('input', () => {
+        const d = inp.value.replace(/\D/g, '').slice(0, 6);
+        inp.value = d.replace(/^(\d{2})(\d{1,2})?(\d{1,2})?$/, (m, a, b, c) => a + (b ? ':' + b : '') + (c ? ':' + c : ''));
+      });
+      inp.addEventListener('change', () => { r[k] = inp.value; saveOwn(); });
+      return inp;
+    };
+    el.append(mk('start', 'Inicio'), mk('end', 'Fin'));
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.className = 'ndel';
+    del.textContent = '✕';
+    del.title = 'Quitar franja';
+    del.setAttribute('aria-label', 'Quitar la franja ' + (i + 1));
+    del.hidden = rows.length < 2;
+    del.addEventListener('click', () => { rows.splice(i, 1); saveOwn(); renderOwn(); });
+    el.appendChild(del);
+    list.appendChild(el);
+  });
+  addBtn.hidden = false;
+}
+
+function render() {
+  sel.textContent = '';
+  const groups = [['general', 'Generalistas'], ['musical', 'Musicales']];
+  for (const [g, name] of groups) {
+    const og = document.createElement('optgroup');
+    og.label = name;
+    S.stations.filter(x => x.group === g).forEach(x => {
+      const op = document.createElement('option');
+      op.value = x.id;
+      op.textContent = x.name;
+      og.appendChild(op);
+    });
+    if (og.children.length) sel.appendChild(og);
+  }
+  if (station) sel.value = station.id;
+  if (isSer(station)) renderSer(); else renderOwn();
+}
+
+// Estado de partida, desde los ajustes que hay ahora
+function load() {
+  station = S.newsStation || S.stations.find(isSer) || S.stations[0] || null;
+  const news = S.news || [];
+  if (isSer(station)) {
+    pick = serPick(news) || serPick(SER_DEFAULT);
+    last = pick.map(p => Math.max(0, p));
+  } else {
+    rows = news.length ? news.map(n => ({ start: n.start, end: n.end })) : [{ start: '', end: '' }];
+  }
+}
+
+sel.addEventListener('change', () => {
+  const next = S.stations.find(x => x.id === sel.value);
+  if (!next) return;
+  const wasSer = isSer(station);
+  station = next;
+  if (isSer(next)) {   // a la SER: su horario, con lo que ya hubiera de él o, si no, la selección de siempre
+    pick = serPick(S.news || []) || serPick(SER_DEFAULT);
+    last = pick.map(p => Math.max(0, p));
+    saveSer();
+  } else {
+    if (wasSer) rows = [{ start: '', end: '' }];   // de la SER a otra: se empieza con una fila vacía
+    saveOwn();
+  }
+  render();
+});
+addBtn.addEventListener('click', () => {
+  rows.push({ start: '', end: '' });
+  renderOwn();
+  const ins = list.querySelectorAll('input.ntime');
+  if (ins.length) ins[ins.length - 2].focus();
+});
+
+panel.addEventListener('show', () => { clearMsg(); load(); render(); });

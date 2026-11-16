@@ -19,6 +19,8 @@ import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
 import './importer.js';
 import './intro.js';
+import './eqtab.js';
+import './newstab.js';
 import { setFootPhrases } from './foot.js';
 
 // ===============================
@@ -52,7 +54,7 @@ function applyConfig(cfg) {
   if (S.newsMode) ensureSounds();
 }
 
-// Cambio de emisoras con la reproducción en marcha (añadir, reordenar, eliminar una que no suena): se conservan los objetos de emisora que ya existen
+// Cambio de emisoras con la reproducción en marcha (añadir, reordenar, eliminar una que no suena), y del ecualizador y las franjas: se conservan los objetos de emisora que ya existen
 // (los decks y el estado apuntan a ellos) y solo se redibuja la rejilla. Lo demás de los ajustes no se toca.
 function applyLive(cfg) {
   const old = new Map(S.stations.map(x => [x.id, x]));
@@ -64,6 +66,15 @@ function applyLive(cfg) {
     return o;
   });
   S.newsStation = S.stations.find(x => x.id === cfg.newsStationId) || null;
+  // ecualizador y franjas (pestañas Ecualizador y Boletines): se cambian sin olvidar el modo de ecualizador elegido; las franjas, fuera de un boletín
+  const eq = cfg.eq || { modes: [] };
+  if (JSON.stringify(eq) !== JSON.stringify(S.eq)) { S.eq = eq; refreshEq(); }
+  if (JSON.stringify(cfg.news) !== JSON.stringify(S.news) && !S.newsOn && !S.trans) {
+    S.news = cfg.news;
+    rebuildSlots();
+    slotPlan.clear();
+    S.skippedSlot = -1;
+  }
   if (S.lastStation && !S.stations.includes(S.lastStation)) restoreLast();
   buildStations();
   refreshStations();
@@ -85,16 +96,17 @@ async function loadSettings() {
   const stored = loadConfigText();
   let r = stored ? validateConfig(stored) : null;
   if (r && r.errors.length) { log('Los ajustes guardados no son válidos: ' + r.errors[0]); r = null; }
-  let source = 'guardados';
+  let source = 'guardados', text = stored;
   if (!r) {
     const def = await fetchDefaultConfigText();
+    text = def || '';
     r = def ? validateConfig(def) : null;
     if (r && r.errors.length) { log('Los ajustes por defecto no son válidos: ' + r.errors[0]); r = null; }
     source = 'por defecto';
   }
   if (!r) { applyConfig(emptyConfigFn()); log('Sin ajustes'); return ''; }
   applyConfig(r.cfg);
-  S.configText = stored && source === 'por defecto' ? stored : JSON.stringify(r.parsed, null, 2);   // si lo guardado no vale, se deja a la vista para corregirlo
+  S.configText = text;   // tal cual, con sus comentarios (ver jsonc.js)
   log('Ajustes ' + source + ': ' + r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas');
   return source;
 }

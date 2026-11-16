@@ -25,8 +25,17 @@ let NEWS_SLOTS = [];
 let newsWarned = false;   // ya se avisó en el registro de que no se puede entrar en noticias ahora
 
 export function rebuildSlots() {
-  NEWS_SLOTS = S.news.map(n => ({ ...n, s: toSeconds(n.start), e: toSeconds(n.end) }))
-                     .filter(n => !isNaN(n.s) && !isNaN(n.e));
+  const list = S.news.map(n => ({ ...n, s: toSeconds(n.start), e: toSeconds(n.end) }))
+                     .filter(n => !isNaN(n.s) && !isNaN(n.e))
+                     .sort((a, b) => a.s - b.s);
+  // franjas que se pisan o se tocan (por ejemplo "Todo por la radio" y las de las 6, o la Portada de las 14 y Hora 14) se unen en una sola:
+  // así no hay música entre ellas ni dos franjas a la vez (las que pasan de la medianoche se dejan como están)
+  NEWS_SLOTS = [];
+  for (const n of list) {
+    const prev = NEWS_SLOTS[NEWS_SLOTS.length - 1];
+    if (prev && prev.e > prev.s && n.e > n.s && n.s <= prev.e) { if (n.e > prev.e) { prev.e = n.e; prev.end = n.end; } }
+    else NEWS_SLOTS.push({ ...n });
+  }
 }
 
 // Retraso del stream de la emisora de noticias (ms): las franjas se miran con el reloj "del stream", ahora menos este retraso

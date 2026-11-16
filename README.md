@@ -44,13 +44,20 @@ Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación
 
 En esas dos mismas ventanas, la pestaña "Consultar catálogo" es el buscador: lo que elijas va directamente a la presintonía nueva o a la cadena desde la que la abriste
 
+## Ecualizador y boletines
+
+En los ajustes (engranaje de la cabecera):
+
+- Ecualizador: elige un modo (1, 2…) para cambiar su nombre, los graves, medios, agudos y el volumen; la gráfica enseña cómo queda el sonido y lo que tocas suena al momento. Con + se añade un modo (hasta 5) y "Volver a los de serie" recupera los de siempre
+- Boletines: elige la cadena de las noticias. Con la SER aparece su horario y se enciende o apaga cada boletín (a las 5, 6, 7, 8, 14 y 20 se elige además la duración); con otra cadena, escribe las franjas de Inicio a Fin y añade las que quieras con "+ Añadir franja"
+
 ## Exportar configuración
 
 En el origen:
 
 1. Pulsa el engranaje de la cabecera para mostrar los ajustes
 2. Pulsa en la pestaña de Configuración
-3. Pulsa "Exportar configuración": se descarga el archivo radio_web_neo.json
+3. Pulsa "Exportar configuración": se descarga el archivo radio_web_neo.json (es un JSON legible; si lo editas a mano, tus comentarios se conservan al importarlo)
 
 En el destino:
 

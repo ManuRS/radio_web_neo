@@ -300,6 +300,16 @@ export function refreshEq(immediate = false) {
   }
 }
 
+// Modo que suena ahora (0 = normal; 1.. = los de los ajustes)
+export const currentEqMode = () => eqShown;
+
+// Elige un modo (0 = normal; 1.. = los de los ajustes) y lo recuerda, como si se hubiera pulsado el visualizador (lo usa la pestaña Ecualizador para oír lo que se edita)
+export function setEqMode(n) {
+  eqMode = Math.max(0, n | 0);
+  saveEqMode();
+  refreshEq();
+}
+
 function cycleEq() {
   if (outMode === 'nativa') return;
   eqMode = (eqShown + 1) % eqModes().length;

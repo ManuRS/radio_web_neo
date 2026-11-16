@@ -1,0 +1,234 @@
+// ===========================
+// == PESTAÑA ECUALIZADOR ==
+// ===========================
+// Edita los modos del ecualizador (los que se eligen pulsando el visualizador, detrás del "normal"): nombre, graves, medios, agudos y volumen,
+// con una gráfica de cómo queda el sonido de graves a agudos. Lo que se edita suena al momento; se guarda en el bloque "eq" de los ajustes al soltar.
+
+import { S } from './state.js';
+import { DEFAULT_EQ, EQ_GAIN_MAX, EQ_GAIN_MIN, editSettings } from './settings.js';
+import { currentEqMode, refreshEq, resetEq, setEqMode } from './audio.js';
+import { paintRange } from './ui.js';
+
+const MAX_MODES = 5;
+const panel = document.getElementById('tabEq');
+const modesBox = document.getElementById('eqModes');
+const edit = document.getElementById('eqEdit');
+const nameIn = document.getElementById('eqName');
+const canvas = document.getElementById('eqCurve');
+const defSw = document.getElementById('eqDefault');
+const delBtn = document.getElementById('eqDel');
+const resetBtn = document.getElementById('eqReset');
+const msg = document.getElementById('eqMsg');
+const SLIDERS = { low: 'eqLow', mid: 'eqMid', high: 'eqHigh', pre: 'eqPre' };
+const sliders = Object.fromEntries(Object.entries(SLIDERS).map(([k, id]) => [k, document.getElementById(id)]));
+const values = Object.fromEntries(Object.entries(SLIDERS).map(([k, id]) => [k, document.getElementById(id + 'V')]));
+
+let sel = 0;   // modo que se edita (posición en S.eq.modes)
+
+function report(lines, isError) {
+  msg.className = 'cfgmsg' + (isError ? ' err' : ' ok');
+  msg.textContent = lines.join('\n');
+}
+const clearMsg = () => { msg.className = 'cfgmsg'; msg.textContent = ''; };
+const modes = () => (S.eq && Array.isArray(S.eq.modes) ? S.eq.modes : []);
+const fmtDb = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' dB';
+
+// El bloque "eq" tal como se escribe en los ajustes (frecuencias de siempre si aún no las había)
+function rawEq() {
+  const eq = S.eq || {};
+  const f = typeof eq.lowHz === 'number' ? eq : DEFAULT_EQ;
+  const o = { lowHz: f.lowHz, midHz: f.midHz, midQ: f.midQ, highHz: f.highHz };
+  if (eq.defaultMode >= 0 && eq.defaultMode < modes().length) o.defaultMode = eq.defaultMode;
+  o.modes = modes().map(m => ({ label: m.label, low: m.low, mid: m.mid, high: m.high, pre: m.pre }));
+  return o;
+}
+const busy = () => {
+  if (!S.newsOn && !S.trans) return false;
+  report(['No se puede cambiar el ecualizador durante un boletín o una transición'], true);
+  return true;
+};
+function save(mutate) {
+  if (busy()) { render(); return false; }
+  const ok = editSettings(raw => { if (mutate) mutate(raw); else raw.eq = rawEq(); }, report);
+  if (ok) clearMsg();
+  return ok;
+}
+
+// ============
+// == GRÁFICA ==
+// ============
+// La respuesta real de los tres filtros (los mismos tipos que usa el audio) calculada con Web Audio, más el volumen
+const N = 240, F_MIN = 20, F_MAX = 20000, DB = 24;
+const freqs = new Float32Array(N).map((_, i) => F_MIN * Math.pow(F_MAX / F_MIN, i / (N - 1)));
+let oac = null, fl, fm, fh;
+function response(m, f) {
+  if (!oac) {
+    try {
+      oac = new OfflineAudioContext(1, 128, 48000);
+      fl = oac.createBiquadFilter(); fl.type = 'lowshelf';
+      fm = oac.createBiquadFilter(); fm.type = 'peaking';
+      fh = oac.createBiquadFilter(); fh.type = 'highshelf';
+    } catch (_) { oac = false; }
+  }
+  if (!oac) return null;
+  fl.frequency.value = f.lowHz; fl.gain.value = m.low;
+  fm.frequency.value = f.midHz; fm.Q.value = f.midQ; fm.gain.value = m.mid;
+  fh.frequency.value = f.highHz; fh.gain.value = m.high;
+  const out = new Float32Array(N).fill(m.pre || 0);
+  const mag = new Float32Array(N), ph = new Float32Array(N);
+  for (const flt of [fl, fm, fh]) {
+    flt.getFrequencyResponse(freqs, mag, ph);
+    for (let i = 0; i < N; i++) out[i] += 20 * Math.log10(Math.max(mag[i], 1e-6));
+  }
+  return out;
+}
+
+function draw() {
+  const m = modes()[sel];
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+  const g = canvas.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  const padL = 30, padB = 18, padT = 8, padR = 8, pw = w - padL - padR, ph = h - padT - padB;
+  const x = f => padL + pw * Math.log(f / F_MIN) / Math.log(F_MAX / F_MIN);
+  const y = db => padT + ph * (1 - (Math.max(-DB, Math.min(DB, db)) + DB) / (2 * DB));
+  // rejilla: dB a la izquierda, frecuencias abajo
+  g.font = '10px system-ui, sans-serif';
+  g.fillStyle = '#6b7788';
+  g.textBaseline = 'middle';
+  g.textAlign = 'right';
+  for (const db of [12, 0, -12]) {
+    g.strokeStyle = db === 0 ? '#3a4554' : '#252e3a';
+    g.lineWidth = 1;
+    g.beginPath(); g.moveTo(padL, Math.round(y(db)) + .5); g.lineTo(w - padR, Math.round(y(db)) + .5); g.stroke();
+    g.fillText((db > 0 ? '+' : db < 0 ? '−' : '') + Math.abs(db), padL - 6, y(db));
+  }
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  for (const [f, t] of [[50, '50'], [100, '100'], [500, '500'], [1000, '1k'], [5000, '5k'], [10000, '10k']]) {
+    g.strokeStyle = '#1f2731';
+    g.beginPath(); g.moveTo(Math.round(x(f)) + .5, padT); g.lineTo(Math.round(x(f)) + .5, padT + ph); g.stroke();
+    g.fillText(t, x(f), h - 4);
+  }
+  if (!m) return;
+  const f = typeof S.eq.lowHz === 'number' ? S.eq : DEFAULT_EQ;
+  const r = response(m, f);
+  if (!r) return;
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#58dfa3';
+  g.beginPath();
+  for (let i = 0; i < N; i++) { const px = x(freqs[i]), py = y(r[i]); if (i) g.lineTo(px, py); else g.moveTo(px, py); }
+  g.save();
+  g.lineTo(x(freqs[N - 1]), y(0)); g.lineTo(x(freqs[0]), y(0)); g.closePath();
+  g.globalAlpha = .16; g.fillStyle = accent; g.fill();
+  g.restore();
+  g.beginPath();
+  for (let i = 0; i < N; i++) { const px = x(freqs[i]), py = y(r[i]); if (i) g.lineTo(px, py); else g.moveTo(px, py); }
+  g.strokeStyle = accent; g.lineWidth = 2; g.lineJoin = 'round'; g.stroke();
+}
+if (window.ResizeObserver) new ResizeObserver(() => { if (!panel.hidden) draw(); }).observe(canvas);
+
+// ===============
+// == FORMULARIO ==
+// ===============
+function render() {
+  const list = modes();
+  if (sel >= list.length) sel = Math.max(0, list.length - 1);
+  modesBox.textContent = '';
+  list.forEach((m, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(i + 1);
+    b.title = m.label;
+    b.setAttribute('aria-label', 'Modo ' + (i + 1) + ': ' + m.label);
+    b.classList.toggle('active', i === sel);
+    b.addEventListener('click', () => { sel = i; setEqMode(i + 1); clearMsg(); render(); });
+    modesBox.appendChild(b);
+  });
+  if (list.length < MAX_MODES) {
+    const add = document.createElement('button');
+    add.type = 'button';
+    add.className = 'add';
+    add.textContent = '+';
+    add.title = 'Añadir modo';
+    add.setAttribute('aria-label', 'Añadir modo');
+    add.addEventListener('click', addMode);
+    modesBox.appendChild(add);
+  }
+  const m = list[sel];
+  edit.hidden = !m;
+  if (!list.length) report(['Sin modos: el visualizador no cambia el sonido. Añade uno con "+" o vuelve a los de serie'], false);
+  if (!m) { resetBtn.hidden = false; modesBox.after(resetBtn); return; }
+  edit.querySelector('.cfgacts').appendChild(resetBtn);
+  if (document.activeElement !== nameIn) nameIn.value = m.label;
+  for (const k of Object.keys(SLIDERS)) {
+    sliders[k].min = String(EQ_GAIN_MIN);
+    sliders[k].max = String(EQ_GAIN_MAX);
+    sliders[k].value = String(m[k] || 0);
+    paintRange(sliders[k]);
+    values[k].textContent = fmtDb(m[k] || 0);
+  }
+  defSw.checked = S.eq.defaultMode === sel;
+  draw();
+}
+
+function addMode() {
+  if (modes().length >= MAX_MODES || busy()) return;
+  if (typeof S.eq.lowHz !== 'number') Object.assign(S.eq, { lowHz: DEFAULT_EQ.lowHz, midHz: DEFAULT_EQ.midHz, midQ: DEFAULT_EQ.midQ, highHz: DEFAULT_EQ.highHz });
+  if (!Array.isArray(S.eq.modes)) S.eq.modes = [];
+  S.eq.modes.push({ label: 'EQ ' + (S.eq.modes.length + 1), low: 0, mid: 0, high: 0, pre: 0 });
+  sel = S.eq.modes.length - 1;
+  if (save()) setEqMode(sel + 1);
+  render();
+}
+
+for (const k of Object.keys(SLIDERS)) {
+  sliders[k].addEventListener('input', () => {   // suena y se dibuja al momento
+    const m = modes()[sel];
+    if (!m) return;
+    m[k] = Number(sliders[k].value);
+    values[k].textContent = fmtDb(m[k]);
+    if (currentEqMode() !== sel + 1) setEqMode(sel + 1); else refreshEq();
+    draw();
+  });
+  sliders[k].addEventListener('change', () => save());   // al soltar, se guarda
+}
+nameIn.addEventListener('input', () => {
+  const m = modes()[sel];
+  if (!m) return;
+  m.label = nameIn.value.trim().slice(0, 24) || 'EQ ' + (sel + 1);
+  refreshEq();
+  modesBox.children[sel].title = m.label;
+});
+nameIn.addEventListener('change', () => { nameIn.value = (modes()[sel] || {}).label || ''; save(); });
+defSw.addEventListener('change', () => {
+  if (busy()) { render(); return; }
+  S.eq.defaultMode = defSw.checked ? sel : -1;
+  save();
+  render();
+});
+delBtn.addEventListener('click', () => {
+  if (busy()) return;
+  const list = modes();
+  if (!list[sel]) return;
+  list.splice(sel, 1);
+  const d = S.eq.defaultMode;
+  S.eq.defaultMode = d === sel ? -1 : d > sel ? d - 1 : d;
+  sel = Math.max(0, sel - 1);
+  save();
+  setEqMode(list.length ? sel + 1 : 0);
+  render();
+});
+resetBtn.addEventListener('click', () => {
+  if (save(raw => { delete raw.eq; })) { sel = 0; resetEq(); }   // los de serie, y el modo de siempre al abrir (Dinámico)
+  render();
+});
+
+panel.addEventListener('show', () => {
+  clearMsg();
+  const cur = currentEqMode();
+  if (cur > 0) sel = cur - 1;
+  render();
+});

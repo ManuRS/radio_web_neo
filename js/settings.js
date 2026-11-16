@@ -18,6 +18,7 @@ import { editHooks, expandGroup, refreshAccent } from './stations.js';
 import { loadCustom, saveCustom } from './custom.js';
 import { refreshDelayUi, setAutoDelay, setManualDelay } from './clock.js';
 import { forgetNoCors } from './deck.js';
+import { parseJsonc, patchTop, stripJsonComments } from './jsonc.js';
 
 // ====================================
 // == ALMACENAMIENTO EN EL NAVEGADOR ==
@@ -61,8 +62,8 @@ const emptyConfig = () => ({
 export const emptyConfigFn = emptyConfig;
 
 // Ecualizador: límites de las ganancias en dB (bandas y preamplificación)
-const EQ_GAIN_MIN = -24;
-const EQ_GAIN_MAX = 18;
+export const EQ_GAIN_MIN = -24;
+export const EQ_GAIN_MAX = 18;
 
 // Color de énfasis: luminosidad relativa (0 negro – 1 blanco) de un "#rrggbb"
 const luminance = hex => {
@@ -72,7 +73,7 @@ const luminance = hex => {
 };
 const ACCENT_MIN_LUM = 0.15;   // por debajo, el color se pierde sobre el fondo oscuro y el texto oscuro de los botones no se lee
 // Ecualizador por defecto (detrás del "normal", plano y sin texto): el que se usa si los ajustes no traen el bloque "eq" (con "eq" pero sin modos, no hay ecualizador)
-const DEFAULT_EQ = {
+export const DEFAULT_EQ = {
   lowHz: 100, midHz: 1000, midQ: 0.8, highHz: 8000, defaultMode: 1,
   modes: [
     { label: 'EQ Graves', low: 10, mid: 0, high: 2, pre: 0 },
@@ -83,11 +84,6 @@ const DEFAULT_EQ = {
   ],
 };
 
-function stripJsonComments(text) {
-  return text
-    .replace(/("(?:\\.|[^"\\])*")|\/\/[^\n\r]*|\/\*[\s\S]*?\*\//g, (m, str) => str || '')
-    .replace(/("(?:\\.|[^"\\])*")|,(\s*[}\]])/g, (m, str, tail) => str || tail);
-}
 export function validateConfig(text) {
   const errors = [];
   let raw;
@@ -216,12 +212,15 @@ function showCfgMsg(lines, isError) {
   if (!settingsDlg.open && !document.getElementById('tdtDlg').open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
 }
 
-// Pestañas de la ventana: General (reloj y audio), Configuración (el texto con los ajustes) y Registro (oculta salvo con "Mostrar registro")
-const tabPanels = { general: tabGeneral, config: tabConfig, log: tabLog };
+// Pestañas de la ventana: General (reloj y audio), Ecualizador y Boletines (eqtab.js y newstab.js), Configuración (exportar e importar) y Registro (oculta salvo con "Mostrar registro").
+// Al mostrarse, cada pestaña recibe el evento "show" para pintarse con los ajustes de ese momento
+const tabPanels = { general: tabGeneral, eq: document.getElementById('tabEq'), news: document.getElementById('tabNews'), config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
   settingsTabs.forEach(x => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', String(on)); });
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });
   if (b.dataset.tab === 'log') logBox.scrollTop = 0;
+  tabPanels[b.dataset.tab].dispatchEvent(new Event('show'));
+  b.scrollIntoView({ block: 'nearest', inline: 'nearest' });   // en el móvil las pestañas pueden no caber: la elegida, a la vista
 }));
 
 // La pestaña Registro está oculta: "Mostrar registro" (General) la saca solo durante esta sesión; al cerrar y volver a abrir la aplicación vuelve a estar oculta
@@ -247,33 +246,37 @@ function openSettings() {
   cfgMsg.className = 'cfgmsg';
   disarmClear();
   openDialog(settingsDlg);
+  Object.values(tabPanels).forEach(p => { if (!p.hidden) p.dispatchEvent(new Event('show')); });
 }
 
 function closeSettings() {
   closeDialog(settingsDlg);
 }
 
-// Valida, aplica y guarda (en el navegador) unos ajustes importados desde archivo (o cambiados por la propia app)
-// "live": cambio de emisoras ya comprobado como seguro (ver editConfig), que se puede hacer con la reproducción en marcha; el resto exige pararla
-function saveSettingsFrom(text, live = false) {
+// Valida, aplica y guarda (en el navegador) unos ajustes importados desde archivo (o cambiados por la propia app). Se guarda el texto tal cual, con sus comentarios.
+// "live": cambio ya comprobado como seguro (ver editConfig), que se puede hacer con la reproducción en marcha; el resto exige pararla.
+// opts.force: se aplica con applyLive aunque no suene nada (cambios de las pestañas Ecualizador y Boletines: no reinician el modo de ecualizador elegido);
+// opts.report: dónde se cuentan los errores (por defecto, el aviso de Configuración); opts.quiet: sin aviso si todo va bien
+function saveSettingsFrom(text, live = false, opts = {}) {
+  const report = opts.report || showCfgMsg;
   const r = validateConfig(text);
-  if (r.errors.length) { showCfgMsg(r.errors, true); return false; }
+  if (r.errors.length) { report(r.errors, true); return false; }
   const busy = S.session !== 'off' || S.trans || S.newsOn;
   if (busy && !live) {
-    showCfgMsg([S.trans || S.newsOn ? 'No se pueden cambiar los ajustes durante un boletín o una transición' : 'Detén la reproducción para cambiar los ajustes'], true);
+    report([S.trans || S.newsOn ? 'No se pueden cambiar los ajustes durante un boletín o una transición' : 'Detén la reproducción para cambiar los ajustes'], true);
     return false;
   }
-  if (busy) applyLiveFn(r.cfg); else applyConfigFn(r.cfg);
-  S.configText = JSON.stringify(r.parsed, null, 2);
-  const stored = saveConfigText(JSON.stringify(r.parsed));
+  if (busy || opts.force) applyLiveFn(r.cfg); else applyConfigFn(r.cfg);
+  S.configText = text;
+  const stored = saveConfigText(text);
   const info = r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas';
   if (!stored) {
-    showCfgMsg(['Aplicado, pero NO se pudo guardar en este navegador (almacenamiento bloqueado): valdrá solo hasta cerrar la página'], true);
+    report(['Aplicado, pero NO se pudo guardar en este navegador (almacenamiento bloqueado): valdrá solo hasta cerrar la página'], true);
     log('Ajustes aplicados sin guardar: el navegador bloquea el almacenamiento');
     return false;
   }
   if (!loadBase() && lastDefaultStations) saveBase(lastDefaultStations);   // primera vez que se guarda: se anota de qué cadenas por defecto se partió
-  showCfgMsg(['Configuración importada: ' + info], false);
+  if (!opts.quiet) report(['Configuración importada: ' + info], false);
   log('Ajustes guardados: ' + info);
   return true;
 }
@@ -342,15 +345,17 @@ export async function syncDefaults() {
   if (sameJson(base, def)) return;
   if (S.session !== 'off' || S.trans || S.newsOn || S.newsMode || settingsDlg.open) return;
   let raw;
-  try { raw = JSON.parse(stripJsonComments(S.configText || '')); } catch (_) { return; }
+  try { raw = parseJsonc(S.configText || ''); } catch (_) { return; }
   if (!raw || typeof raw !== 'object' || !Array.isArray(raw.stations)) return;
+  const before = JSON.parse(JSON.stringify(raw));
   const notes = mergeDefaults(raw, base, def);
   if (notes.length) {
-    const r = validateConfig(JSON.stringify(raw));
+    const text = patchTop(S.configText, before, raw);
+    const r = validateConfig(text);
     if (r.errors.length) { log('No se pudieron poner al día las cadenas por defecto: ' + r.errors[0]); return; }
-    if (!saveConfigText(JSON.stringify(r.parsed))) return;
+    if (!saveConfigText(text)) return;
     applyConfigFn(r.cfg);
-    S.configText = JSON.stringify(r.parsed, null, 2);
+    S.configText = text;
     log('Cadenas por defecto puestas al día: ' + notes.join(', '));
   }
   saveBase(def);
@@ -427,13 +432,13 @@ settingsClose.addEventListener('click', closeSettings);
 
 settingsDlg.addEventListener('click', e => { if (e.target === settingsDlg) closeSettings(); });
 
-// Exportar: descarga los ajustes actuales como un JSON legible (sin los comentarios que pudiera tener el archivo importado)
+// Exportar: descarga los ajustes actuales tal como están guardados (con los comentarios del archivo importado, salvo en lo que haya cambiado la app)
 const EXPORT_NAME = 'radio_web_neo.json';
 function refreshExportBtn() { cfgExport.disabled = !S.configText; }
 cfgExport.addEventListener('click', () => {
   if (!S.configText) return;
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([S.configText + '\n'], { type: 'application/json' }));
+  a.href = URL.createObjectURL(new Blob([/\n$/.test(S.configText) ? S.configText : S.configText + '\n'], { type: 'application/json' }));
   a.download = EXPORT_NAME;
   document.body.appendChild(a);
   a.click();
@@ -506,8 +511,8 @@ cfgClear.addEventListener('click', async () => {
   const r = text ? validateConfig(text) : null;
   if (r && !r.errors.length) {
     applyConfigFn(r.cfg);
-    S.configText = JSON.stringify(r.parsed, null, 2);
-      refreshExportBtn();
+    S.configText = text;
+    refreshExportBtn();
     showGenMsg('Ajustes guardados borrados: se usan los de por defecto', false);
   } else {
     applyConfigFn(emptyConfig());
@@ -539,23 +544,28 @@ function ensureIds(list) {
   });
 }
 
-// Parte del JSON actual, aplica el cambio y lo guarda (mutate devuelve un texto de error, NOOP si no hay nada que hacer, o nada si todo va bien)
-function editConfig(mutate) {
+// Parte del JSON actual, aplica el cambio y lo guarda (mutate devuelve un texto de error, NOOP si no hay nada que hacer, o nada si todo va bien).
+// Solo se reescriben en el texto las claves de primer nivel que cambian (patchTop): los comentarios del resto se conservan
+function editConfig(mutate, opts = {}) {
+  const report = opts.report || showCfgMsg;
   let raw;
   const text = (S.configText || '').trim();
   if (!text) raw = { stations: [] };
   else {
-    try { raw = JSON.parse(stripJsonComments(text)); }
-    catch (e) { showCfgMsg(['Los ajustes actuales no son un JSON válido; importa una configuración correcta (' + e.message + ')'], true); return false; }
+    try { raw = parseJsonc(text); }
+    catch (e) { report(['Los ajustes actuales no son un JSON válido; importa una configuración correcta (' + e.message + ')'], true); return false; }
   }
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { showCfgMsg(['Los ajustes actuales deben ser un objeto { ... }'], true); return false; }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { report(['Los ajustes actuales deben ser un objeto { ... }'], true); return false; }
+  const before = JSON.parse(JSON.stringify(raw));
   if (!Array.isArray(raw.stations)) raw.stations = [];
   ensureIds(raw.stations);
   const err = mutate(raw);
   if (err === NOOP) return false;
-  if (err) { showCfgMsg([err], true); return false; }
-  return saveSettingsFrom(JSON.stringify(raw), true);
+  if (err) { report([err], true); return false; }
+  return saveSettingsFrom(patchTop(S.configText || '', before, raw), true, { quiet: true, ...opts });
 }
+// Para las pestañas Ecualizador y Boletines: cambia los ajustes y los aplica sin reiniciar nada (report: su propio aviso)
+export const editSettings = (mutate, report) => editConfig(mutate, { force: true, report });
 
 // Con algo sonando, estas cadenas no se pueden quitar ni cambiar de tipo: las usa el audio (la actual, la que se retoma tras las noticias y la de noticias)
 const busyNow = () => S.session !== 'off' || !!S.trans || S.newsOn;
