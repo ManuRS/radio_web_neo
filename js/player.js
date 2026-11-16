@@ -52,6 +52,7 @@ export function closeDeck(d) {
 // El deck pasa a ser el que suena
 export function setMain(d) {
   S.pending = false;   // cambio confirmado: el panel pasa a mostrar la nueva emisora
+  S.ahead = null;
   if (d === newsDeck) newsDeck = null;
   main = d;
   if (d) { S.current = d.station; S.variant = d.variant; if (S.session === 'off') S.session = 'music'; }

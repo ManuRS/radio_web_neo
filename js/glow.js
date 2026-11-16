@@ -6,7 +6,7 @@
 // (#bgGlow en styles.css), así que no se distinguen las barras. Se suavizan en el tiempo y entre vecinas para que no haya cortes bruscos.
 
 import { viz } from './audio.js';
-import { desk } from './ui.js';
+import { desk } from './dom.js';
 
 const canvas = document.getElementById('bgGlow');
 const ctx = canvas.getContext('2d');

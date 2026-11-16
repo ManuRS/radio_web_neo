@@ -6,8 +6,8 @@
 
 import { S, endNewsState } from './state.js';
 import { emisoraName, emisoraSub } from './utils.js';
-import { presetsBox, psText, psValue } from './dom.js';
-import { applyAccent, desk, paletteColor, setText } from './ui.js';
+import { desk, presetsBox, psText, psValue } from './dom.js';
+import { applyAccent, paletteColor, setText } from './ui.js';
 import { switchStation } from './transitions.js';
 import { play, stopAll, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
@@ -548,7 +548,7 @@ export function stepStation(dir) {
 let accentShown = null;
 export function refreshAccent() {
   if (S.pending) return;   // mientras se espera la confirmación del cambio, el color se queda como estaba
-  const st = S.stationColors ? S.current : null;
+  const st = S.stationColors ? (S.ahead ? S.ahead.station : S.current) : null;   // durante la cortinilla de los boletines, ya el de la que entra
   const hex = st ? st.color || paletteColor(st.name) : S.accent;   // sin color en los ajustes, uno de la lista (ver paletteColor)
   if (hex === accentShown) return;
   accentShown = hex;
@@ -582,7 +582,8 @@ if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitNow).observe(ps
 if (document.fonts) document.fonts.addEventListener('loadingdone', () => { fitKey = ''; fitNow(); });   // con la fuente propia ya cargada, el nombre mide otra cosa
 
 export function refreshNow() {
-  if (!S.pending) { shown = S.current || S.lastStation; shownV = S.current ? S.variant : S.lastVariant; }
+  if (S.ahead) { shown = S.ahead.station; shownV = S.ahead.variant; }   // cortinilla de los boletines: ya es la que entra
+  else if (!S.pending) { shown = S.current || S.lastStation; shownV = S.current ? S.variant : S.lastVariant; }
   psValue.classList.toggle('idle', !S.current && !S.pending);
   psValue.classList.toggle('pending', S.pending);
   setText(psText, shown ? emisoraName(shown, shownV) : '—');   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)

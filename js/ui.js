@@ -4,7 +4,7 @@
 // Registro de eventos (ventana), estado de conexión, botones y maquetación de la página.
 
 import { clockNow } from './state.js';
-import { copyBtn, dot, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
+import { copyBtn, desk, dot, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
 import { viz } from './audio.js';
 
 // ==================
@@ -146,9 +146,7 @@ if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutCheck).obser
 // ==========================================
 // == PANTALLAS GRANDES (PC): DOS PANELES ==
 // ==========================================
-// Misma condición que en styles.css: por encima, dos paneles, la cabecera fija sin encogerse, las presintonías desplegadas y la luz de fondo
-export const DESK_MQ = '(min-width: 1024px) and (min-height: 600px)';
-export const desk = matchMedia(DESK_MQ);
+// Por encima de DESK_MQ (dom.js): dos paneles, la cabecera fija sin encogerse, las presintonías desplegadas y la luz de fondo
 
 // Tamaño del panel de presintonías: grande (por defecto) o pequeño, igual que el panel 1. Se guarda en el navegador (rn_psmall)
 const PSMALL_KEY = 'rn_psmall';

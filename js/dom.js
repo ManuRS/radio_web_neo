@@ -80,3 +80,7 @@ export const stForm = document.getElementById('stForm');
 export const stMsg = document.getElementById('stMsg');
 export const stAdd = document.getElementById('stAdd');
 export const toastEl = document.getElementById('toast');
+
+// Pantallas grandes (PC): dos paneles, la cabecera fija y la luz de fondo. Misma condición que en styles.css
+export const DESK_MQ = '(min-width: 1024px) and (min-height: 600px)';
+export const desk = matchMedia(DESK_MQ);

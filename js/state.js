@@ -61,6 +61,7 @@ export const S = {
   newsStation: null, // emisora a la que se cambia durante las noticias (objeto de S.stations)
   news: [], // [{ start: 'hh:mm:ss', end: 'hh:mm:ss' }] (horas reales de emisión, hora de Madrid)
   pending: false, // se ha pedido una emisora y aún no se ha confirmado el cambio: el panel sigue con la anterior, parpadeando
+  ahead: null, // { station, variant } que entra tras la cortinilla de los boletines: mientras suena la cortinilla, el nombre y el color ya son los suyos
   configLoaded: false, // hay unos ajustes válidos aplicados (si no, el reloj no se pinta)
   configText: '', // ajustes guardados, tal como se muestran en la ventana
   clockDelayMs: 0, // retraso del reloj local (ms): hora real = hora local + retraso

@@ -22,6 +22,7 @@ export function cancelTransition() {
   const t = S.trans;
   S.trans = null;
   stopJingle();
+  if (S.ahead) { S.ahead = null; syncUi(); }   // la cortinilla se corta: vuelve el nombre y el color de lo que suena
   // la emisora que se estaba preparando se descarta (salvo la de noticias en espera, que sigue conectada para su hora)
   if (t && t.deck && t.deck !== getMain() && t.deck !== getNewsDeck() && !t.keep) closeDeck(t.deck);
 }
@@ -60,6 +61,7 @@ export async function switchStation(target, o = {}) {
   }
   const abort = async why => {
     log((label ? label + ': ' : '') + why);
+    if (S.ahead) { S.ahead = null; syncUi(); }
     if (nd && nd !== given) closeDeck(nd);
     S.volMode = vm0;
     applyVolume();
@@ -95,10 +97,12 @@ export async function switchStation(target, o = {}) {
     }
   }
 
-  // 3) en silencio: sonido local (si lo hay) y volumen del nuevo modo
+  // 3) en silencio: sonido local (si lo hay) y volumen del nuevo modo. Con cortinilla (boletines), lo que se ve ya es la emisora que entra:
+  //    su nombre y su color desde que empieza a sonar la cortinilla, no al acabar (ver S.ahead)
   if (onSilence) onSilence();
   S.volMode = vm;
   applyVolume();
+  if (jingle && target) { S.ahead = { station: target.station, variant: target.variant }; syncUi(); }
   let jingleEnd = 0;
   const buf = jingle ? soundBuffers.get(jingle.src) : null;
   if (buf && canPlayJingles()) {
@@ -119,6 +123,7 @@ export async function switchStation(target, o = {}) {
     if (!alive()) return;
     if (!ok) {
       if (old) { await abort('no se pudo conectar con ' + target.station.name + ', se vuelve a la cadena anterior'); return; }
+      if (S.ahead) { S.ahead = null; syncUi(); }
       closeDeck(nd);
       if (onAbort) onAbort();
       log((label ? label + ': ' : '') + 'no se pudo conectar con ' + target.station.name);
