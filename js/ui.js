@@ -159,6 +159,27 @@ function setPaneSmall(small) {
   paneSize.setAttribute('aria-label', (small ? 'Ampliar' : 'Reducir') + ' panel de presintonías');
 }
 try { setPaneSmall(localStorage.getItem(PSMALL_KEY) === '1'); } catch (_) { setPaneSmall(false); }
+
+// El reloj: en pantallas grandes va dentro de la barra, detrás de Reproducir; en las demás, en su píldora de la cabecera, como siempre
+const hrow = statusBox.parentElement;
+function placeClock() {
+  if (desk.matches) playBtn.after(statusBox); else hrow.appendChild(statusBox);
+}
+placeClock();
+desk.addEventListener('change', placeClock);
+
+// Pie: en pantallas grandes la página no se desplaza; si no cabe entero bajo los paneles, pasa a una sola línea (clase "compact")
+const footEl = document.querySelector('.foot');
+function fitFoot() {
+  footEl.classList.remove('compact');
+  if (!desk.matches) return;
+  const sc = footEl.parentElement, pad = parseFloat(getComputedStyle(sc).paddingBottom) || 0;
+  const room = sc.getBoundingClientRect().bottom - pad - footEl.getBoundingClientRect().top;
+  if (footEl.scrollHeight > room + 1) footEl.classList.add('compact');
+}
+if (typeof ResizeObserver !== 'undefined') { const ro = new ResizeObserver(fitFoot); ro.observe(document.querySelector('.scroller')); ro.observe(document.querySelector('.panes')); }
+desk.addEventListener('change', fitFoot);
+if (document.fonts) document.fonts.ready.then(fitFoot);
 let paneAnim = 0;
 paneSize.addEventListener('click', () => {
   const small = !document.documentElement.classList.contains('psmall');

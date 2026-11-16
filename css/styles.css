@@ -517,6 +517,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media (hover: hover) { .foot a:hover { text-decoration: underline; text-underline-offset: 3px; } }
 .foot a:focus-visible { text-decoration: underline; outline: 0; }
 .foot .fsep { margin: 0 .4em; opacity: .6; }
+.foot .fsep0 { display: none; }   /* separación tras la frase, solo con el pie en una línea (pantallas grandes con poco alto) */
 /* Primera línea: las frases se cruzan (la que sale sube y se va; la que entra sube desde abajo) y al aparecer, bote de los emojis
    o brillo del color de énfasis en el texto (ver foot.js) */
 .foot .love { display: grid; justify-items: center; overflow: hidden; padding-top: 10px; margin-top: -10px; }   /* el hueco de arriba deja sitio al bote de los emojis */
@@ -596,7 +597,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
-  :root { --hf: 150px; --dw: min(1160px, calc(100vw - 64px)); }
+  :root { --hf: 112px; --dw: min(1160px, calc(100vw - 64px)); }
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
@@ -605,12 +606,14 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .scroller > * { flex: none; }
   html.pane-anim main, html.pane-anim .hin { transition: width .35s ease; }   /* solo al cambiar de tamaño con el botón, no al cargar */
 
-  /* Cabecera fija (no se encoge con el scroll): título a la izquierda y, a la derecha, la píldora del reloj arriba y la barra de controles debajo */
-  .hin { display: grid; grid-template-columns: auto minmax(0, 1fr) 360px; grid-template-rows: auto auto; align-content: center; align-items: center; row-gap: 12px; width: var(--dw); height: var(--hf); padding: 0; }
-  .hrow { display: contents; }
-  .logo, .titles { grid-row: 1 / 3; }
-  .status { grid-column: 3; grid-row: 1; justify-self: end; margin: 0; }
-  .bar { grid-column: 3; grid-row: 2; margin: 0; }
+  /* Cabecera fija en una sola fila (no se encoge con el scroll): título a la izquierda y la barra a la derecha con Reproducir, el reloj (sin píldora,
+     en el fondo de la barra; ui.js lo mueve aquí), la separación y los botones de tamaño de las presintonías, información y ajustes */
+  .hin { display: flex; align-items: center; gap: 24px; width: var(--dw); height: var(--hf); padding: 0; }
+  .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; }
+  .bar { flex: 0 0 auto; width: 500px; margin: 0; }
+  .bar #playBtn { flex: 1 1 0; }
+  .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */
+  .bar .psize { display: flex; }
 
   /* Los dos paneles: fondo, marco y sombra; el 2 mide lo mismo de alto que el 1 y se desplaza por dentro */
   .scroller > .panes { display: grid; flex: 0 1 auto; min-height: 0; grid-template-columns: 470px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 22px; margin-top: 26px; }
@@ -625,15 +628,16 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .pane2 .pgroup:first-child { margin-top: 0; }
   .pane2 .pgroup + .pgroup { margin-top: 22px; }
   .pane2 .pgrid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
-  /* Botón de tamaño, arriba a la derecha del panel 2 (en la línea de "Generalistas"): con el ratón se aviva el icono, sin bloque de fondo */
-  .psize { position: absolute; top: 9px; right: 12px; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border-radius: 8px; background: #1a2029; color: #9fabb9; -webkit-tap-highlight-color: transparent; }
-  .psize svg { display: block; }
+  /* Botón de tamaño de las presintonías (en la barra): flechas hacia dentro para reducir y hacia fuera para ampliar */
   .psize .pz-out, html.psmall .psize .pz-in { display: none; }
   html.psmall .psize .pz-out { display: inline; }
-  @media (hover: hover) { .psize:hover { color: #fff; } }
-  .psize:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
   .scroller > .foot { flex: 0 100000 auto; min-height: 0; overflow: hidden; margin-top: 0; }
   .scroller > .foot::before { content: ''; display: block; height: 34px; }   /* el hueco hasta los paneles va dentro del pie: si se recorta, se va con él */
+  /* Si el pie no cabe entero (ventanas bajas, lo decide ui.js): todo en una línea, con la letra más ligera y más cerca de los paneles */
+  .scroller > .foot.compact { font-size: .86rem; white-space: nowrap; }
+  .scroller > .foot.compact::before { height: 14px; }
+  .foot.compact .love { display: inline-grid; vertical-align: bottom; margin-bottom: 0; font-size: inherit; font-weight: 400; color: inherit; }
+  .foot.compact .fsep0 { display: inline; }
 
   /* Luz desde abajo: las barras del ecualizador en un lienzo pequeño, estirado y muy difuminado, detrás de todo (glow.js) */
   #bgGlow { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; width: 100%; height: 62vh; pointer-events: none; filter: blur(34px); opacity: .55; }
