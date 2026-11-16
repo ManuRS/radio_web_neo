@@ -9,7 +9,7 @@ import { emisoraName, emisoraSub } from './utils.js';
 import { desk, presetsBox, psText, psValue } from './dom.js';
 import { applyAccent, paletteColor, setText } from './ui.js';
 import { switchStation } from './transitions.js';
-import { play, stopAll, wake } from './player.js';
+import { play, stopForRestart, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
 import { corsAllowed } from './deck.js';
 import { toast } from './ui.js';
@@ -503,7 +503,7 @@ function onStationClick(st) {
 
 export function selectStation(st, vi = 0) {
   wake();   // si el audio estaba pausado por algo ajeno, al elegir emisora se quiere oír
-  if (S.held) { stopAll(); saveLast(st, vi); play(st, vi); return; }   // en pausa: se elige y vuelve a sonar
+  if (S.held) { stopForRestart(); saveLast(st, vi); play(st, vi); return; }   // en pausa: se elige y vuelve a sonar
   if (S.newsOn) {
     // cambio manual durante unas noticias: se respeta tu elección y no se vuelve a la emisora anterior
     S.skippedSlot = S.newsSlot ? S.newsSlot.idx : -1;

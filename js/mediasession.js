@@ -7,7 +7,7 @@ import { S, APP_TITLE } from './state.js';
 import { log } from './ui.js';
 import { getSoundData } from './sounds.js';
 import { anyPlaying } from './audio.js';
-import { holdPlayback, play, resumePlayback, wake } from './player.js';
+import { holdPlayback, isWaiting, isWaitPaused, pauseWaiting, play, resumePlayback, resumeWaiting, wake } from './player.js';
 import { requestStop } from './recorder.js';
 import { stepStation } from './stations.js';
 import { emisoraName } from './utils.js';
@@ -52,8 +52,10 @@ function applyMediaSession(title, artist) {
 
 // Solo se actualiza cuando cambia el título
 export function scheduleMediaTitle() {
-  if (!mediaSessionOk() || S.session === 'off' || !S.current || !anyPlaying()) return;
-  const title = emisoraName(S.current, S.variant);   // la emisora que suena (Radio Madrid), no la cadena (Cadena SER)
+  if (!mediaSessionOk()) return;
+  const waiting = isWaiting();   // a la espera de las noticias sin música: la notificación lo dice
+  if (!waiting && (S.session === 'off' || !S.current || !anyPlaying())) return;
+  const title = waiting ? 'Esperando noticias' : emisoraName(S.current, S.variant);   // la emisora que suena (Radio Madrid), no la cadena (Cadena SER)
   const artist = mediaArtist();
   const key = title + '\n' + artist;
   if (key === mediaTitle) return;
@@ -82,9 +84,9 @@ export function setPlaybackState(state) {
 // anterior y siguiente cambian de emisora dentro de su grupo
 if (mediaSessionOk()) {
   try {
-    navigator.mediaSession.setActionHandler('pause', () => holdPlayback());
+    navigator.mediaSession.setActionHandler('pause', () => { if (isWaiting()) pauseWaiting(); else holdPlayback(); });
     navigator.mediaSession.setActionHandler('stop', () => requestStop());
-    navigator.mediaSession.setActionHandler('play', () => { if (S.held) resumePlayback(); else if (S.session === 'off') play(); else wake(); });   // wake: el audio lo pausó otra app o el sistema
+    navigator.mediaSession.setActionHandler('play', () => { if (S.held) resumePlayback(); else if (isWaitPaused()) resumeWaiting(); else if (S.session === 'off') play(); else wake(); });   // wake: el audio lo pausó otra app o el sistema
     navigator.mediaSession.setActionHandler('previoustrack', () => stepStation(-1));
     navigator.mediaSession.setActionHandler('nexttrack', () => stepStation(1));
   } catch (_) {}

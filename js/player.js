@@ -12,9 +12,13 @@ import { cancelTransition } from './transitions.js';
 import { clearMediaSession, scheduleMediaTitle, setPlaybackState } from './mediasession.js';
 import { refreshStations } from './stations.js';
 import { refreshRecBtn } from './recorder.js';
+import { anchorOk, setAnchor, wakeAnchor } from './anchor.js';
 
 let main = null;       // deck que suena (o al que se está entrando)
 let newsDeck = null;   // deck de la emisora de noticias, conectado en silencio a la espera de la hora
+let waitPaused = false;   // esperando las noticias sin música, se ha pulsado la pausa de la notificación
+let keepAnchor = false;   // se detiene para volver a entrar enseguida: el ancla no se toca
+let wasWaiting = false;
 
 export const getMain = () => main;
 export const getNewsDeck = () => newsDeck;
@@ -90,6 +94,36 @@ export function syncUi() {
   } else {
     setStatus(d.everPlayed ? 'Reconectando…' : 'Conectando…');
   }
+  syncAnchor();
+}
+
+// =============================
+// == ANCLA DE LA NOTIFICACIÓN ==
+// =============================
+// El ancla (anchor.js) sigue a la sesión: suena con ella (también mientras se reconecta o se cambia de emisora), se pausa con la pausa de la
+// notificación y se apaga al detener. A la espera de las noticias sin música también suena, con su notificación ("Esperando noticias")
+
+// Se esperan las noticias sin música (solo cuenta donde hay ancla: sin ella no hay notificación que mostrar)
+export const isWaiting = () => anchorOk && S.session === 'off' && S.newsMode && S.configLoaded;
+export const isWaitPaused = () => isWaiting() && waitPaused;
+
+function syncAnchor() {
+  const waiting = isWaiting();
+  if (!keepAnchor) setAnchor(S.session !== 'off' ? (S.held ? 'paused' : 'on') : waiting ? (waitPaused ? 'paused' : 'on') : 'off');
+  if (waiting) { scheduleMediaTitle(); setPlaybackState(waitPaused ? 'paused' : 'playing'); }
+  else if (wasWaiting && S.session === 'off') clearMediaSession();
+  wasWaiting = waiting;
+}
+
+// Pausa y play de la notificación mientras se esperan las noticias: solo cambian la notificación (en pausa se puede descartar)
+export function pauseWaiting() { if (!isWaiting()) return; waitPaused = true; syncUi(); }
+export function resumeWaiting() { waitPaused = false; syncUi(); }
+
+// Detener para volver a entrar enseguida (otra emisora estando en pausa, cambio de la salida de audio): la notificación no se suelta
+export function stopForRestart(keepSlot = false) {
+  keepAnchor = true;
+  stopAll(true, keepSlot);
+  keepAnchor = false;
 }
 
 // ==============================
@@ -104,7 +138,11 @@ export function play(station = null, variant = 0) {
   S.lastStation = st;
   S.lastVariant = vi;
   S.held = false;
-  initAudioGraph(decks.size === 0 && !S.recording);   // sin nada sonando se recrea el audio (tras cambiar de salida, p. ej. unos cascos, el anterior puede quedarse mudo); grabando no, se cortaría la grabación
+  waitPaused = false;
+  setAnchor('on');   // lo primero, dentro del gesto: la notificación ya tiene quien la sostenga mientras conecta la emisora
+  // sin nada sonando se recrea el audio (tras cambiar de salida, p. ej. unos cascos, el anterior puede quedarse mudo); grabando no, se cortaría la
+  // grabación; con la página oculta (botones de la notificación) tampoco: un audio nuevo creado en segundo plano puede nacer parado
+  initAudioGraph(decks.size === 0 && !S.recording && !document.hidden);
   if (S.newsOn) {
     // se pulsa Reproducir durante unas noticias: siguen sonando y al acabar se vuelve a esta emisora
     S.prevStation = st;
@@ -147,6 +185,7 @@ export function stopAll(keepMedia = false, keepSlot = false) {
   main = newsDeck = null;
   S.session = 'off';
   S.held = false;
+  waitPaused = false;
   S.pending = false;
   S.volMode = 'music';
   S.current = null;
@@ -191,6 +230,7 @@ export function endNewsWhileHeld(back, vi) {
 export function resumePlayback() {
   if (!S.held || !main) return;
   S.held = false;
+  setAnchor('on');   // antes de soltar el <audio> en pausa: la notificación no se queda sin nadie
   log('Se reanuda ' + main.station.name + ' en directo');
   setFade(main, 0);
   initAudioGraph(false);
@@ -209,11 +249,12 @@ export function resumePlayback() {
 export function restartAudio() {
   if (S.session === 'off') return;
   const st = S.current && !S.newsOn ? S.current : S.lastStation, vi = S.current && !S.newsOn ? S.variant : S.lastVariant;
-  stopAll(false, true);
-  if (st) play(st, vi);
+  stopForRestart(true);
+  if (st) play(st, vi); else stopAll(false, true);
 }
 
 // Si la emisora que suena está parada por algo ajeno, al elegir otra se quiere oír
 export function wake() {
+  wakeAnchor();
   if (main && main.interrupted) main.resumeInterrupted();
 }

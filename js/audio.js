@@ -13,6 +13,7 @@ import { S, NORM_MAX_BOOST_DB, NORM_MAX_CUT_DB, NORM_SILENCE_DB, NORM_TARGET_DB,
 import { eqLabel, newsVolume, newsVolValue, vizBox, vizCanvas, volume, volValue } from './dom.js';
 import { log } from './ui.js';
 import { loadSounds } from './sounds.js';
+import { wakeAnchor } from './anchor.js';
 
 // ===============================
 // == SALIDA DE AUDIO (AJUSTES) ==
@@ -451,19 +452,40 @@ newsVolume.addEventListener('input', () => {
 // ============================================
 // == SALIDA COLGADA Y VIGILANTE DE LOS DECKS ==
 // ============================================
-// Si el reloj del contexto de Web Audio se queda parado con algo sonando, la salida está colgada: se reinicia. Y cada segundo cada deck comprueba que
-// avanza (reconexión) y que no acumula retraso (salto al directo).
+// Si el reloj del contexto de Web Audio se queda parado con algo sonando, la salida está colgada: se reinicia y, si sigue igual, se recrea el audio.
+// Lo mismo si el contexto deja de estar en marcha (suspendido o interrumpido) con una emisora sonando por él: sin esto, la notificación diría que
+// suena y no se oiría nada. Y cada segundo cada deck comprueba que avanza (reconexión) y que no acumula retraso (salto al directo).
 
 let lastClock = 0, stuck = 0, lastRestart = 0;
+let badCtx = 0;        // segundos seguidos con el contexto parado y una emisora sonando por él
+let restarts = 0;      // reinicios de la salida sin que el reloj haya vuelto a avanzar
+let rebuilt = false;   // ya se ha recreado el audio en este atasco: no se repite hasta que vuelva a funcionar
+
+const waPlaying = () => { for (const d of decks) if (d.wa && d.isPlaying()) return true; return false; };
+
+// Último recurso: contexto nuevo y las emisoras conectadas otra vez a él (un <audio> no puede cambiar de contexto: estrenan uno). Grabando no se hace
+function rebuildAudio(why) {
+  if (rebuilt || S.recording) return;
+  rebuilt = true;
+  log(why + ': se recrea el audio del navegador');
+  initAudioGraph(true);
+  for (const d of [...decks]) {
+    if (d.state === 'closed' || d.state === 'failed') continue;
+    d.build();
+    if (!d.held) d.start();
+  }
+}
 
 async function restartOutput(why) {
   if (!S.audioCtx || Date.now() - lastRestart < 10000) return;
   lastRestart = Date.now();
   log(why + ': se reinicia la salida de audio');
   try {
-    await S.audioCtx.suspend();
-    await S.audioCtx.resume();
-    log('Salida de audio reiniciada (' + S.audioCtx.state + ')');
+    restarts++;
+    const ctx = S.audioCtx;
+    await ctx.suspend();
+    await ctx.resume();
+    log('Salida de audio reiniciada (' + ctx.state + ')');   // si no queda en marcha, el vigilante sigue con ella
   } catch (err) {
     log('No se pudo reiniciar la salida de audio: ' + ((err && err.message) || err));
   }
@@ -477,8 +499,15 @@ function recoverAllIfStalled(reason) {
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) return;
   if (S.audioCtx && S.audioCtx.state !== 'running') S.audioCtx.resume().catch(() => {});
+  wakeAnchor();
   for (const d of decks) if (d.interrupted) d.resumeInterrupted();
   recoverAllIfStalled('página de nuevo en primer plano');
+});
+// El navegador congeló la página en segundo plano y la despierta (puede seguir oculta): los temporizadores han estado parados
+document.addEventListener('resume', () => {
+  log('Página descongelada');
+  if (S.audioCtx && S.audioCtx.state !== 'running') S.audioCtx.resume().catch(() => {});
+  recoverAllIfStalled('página descongelada');
 });
 // "online" solo dice que hay red, no que haya internet: adelanta el reintento, pero no sustituye a los periódicos. Con "offline" no hay que hacer nada: retrySoon ya no gasta intentos sin red
 window.addEventListener('online', () => recoverAllIfStalled('vuelve la red'));
@@ -487,9 +516,24 @@ window.addEventListener('pageshow', e => { if (e.persisted) recoverAllIfStalled(
 
 setInterval(() => {
   for (const d of decks) d.watch();
-  if (!S.audioCtx || !anyPlaying() || S.audioCtx.state !== 'running') { stuck = 0; return; }
+  if (!S.audioCtx || !anyPlaying()) { stuck = badCtx = 0; return; }
+  if (S.audioCtx.state !== 'running') {
+    stuck = 0;
+    if (!waPlaying()) { badCtx = 0; return; }   // las emisoras en modo degradado no pasan por el contexto
+    badCtx++;
+    if (badCtx === 1) log('El audio del navegador está parado (' + S.audioCtx.state + ') con una emisora sonando: se intenta reanudar');
+    if (badCtx % 3 === 1) S.audioCtx.resume().catch(() => {});
+    if (badCtx === 10) rebuildAudio('El audio del navegador no se reanuda');
+    return;
+  }
+  if (badCtx) { badCtx = 0; log('Audio del navegador en marcha de nuevo'); }
   const t = S.audioCtx.currentTime;
   stuck = t - lastClock < 0.05 ? stuck + 1 : 0;
   lastClock = t;
-  if (stuck >= 2) { stuck = 0; restartOutput('El reloj del audio está parado'); }
+  if (!stuck) { restarts = 0; rebuilt = false; }
+  if (stuck >= 2) {
+    stuck = 0;
+    if (restarts >= 1 && Date.now() - lastRestart >= 10000) rebuildAudio('El reloj del audio sigue parado');
+    else restartOutput('El reloj del audio está parado');
+  }
 }, 1000);

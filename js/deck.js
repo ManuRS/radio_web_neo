@@ -354,6 +354,8 @@ export class Deck {
   // Vigilante (una vez por segundo): si el reloj del audio no avanza, se reconecta; si hay demasiado búfer acumulado, se salta al directo
   watch() {
     if (this.state !== 'playing' || this.held || !this.el || this.el.paused) { this.stuckS = 0; return; }
+    // con el audio del navegador parado (suspendido o interrumpido) la emisora no avanza, pero no es culpa suya: reconectarla no arregla nada (lo vigila audio.js)
+    if (this.wa && S.audioCtx && S.audioCtx.state !== 'running') { this.stuckS = 0; return; }
     const t = this.el.currentTime;
     this.stuckS = t - this.lastTime < 0.05 ? this.stuckS + 1 : 0;
     this.lastTime = t;
