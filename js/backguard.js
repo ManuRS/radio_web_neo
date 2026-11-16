@@ -5,7 +5,7 @@
 // En pantallas táctiles con CloseWatcher (Chrome, como en Radio Web Fast) el navegador avisa del gesto atrás sin tocar el historial: así Android no
 // anima la "vista previa" de la página anterior (que aquí sería la propia app). Sin CloseWatcher, o en PC (botón atrás del ratón, Alt+←), se añade una
 // entrada propia al historial al empezar a sonar y se pregunta al volver de ella.
-// Cancelar (o la ✕, o Escape, o otro gesto atrás con la ventana abierta) sigue en la página; "Sí, cerrar" sigue hacia atrás y, si no hay página anterior, intenta cerrar la ventana.
+// Con la ventana abierta, atrás la cierra (como Cancelar): solo el botón "Sí, cerrar" saca de la página; "Sí, cerrar" sigue hacia atrás y, si no hay página anterior, intenta cerrar la ventana.
 // Sin la radio puesta, el atrás sigue su camino sin preguntar.
 // "Sí, cerrar" detiene la radio (si graba, antes pregunta) y sigue hacia atrás; si la página sigue ahí (una app instalada no se puede cerrar desde la web), avisa de que ya se puede salir.
 // Al cerrar o recargar la pestaña con la radio puesta, el navegador pregunta con su propio aviso (la web no puede poner el suyo).
@@ -21,7 +21,7 @@ document.getElementById('exitNote').textContent = MOBILE
   : 'No cierres la pestaña para seguir escuchando la radio';
 
 const playing = () => !stop.disabled;   // hay una sesión de escucha (el botón Detener se puede pulsar)
-let guarded = false, leaving = false, watcher = null;
+let guarded = false, leaving = false, watcher = null, dlgWatcher = null;
 const useWatcher = MOBILE && 'CloseWatcher' in window;
 
 // Con CloseWatcher: un vigilante nuevo por cada pregunta (Chrome solo deja cancelar el mismo un par de veces). Con la radio parada se quita
@@ -35,10 +35,19 @@ function armWatcher() {
     e.preventDefault();
     w.destroy();
     watcher = null;
-    if (playing()) openDialog(dlg);
+    if (playing()) showExit();
   });
   w.addEventListener('close', () => { watcher = null; if (!leaving) history.back(); });
 }
+// Abre la ventana; con CloseWatcher, tiene su propio vigilante (no se confía en el de la ventana, que no se crea bien si se abre desde un gesto atrás): atrás la cierra
+function showExit() {
+  openDialog(dlg);
+  if (!useWatcher || dlgWatcher) return;
+  const d = new CloseWatcher();
+  dlgWatcher = d;
+  d.addEventListener('close', () => { dlgWatcher = null; cancel(); });
+}
+dlg.addEventListener('close', () => { if (dlgWatcher) { dlgWatcher.destroy(); dlgWatcher = null; } });
 function disarmWatcher() {
   if (!watcher) return;
   watcher.destroy();
@@ -60,8 +69,9 @@ window.addEventListener('popstate', e => {
   if (!guarded) return;
   guarded = false;
   if (leaving) return;
-  if (playing()) openDialog(dlg);
-  else history.back();   // sin radio: el atrás que se pulsó sigue hasta la página anterior
+  if (!playing()) { history.back(); return; }   // sin radio: el atrás que se pulsó sigue hasta la página anterior
+  if (dlg.open) closeDialog(dlg); else showExit();
+  arm();   // siempre queda una entrada propia detrás: con la ventana abierta, atrás la cierra y no saca de la página
 });
 
 function cancel() {
@@ -70,14 +80,14 @@ function cancel() {
 }
 document.getElementById('exitCancel').addEventListener('click', cancel);
 document.getElementById('exitClose').addEventListener('click', cancel);
-dlg.addEventListener('cancel', e => { e.preventDefault(); cancel(); });   // Escape
+dlg.addEventListener('cancel', e => { e.preventDefault(); cancel(); });   // Escape (o atrás, si la ventana tiene su vigilante propio)
 document.getElementById('exitGo').addEventListener('click', async () => {
   if (leaving) return;
   leaving = true;
   closeDialog(dlg);
   await requestStop();   // para la radio; si graba, pregunta antes y, si se cancela, la radio sigue
   if (playing()) { leaving = false; arm(); return; }
-  history.back();
+  history.go(guarded ? -2 : -1);   // con entrada propia (sin CloseWatcher) hay que saltar también esa
   // si no había página anterior, la ventana no se va: se intenta cerrar (el navegador solo lo permite si la abrió la propia web) y, si sigue ahí, se avisa
   setTimeout(() => {
     window.close();
