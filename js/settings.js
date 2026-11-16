@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, bgRow, bgSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgRow, bgSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { glowOn, setGlow } from './glow.js';
 import { prefetchSounds } from './sounds.js';

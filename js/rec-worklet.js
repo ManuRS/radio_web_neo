@@ -48,4 +48,4 @@ class RecTap extends AudioWorkletProcessor {
   }
 }
 
-registerProcessor('rn-rec-tap', RecTap);
+registerProcessor('rec-tap', RecTap);

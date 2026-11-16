@@ -22,7 +22,6 @@ import { closeDeck, endNewsWhileHeld, getMain, getNewsDeck, openDeck, play, setN
 // ==============================================
 
 let NEWS_SLOTS = [];
-let newsWarned = false;   // ya se avisó en el registro de que no se puede entrar en noticias ahora
 
 export function rebuildSlots() {
   const list = S.news.map(n => ({ ...n, s: toSeconds(n.start), e: toSeconds(n.end) }))
@@ -187,7 +186,6 @@ function newsTick(nowMs) {
       } else if (blocksNews(music)) {
         // el interruptor sigue puesto: solo se deja pasar esta emisión
         S.skippedSlot = idx;
-        newsWarned = false;
         log('Modo boletines: no se entra en las noticias de las ' + NEWS_SLOTS[idx].start + ', la cadena actual (' + music.name + ') no es musical');
       } else {
         const plan = slotPlan.get(idx);             // sonido sorteado poco antes
@@ -197,7 +195,6 @@ function newsTick(nowMs) {
         S.prevVariant = music ? S.variant : 0;
         S.newsOn = true;
         S.newsSlot = { idx, startAbs: arrive, endAbs: st.endAbs + D };
-        newsWarned = false;
         log('Modo boletines: noticias a las ' + NEWS_SLOTS[idx].start + ' (en el stream, ' + madridClock(arrive) + '). Empieza la transición');
         switchStation({ station: S.newsStation, variant: 0 }, {
           label: 'Modo boletines',
@@ -212,8 +209,6 @@ function newsTick(nowMs) {
           onAbort: endNewsState,
         });
       }
-    } else {
-      newsWarned = false;
     }
   } else if (S.newsOn && (!S.newsMode || !S.newsSlot || nowMs >= S.newsSlot.endAbs)) {
     // Terminan las noticias (o se apaga el modo): volver a la emisora anterior

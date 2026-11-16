@@ -11,7 +11,7 @@ importScripts('../vendor/wasm-media-encoder.min.js');
 const VBR_QUALITY = 4;   // LAME -V4: suficiente para streams de radio (no traen más calidad); el bitrate sube y baja según lo que suena
 const MARK_EVERY = 64;   // cada cuántas tramas se apunta su posición en bytes (para el índice de la cabecera)
 const MAX_MARKS = 2048;  // al llegar aquí se quita una de cada dos y se apuntan la mitad de veces: el índice no crece sin fin en grabaciones largas
-const DB_NAME = 'rn_rec';
+const DB_NAME = self.name;   // la base de datos de cada app: la pone recorder.js al crear el worker
 
 let enc = null, db = null, meta = null;
 let pend = [], pendSamples = 0, carry = new Uint8Array(0), ending = false, failed = false;

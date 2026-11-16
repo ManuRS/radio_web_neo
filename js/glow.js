@@ -5,12 +5,13 @@
 // Son las barras del ecualizador (viz.levels) en el color de énfasis, dibujadas en un lienzo pequeño que el CSS estira y difumina mucho
 // (#bgGlow en styles.css), así que no se distinguen las barras. Se suavizan en el tiempo y entre vecinas para que no haya cortes bruscos.
 
+import { APP_ID } from './state.js';
 import { viz } from './audio.js';
 import { desk } from './dom.js';
 
 const canvas = document.getElementById('bgGlow');
 const ctx = canvas.getContext('2d');
-const KEY = 'rn_bgglow';   // '0' = apagada; cualquier otra cosa (o nada) = encendida
+const KEY = APP_ID + '_bgglow';   // '0' = apagada; cualquier otra cosa (o nada) = encendida
 const W = 144, H = 72;     // tamaño real del lienzo (se estira a toda la pantalla)
 const RISE = 0.22, FALL = 0.05;   // lo que se acerca cada fotograma al nivel nuevo al subir y al bajar
 const IDLE_MS = 400;       // sin sonido, cada cuánto se mira si vuelve

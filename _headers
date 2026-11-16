@@ -2,6 +2,8 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
 
 # el service worker debe revisarse siempre para que las actualizaciones lleguen
 /sw.js

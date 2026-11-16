@@ -7,7 +7,7 @@
 
 import { S } from './state.js';
 import { DEFAULT_EQ, EQ_GAIN_MAX, EQ_GAIN_MIN, editSettings } from './settings.js';
-import { currentEqMode, refreshEq, resetEq, setEqMode } from './audio.js';
+import { currentEqMode, refreshEq, setEqMode } from './audio.js';
 import { paintRange } from './ui.js';
 
 const panel = document.getElementById('tabEq');

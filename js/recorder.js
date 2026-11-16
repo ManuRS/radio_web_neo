@@ -1,21 +1,23 @@
 // ===============
 // == GRABACIÓN ==
 // ===============
+// [NEO>
 // Botón de grabar del panel de la emisora. Se graba lo que sale del ecualizador (normalizado y ecualizado, sin el volumen), así que la grabación
 // sigue sin cortes aunque se cambie de emisora o entren los boletines: todo pasa por ese punto (ver audio.js).
+// <NEO]
 // El audio va a un worklet (rec-worklet.js) → worker (rec-worker.js) que lo pasa a MP3 de bitrate variable y lo guarda por trozos de un segundo
 // en IndexedDB. Al parar se juntan los trozos con la cabecera del MP3 (duración e índice para saltar) y se descarga como
 // aaaa-mm-dd_hh-mm-ss_record.mp3. Si la página se cierra o se cuelga a mitad, al volver a abrirla se ofrece descargar lo grabado.
 // Solo con la salida Web Audio: con la nativa no hay de dónde sacar el audio y el botón no se muestra.
-// Las emisoras en modo degradado (sin CORS) no se pueden grabar: mientras se graba no se pueden poner (ver stations.js).
+// Las emisoras en modo degradado (sin CORS) no se pueden grabar: mientras se graba no se pueden poner (ver stations.js).   // [NEO]
 
-import { S, clockNow } from './state.js';
+import { S, APP_ID, clockNow } from './state.js';
 import { getOutMode, getRecTap } from './audio.js';
 import { log, openDialog, closeDialog, toast } from './ui.js';
-import { getMain, stopAll } from './player.js';
+import { getMain, stopAll } from './player.js';   // [NEO]
 
-const DB_NAME = 'rn_rec';
-const LOCK_PREFIX = 'rn-rec-';        // mientras se graba, la pestaña tiene este candado: otra pestaña no la confunde con una grabación abandonada
+const DB_NAME = APP_ID + '_rec';
+const LOCK_PREFIX = APP_ID + '-rec-'; // mientras se graba, la pestaña tiene este candado: otra pestaña no la confunde con una grabación abandonada
 const IDLE_STOP_MS = 5 * 60000;       // grabando sin nada sonando (la radio se paró sola): pasado este tiempo, la grabación se cierra y se descarga
 const STALE_MS = 15000;               // sin candados en el navegador: una grabación sin trozos nuevos desde hace esto se da por abandonada
 
@@ -30,7 +32,7 @@ const askNo = document.getElementById('askNo');
 const supported = typeof AudioWorkletNode !== 'undefined' && typeof Worker !== 'undefined' && typeof indexedDB !== 'undefined';
 
 let rec = null;   // grabación en curso: { id, name, start, t0, paused, pauseAt, idleSince, worker, node, sink, unlock, stopping }
-let timer = 0;
+let timer = 0;   // [NEO]
 
 // ==================
 // == INDEXEDDB ==
@@ -160,9 +162,9 @@ async function start() {
     if (navigator.locks) {
       await new Promise(got => navigator.locks.request(LOCK_PREFIX + id, () => { got(); return new Promise(rel => { r.unlock = rel; }); }));
     }
-    if (!ac.__rnRec) { await ac.audioWorklet.addModule(new URL('./rec-worklet.js', import.meta.url)); ac.__rnRec = true; }
+    if (!ac.__rnRec) { await ac.audioWorklet.addModule(new URL('js/rec-worklet.js', document.baseURI)); ac.__rnRec = true; }
     if (rec !== r) return;
-    const worker = r.worker = new Worker(new URL('./rec-worker.js', import.meta.url));
+    const worker = r.worker = new Worker(new URL('js/rec-worker.js', document.baseURI), { name: DB_NAME });
     const ch = new MessageChannel();
     const ready = new Promise((res, rej) => {
       worker.onmessage = e => {
@@ -177,7 +179,7 @@ async function start() {
     await ready;
     if (rec !== r) return;
     // el worklet tiene que estar enganchado a la salida para que el navegador lo haga funcionar: va a ella con volumen 0
-    const node = r.node = new AudioWorkletNode(ac, 'rn-rec-tap', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit' });
+    const node = r.node = new AudioWorkletNode(ac, 'rec-tap', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [2], channelCount: 2, channelCountMode: 'explicit' });
     const sink = r.sink = ac.createGain();
     sink.gain.value = 0;
     node.port.postMessage({ port: ch.port1 }, [ch.port1]);
@@ -186,7 +188,7 @@ async function start() {
     sink.connect(ac.destination);
     r.t0 = ac.currentTime;   // el contador va con el reloj del audio: si el sistema lo suspende (una llamada), no cuenta lo que no se graba
     log('Grabando: ' + r.name + '.mp3');
-    timer = setInterval(refreshRecBtn, 500);
+    timer = setInterval(refreshRecBtn, 500);   // [NEO]
     refreshRecBtn();
   } catch (err) {
     log('No se pudo empezar a grabar: ' + err.message);
@@ -204,10 +206,12 @@ function cleanup(r) {
   if (rec === r) {
     rec = null;
     S.recording = false;
+    // [NEO>
     clearInterval(timer);
     timer = 0;
+    // <NEO]
     refreshRecBtn();
-    import('./stations.js').then(m => m.refreshStations()).catch(() => {});   // las emisoras vetadas vuelven a poder ponerse
+    import('./stations.js').then(m => m.refreshStations()).catch(() => {});   // las emisoras vetadas vuelven a poder ponerse   // [NEO]
   }
 }
 
@@ -245,13 +249,15 @@ export function stopRecording() {
 // ==========================
 // == PAUSA Y RADIO PARADA ==
 // ==========================
-// Con la radio en pausa, o parada sin haber parado la grabación (el navegador bloqueó el audio, la emisora no conecta…), no se graba el silencio:
+// Con la radio en pausa, o parada sin haber parado la grabación (el navegador bloqueó el audio, la emisora no conecta…), no se graba el silencio:   // [NEO]
 // la grabación espera y sigue cuando vuelve a sonar. La pausa puede durar lo que sea; parada, a los 5 minutos se cierra y se descarga sola.
 function checkPause(r) {
   if (!r.node || r.stopping || !S.audioCtx) return;
+  // [NEO>
   const main = getMain();
   const idle = !S.held && (S.session === 'off' || !main || main.state === 'failed');
   const paused = S.held || idle;
+  // <NEO]
   if (paused !== !!r.paused) {
     r.paused = paused;
     r.node.port.postMessage({ pause: paused });
@@ -270,7 +276,7 @@ function checkPause(r) {
 // ==================
 // == BOTÓN ==
 // ==================
-// Solo se puede empezar con una emisora sonando de verdad (y que no vaya en modo degradado)
+// Solo se puede empezar con una emisora sonando de verdad (y que no vaya en modo degradado)   // [NEO]
 export function refreshRecBtn() {
   if (!recBtn) return;
   const show = supported && getOutMode() !== 'nativa';
@@ -280,12 +286,14 @@ export function refreshRecBtn() {
   const on = !!rec;
   recBtn.classList.toggle('on', on);
   recBtn.classList.toggle('paused', on && !!rec.paused);
+  // [NEO>
   const main = getMain();
   const canStart = !!S.audioCtx && !!main && main.state === 'playing' && !S.degraded && S.session !== 'off' && !S.held;
+  // <NEO]
   recBtn.disabled = on ? !!rec.stopping || !rec.node : !canStart;   // arrancando, apagado: un segundo toque no la para nada más empezar
-  const label = on ? 'Parar la grabación' : S.degraded && main ? 'Esta emisora no se puede grabar' : 'Grabar';
+  const label = on ? 'Parar la grabación' : S.degraded && main ? 'Esta emisora no se puede grabar' : 'Grabar';   // [NEO]
   if (recBtn.title !== label) { recBtn.title = label; recBtn.setAttribute('aria-label', label); }
-  const t = on ? fmtDur(rec.node && S.audioCtx ? (rec.paused ? rec.pauseAt : S.audioCtx.currentTime) - rec.t0 : 0) : '';
+  const t = on ? fmtDur(rec.node && S.audioCtx ? (rec.paused ? rec.pauseAt : S.audioCtx.currentTime) - rec.t0 : 0) : '';   // [NEO]
   if (recTime.textContent !== t) recTime.textContent = t;
 }
 
@@ -313,14 +321,14 @@ function ask(title, text, yes, no) {
 // Detener (botón, pantalla completa, notificación): con una grabación en curso se pregunta antes
 let asking = false;
 export async function requestStop() {
-  if (!rec) { stopAll(); return; }
+  if (!rec) { stopAll(); return; }   // [NEO]
   if (asking) return;
   asking = true;
   const ok = await ask('Grabación en curso', 'Si detienes la radio, la grabación se parará y se descargará.', 'Parar la grabación', 'Cancelar');
   asking = false;
   if (!ok) return;
   await stopRecording();
-  stopAll();
+  stopAll();   // [NEO]
 }
 
 // Cerrar o recargar la página grabando: el navegador pregunta (si se cierra igualmente, lo grabado se recupera al volver)

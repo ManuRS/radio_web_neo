@@ -8,15 +8,19 @@ export const stop = document.getElementById('stop');
 export const statusBox = document.getElementById('statusBox');
 export const playBtn = document.getElementById('playBtn');
 export const settingsBtn = document.getElementById('settingsBtn');
+// [NEO>
 export const infoBtn = document.getElementById('infoBtn');
 export const introDlg = document.getElementById('intro');
+// <NEO]
 export const dot = document.getElementById('dot');
 export const logBox = document.getElementById('log');
 export const volume = document.getElementById('volume');
 export const volValue = document.getElementById('volValue');
 export const psValue = document.getElementById('psValue');
+// [NEO>
 export const psText = document.getElementById('psText');   // texto del nombre (dentro de psValue, para poder desplazarlo si no cabe)
 export const presetsBox = document.getElementById('presets');   // contenedor de los grupos de emisoras
+// <NEO]
 export const newsBox = document.getElementById('news');
 export const copyBtn = document.getElementById('copyLog');
 export const vizCanvas = document.getElementById('vizCanvas');
@@ -31,10 +35,10 @@ export const presPip = document.getElementById('presPip');
 export const presEl = document.getElementById('pres');
 export const presCanvas = document.getElementById('presCanvas');
 export const presPs = document.getElementById('presPs');
-export const presPsText = document.getElementById('presPsText');
+export const presPsText = document.getElementById('presPsText');   // [NEO]
 export const presQual = document.getElementById('presQual');
 export const presClock = document.getElementById('presClock');
-export const presSpin = document.getElementById('presSpin');   // Radial: activa o para el giro de las barras
+export const presSpin = document.getElementById('presSpin');   // Radial: activa o para el giro de las barras   // [NEO]
 export const presCtl = document.getElementById('presCtl');
 export const presPlay = document.getElementById('presPlay');
 export const presNews = document.getElementById('presNews');
@@ -53,14 +57,16 @@ export const newsVolValue = document.getElementById('newsVolValue');
 export const settingsDlg = document.getElementById('settings');
 export const delayInput = document.getElementById('delayInput');
 export const autoDelay = document.getElementById('autoDelay');
-export const streamDelayInput = document.getElementById('streamDelayInput');
+export const streamDelayInput = document.getElementById('streamDelayInput');   // [NEO]
 export const outSelect = document.getElementById('outSelect');
 export const normSwitch = document.getElementById('normSwitch');
 export const customBtn = document.getElementById('customBtn');
 export const customInput = document.getElementById('customInput');
 export const colorSwitch = document.getElementById('colorSwitch');
+// [NEO>
 export const bgSwitch = document.getElementById('bgSwitch');
 export const bgRow = document.getElementById('bgRow');
+// <NEO]
 export const accentRow = document.getElementById('accentRow');
 export const accentSelect = document.getElementById('accentSelect');
 export const accentPick = document.getElementById('accentPick');
@@ -76,10 +82,12 @@ export const cfgExport = document.getElementById('cfgExport');
 export const cfgFile = document.getElementById('cfgFile');
 export const cfgClearSounds = document.getElementById('cfgClearSounds');
 export const cfgClear = document.getElementById('cfgClear');
+// [NEO>
 export const stForm = document.getElementById('stForm');
 export const stMsg = document.getElementById('stMsg');
 export const stAdd = document.getElementById('stAdd');
 export const toastEl = document.getElementById('toast');
+// <NEO]
 
 // Pantallas grandes (PC): dos paneles, la cabecera fija y la luz de fondo. Misma condición que en styles.css
 export const DESK_MQ = '(min-width: 1024px) and (min-height: 600px)';

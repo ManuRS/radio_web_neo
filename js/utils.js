@@ -30,6 +30,36 @@ export const parseNumber = v => {
   return isFinite(n) ? n : null;
 };
 
+// Frecuencia para mostrar: un decimal (100.5, 89.0) o dos si hace falta (98.45). Solo lo usa Proxy
+export const fmtFreq = f => (Math.abs(f * 10 - Math.round(f * 10)) < 1e-6 ? f.toFixed(1) : f.toFixed(2));
+
+// (Solo lo usa Proxy) Primer fotograma MPEG de audio (MP3) que se pueda confirmar en los bytes b: { layer, kbps, rate, ch }, con ch 0 estéreo, 1 joint stereo,
+// 2 doble canal y 3 mono. Un fotograma solo vale si justo detrás empieza otro compatible. null si no lo hay o faltan bytes para confirmarlo
+const MPEG_KBPS = {
+  1: { 1: [0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448], 2: [0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384], 3: [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320] },
+  2: { 1: [0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256], 2: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160], 3: [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160] },
+};
+const MPEG_RATES = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };   // por versión: 3 = MPEG 1, 2 = MPEG 2, 0 = MPEG 2.5
+function mpegHeader(b, i) {
+  if (b[i] !== 0xFF || (b[i + 1] & 0xE0) !== 0xE0) return null;
+  const ver = (b[i + 1] >> 3) & 3, layer = 4 - ((b[i + 1] >> 1) & 3), kbpsIdx = b[i + 2] >> 4, rateIdx = (b[i + 2] >> 2) & 3;
+  if (ver === 1 || layer === 4 || kbpsIdx === 0 || kbpsIdx === 15 || rateIdx === 3) return null;
+  const kbps = MPEG_KBPS[ver === 3 ? 1 : 2][layer][kbpsIdx], rate = MPEG_RATES[ver][rateIdx], padding = (b[i + 2] >> 1) & 1;
+  const len = layer === 1 ? (Math.floor(12000 * kbps / rate) + padding) * 4 : Math.floor((layer === 3 && ver !== 3 ? 72000 : 144000) * kbps / rate) + padding;
+  return { layer, kbps, rate, ch: b[i + 3] >> 6, len, key: ver + '-' + layer + '-' + rateIdx };
+}
+export function mp3Info(b) {
+  for (let i = 0; i + 4 <= b.length; i++) {
+    const h = mpegHeader(b, i);
+    if (!h) continue;
+    const next = i + h.len;
+    if (next + 4 > b.length) return null;   // faltan bytes para comprobar el fotograma siguiente
+    const n = mpegHeader(b, next);
+    if (n && n.key === h.key) return { layer: h.layer, kbps: h.kbps, rate: h.rate, ch: h.ch };
+  }
+  return null;
+}
+
 // Elige un elemento de la lista con probabilidad proporcional a su "weight" (null si la lista está vacía)
 export function pickWeighted(list) {
   if (!list || !list.length) return null;
@@ -99,7 +129,7 @@ export function effectiveDuration(buf, silenceDb) {
   return d;
 }
 
-// Nombre de una emisora (cada URL de una cadena). Es genérico si no dice nada de la señal: vacío, el formato (MP3) o "Señal central" / "Señal web" / "Directo".
+// (Solo lo usa Neo) Nombre de una emisora (cada URL de una cadena). Es genérico si no dice nada de la señal: vacío, el formato (MP3) o "Señal central" / "Señal web" / "Directo".
 // En títulos se prefiere el nombre de la emisora que suena (Radio Madrid) al de la cadena (Cadena SER); si es genérico, o la cadena tiene una sola emisora, se usa el de la cadena.
 const GENERIC_LABEL = /^(se[ñn]al central|se[ñn]al web|directo|mp3|aac|hls|stream)$/i;
 const emisoraLabel = u => (u && u.label ? String(u.label).trim() : '');

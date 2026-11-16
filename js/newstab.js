@@ -1,10 +1,12 @@
 // ========================
 // == PESTAÑA BOLETINES ==
 // ========================
+// [NEO>
 // Elige quién da los boletines ("newsStation", solo generalistas con "newsSource": true) y sus franjas ("news").
 //  - Cadena SER (guiada), la primera: su horario ya hecho, una fila por boletín con su interruptor; donde hay dos duraciones se elige una.
+// <NEO]
 //    "Restablecer" vuelve a la selección de siempre.
-//  - Cadena SER (lista manual) y el resto: una lista de franjas (Inicio y Fin) escrita a mano; se añaden con "+" y se quitan con ✕ (si hay más de una).
+//  - Cadena SER (lista manual) y el resto: una lista de franjas (Inicio y Fin) escrita a mano; se añaden con "+" y se quitan con ✕ (si hay más de una).   // [NEO]
 // Lo de cada opción se guarda: al cambiar de opción, la lista de la que se deja va a "newsSaved" (por opción) y la de la nueva sale de ahí.
 // En los ajustes, la SER manual se distingue por "newsGuided": false. Se guarda al momento; las franjas que se pisan o se tocan se unen al sonar.
 
@@ -52,11 +54,13 @@ const SER_DEFAULT = [['07:59:55', '08:20:10'], ['08:59:55', '09:04:00'], ['09:59
   ['19:59:38', '20:25:10'], ['20:59:38', '21:04:00'], ['21:59:55', '22:04:00'], ['22:59:55', '23:04:00']].map(([start, end]) => ({ start, end }));
 const GUIDED = 'ser-guiada';   // la opción de la SER con su horario (las demás opciones son el id de la cadena)
 
-const isSer = st => !!st && (st.id === 'ser' || ['ser', 'cadenaser'].includes(soundKey(st.name)));
+const isSer = st => !!st && (st.id === 'ser' || ['ser', 'cadenaser'].includes(soundKey(st.name)));   // [NEO]
 const same = (a, b) => a.start === b.start && a.end === b.end;
 
+// [NEO>
 let station = null;   // cadena elegida (objeto de S.stations)
 let opt = '';         // opción elegida en el selector (GUIDED o el id de la cadena)
+// <NEO]
 let pick = [];        // con la SER: opción elegida de cada fila (-1 = apagada)
 let last = [];        // con la SER: última opción usada en cada fila (para volver a ella al encenderla)
 let rows = [];        // con otra cadena: [{ start, end }] (puede haber filas a medio escribir)
@@ -81,7 +85,7 @@ function serPick(news) {
 function save(news) {
   if (S.newsOn || S.trans) { report(['No se pueden cambiar los boletines durante un boletín o una transición'], true); return false; }
   const ok = editSettings(raw => {
-    raw.newsStation = station.id;
+    raw.newsStation = station.id;   // [NEO]
     raw.news = news.map(n => ({ start: n.start, end: n.end }));
   }, report);
   if (ok) clearMsg();
@@ -202,13 +206,17 @@ function renderOwn() {
 
 // Opciones del selector: la SER guiada primero, luego las generalistas que pueden dar boletines (la SER, como lista manual)
 function options() {
+  // [NEO>
   let srcs = S.stations.filter(x => x.group !== 'musical' && x.newsSource);
   if (!srcs.length) srcs = S.stations.filter(x => x.group !== 'musical');   // ajustes antiguos, sin marcar ninguna
+  // <NEO]
   if (station && !srcs.includes(station)) srcs = [station, ...srcs];        // la que está puesta, aunque no esté marcada
   const out = [];
   const ser = srcs.find(isSer);
+  // [NEO>
   if (ser) out.push({ key: GUIDED, st: ser, name: ser.name + ' (guiada)' });
   for (const x of srcs) out.push({ key: x.id, st: x, name: isSer(x) ? x.name + ' (lista manual)' : x.name });
+  // <NEO]
   return out;
 }
 function render() {
@@ -229,8 +237,10 @@ function rawConfig() { try { const r = parseJsonc(S.configText || ''); return r 
 // Estado de partida, desde los ajustes que hay ahora
 function load() {
   const raw = rawConfig();
+  // [NEO>
   station = S.newsStation || S.stations.find(isSer) || S.stations.find(x => x.group !== 'musical') || null;
   opt = isSer(station) && raw.newsGuided !== false ? GUIDED : station ? station.id : '';
+  // <NEO]
   const news = S.news || [];
   if (opt === GUIDED) {
     pick = serPick(news) || serPick(SER_DEFAULT);
@@ -253,7 +263,7 @@ sel.addEventListener('change', () => {
     delete saved[o.key];
     if (!Array.isArray(next)) next = o.key === GUIDED ? SER_DEFAULT : [];
     raw.news = next.map(n => ({ start: n.start, end: n.end }));
-    raw.newsStation = o.st.id;
+    raw.newsStation = o.st.id;   // [NEO]
     if (isSer(o.st) && o.key !== GUIDED) raw.newsGuided = false; else delete raw.newsGuided;
     if (Object.keys(saved).length) raw.newsSaved = saved; else delete raw.newsSaved;
   }, report);
@@ -274,4 +284,4 @@ addBtn.addEventListener('click', () => {
   if (ins.length) ins[ins.length - 2].focus();
 });
 
-panel.addEventListener('show', () => { clearMsg(); load(); render(); });
+panel.addEventListener('show', () => { clearMsg(); load(); render(); });   // [NEO]

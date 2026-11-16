@@ -2,10 +2,10 @@
 // == ANCLA ==
 // ===========
 // En Android, la notificación del reproductor y el permiso para seguir sonando con la pantalla apagada dependen de que haya un <audio> sonando.
-// Las emisoras cambian de <audio> al reconectar, al reanudar tras una pausa y al cambiar de emisora en pausa: en esos huecos no suena ninguno y
-// Chrome retira la notificación (y, sin ella, volver a sonar en segundo plano no es fiable). El ancla es un <audio> en silencio y en bucle que dura
-// toda la sesión de escucha: suena de Reproducir a Detener (y mientras se esperan las noticias), se pausa con la pausa de la notificación y solo se
-// vacía al detener. Solo en Android; en el resto no hace nada.
+// El audio de la radio se vacía o cambia de <audio> en varios momentos (al reconectar, al reanudar tras una pausa, al cambiar de emisora en pausa o
+// de servidor): en esos huecos no suena nada y Chrome retira la notificación (y, sin ella, volver a sonar en segundo plano no es fiable). El ancla
+// es un <audio> en silencio y en bucle que dura toda la sesión de escucha: suena de Reproducir a Detener, se pausa con la pausa de la notificación
+// y solo se vacía al detener. Cuándo se enciende lo decide cada app (Neo: player.js; Proxy: connection.js). Solo en Android; en el resto no hace nada.
 
 import { log } from './ui.js';
 

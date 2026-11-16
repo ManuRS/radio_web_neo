@@ -10,7 +10,7 @@ import { S } from './state.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { editHooks } from './stations.js';
 import { addChainFromForm, createChain, lastSettingsMsg } from './settings.js';
-import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optionName, optionSuffix, search } from './tdt.js';
+import { TDT_MAX_AGE_MS, dedupe, importFile, loadCatalog, loadLists, norm, optionName, search } from './tdt.js';
 
 const $ = id => document.getElementById(id);
 const panel = $('tdtPanel'), query = $('tdtQuery'), go = $('tdtGo');

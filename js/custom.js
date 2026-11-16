@@ -1,12 +1,13 @@
 // ===========================================
 // == SCRIPT DE PERSONALIZACIÓN (personalizar.js) ==
 // ===========================================
-// El usuario puede subir un JS (en Ajustes > General). Se guarda en la caché del navegador (solo en este navegador, nada va a la red) y,
+// El usuario puede subir un JS (en Ajustes > Configuración). Se guarda en la caché del navegador (solo en este navegador, nada va a la red) y,
 // en cada carga de la web, se ejecuta lo último de todo para que pueda tocar lo que quiera de la página. Subir un archivo vacío lo quita.
 
+import { APP_ID } from './state.js';
 import { log } from './ui.js';
 
-const CUSTOM_CACHE = 'rn-custom';
+const CUSTOM_CACHE = APP_ID + '-custom';
 const CUSTOM_KEY = 'personalizar.js';
 const MAX_BYTES = 1024 * 1024;
 

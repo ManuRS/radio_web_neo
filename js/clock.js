@@ -3,11 +3,11 @@
 // ==================
 // Retraso del reloj local (hora real = hora local + retraso): a mano o detectado solo comparando con una hora oficial.
 // Lo detectado solo corrige diferencias mayores de AUTO_DEAD_S; entre medias se queda en 0. Se aplica con decimales y se muestra con uno.
-// Aquí también el retraso de la señal de audio (S.defaultDelayS): el de los ajustes ("defaultDelayS") salvo que se cambie en General.
+// Aquí también el retraso de la señal de audio (S.defaultDelayS): el de los ajustes ("defaultDelayS") salvo que se cambie en General.   // [NEO]
 
 import { parseNumber } from './utils.js';
-import { S } from './state.js';
-import { autoDelay, delayInput, streamDelayInput } from './dom.js';
+import { S, APP_ID } from './state.js';
+import { autoDelay, delayInput, streamDelayInput } from './dom.js';   // [NEO]
 import { log } from './ui.js';
 
 const TIME_URL = 'https://time.now/developer/api/timezone/Europe/Madrid';
@@ -17,10 +17,10 @@ const RECHECK_MS = 20 * 60000;   // además de al cargar, se repite cada tanto (
 const RETRY_MS = 20000;       // tras un fallo se reintenta (hasta MAX_RETRIES veces)
 const MAX_RETRIES = 3;
 
-const KEY_MANUAL = 'rn_delay', KEY_AUTO_ON = 'rn_autodelay', KEY_AUTO_VAL = 'rn_autodelay_val';
+const KEY_MANUAL = APP_ID + '_delay', KEY_AUTO_ON = APP_ID + '_autodelay', KEY_AUTO_VAL = APP_ID + '_autodelay_val';
 const load = key => { try { return localStorage.getItem(key); } catch (_) { return null; } };
 const save = (key, value) => { try { localStorage.setItem(key, String(value)); } catch (_) {} };
-const drop = key => { try { localStorage.removeItem(key); } catch (_) {} };
+const drop = key => { try { localStorage.removeItem(key); } catch (_) {} };   // [NEO]
 
 let autoOn = load(KEY_AUTO_ON) !== '0';                 // por defecto, activada
 let manualSec = parseNumber(load(KEY_MANUAL)) || 0;     // retraso escrito a mano
@@ -30,9 +30,10 @@ let lastOk = 0, retries = 0, retryTimer = null, running = false;
 const apply = () => { S.clockDelayMs = (autoOn ? autoSec : manualSec) * 1000; };
 apply();
 
+// [NEO>
 // == RETRASO DE LA SEÑAL DE AUDIO ==
 // El de los ajustes vale mientras no se escriba otro en General; escribir el mismo o vaciar el campo vuelve a él
-const KEY_STREAM = 'rn_streamdelay', STREAM_MAX_S = 300;
+const KEY_STREAM = APP_ID + '_streamdelay', STREAM_MAX_S = 300;
 let streamSec = parseNumber(load(KEY_STREAM));          // el escrito en General (null = el de los ajustes)
 let cfgStreamSec = S.defaultDelayS;                      // "defaultDelayS" de los ajustes
 const applyStream = () => { S.defaultDelayS = streamSec !== null ? streamSec : cfgStreamSec; };
@@ -49,15 +50,19 @@ function setStreamDelay(sec) {
   applyStream();
 }
 
+// <NEO]
 // Campo e interruptor de la ventana de ajustes: con la autodetección activa el campo no se edita y muestra el valor aplicado
 export function refreshDelayUi() {
   autoDelay.checked = autoOn;
   delayInput.disabled = autoOn;
   const sec = autoOn ? autoSec : manualSec;
   delayInput.value = autoOn ? sec.toFixed(1) : sec !== 0 ? String(sec) : '';
+  // [NEO>
   streamDelayInput.placeholder = String(cfgStreamSec);
   streamDelayInput.value = String(S.defaultDelayS);
+  // <NEO]
 }
+// [NEO>
 
 streamDelayInput.addEventListener('input', () => {
   if (streamDelayInput.value.trim() === '') { setStreamDelay(null); return; }
@@ -67,6 +72,7 @@ streamDelayInput.addEventListener('input', () => {
 streamDelayInput.addEventListener('change', () => {   // al salir del campo se ve el valor que vale
   streamDelayInput.value = String(S.defaultDelayS);
 });
+// <NEO]
 
 export function setManualDelay(sec) {
   manualSec = sec;

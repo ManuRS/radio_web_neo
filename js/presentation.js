@@ -1,7 +1,7 @@
 // =======================
 // == MODO PRESENTACIÓN ==
 // =======================
-// Pantalla completa con un visualizador grande (botón en la esquina del visualizador de la página). Siete vistas, que se cambian tocando la pantalla
+// Pantalla completa con un visualizador grande (botón en la esquina del visualizador de la página). Siete vistas, que se cambian tocando la pantalla   // [NEO]
 // (o con las flechas y el espacio), en este orden:
 //   Espectro      barras grandes con reflejo, picos que caen, halo que late con los graves y partículas
 //   Radial        las barras en círculo alrededor de la emisora; un botón alterna el giro y el estéreo (Sin Giro, Sin Giro ST, Con Giro, Con Giro ST)
@@ -11,30 +11,36 @@
 //   Onda          cintas de malla de líneas finas que se retuercen y por las que viajan las frecuencias y los golpes
 //   Onda de seda  las reglas de la Seda con la estética de la Onda
 // Todas comparten una paleta de colores suaves que va cambiando de tono, más deprisa cuanto más rápido es el tempo. Lee los niveles del visualizador
+// [NEO>
 // de la página (viz.levels) y, en el Vórtice, la forma de onda del analizador; no toca el audio. Con el ratón arriba a la izquierda aparece el control
 // (reproducir, volúmenes y boletines) y abajo las emisoras; en pantallas táctiles, ambos al tocar. Son copias de los controles de la página, que se
+// <NEO]
 // mantienen al día con ellos.
 // Imagen en imagen: la vista elegida, en la ventana flotante del navegador (ver el apartado IMAGEN EN IMAGEN, al final).
 
-import { S } from './state.js';
+import { S, APP_ID } from './state.js';
 import {
   newsBox, newsToggle, newsVolume, newsVolValue, clockEl, presetsBox, stop, toggle, volume, volValue,
+  // [NEO>
   presCanvas, presClock, presSpin, presClose, presCtl, presEl, presMode, presNews, presNewsSw, presNewsVol, presNewsVolValue, presOpen, presExpand,
   presPlay, presPs, presPsText, presQual, presStrip, presVol, presVolValue, pipBtn, presPipBtn, presPipRow, presPip
+  // <NEO]
 } from './dom.js';
-import { paintRange, setText } from './ui.js';
+import { paintRange, setText } from './ui.js';   // [NEO]
 import { viz } from './audio.js';
+// [NEO>
 import { shownStation, shownVariant } from './stations.js';
 import { emisoraName } from './utils.js';
+// <NEO]
 import { mix, shade } from './viz.js';
 
-const MODE_KEY = 'rn_pres';
-const SPIN_KEY = 'rn_giro';   // Radial: '0' sin giro, '1' con giro; con una 's' detrás, en estéreo (ST)
+const MODE_KEY = APP_ID + '_pres';
+const SPIN_KEY = APP_ID + '_giro';   // Radial: '0' sin giro, '1' con giro; con una 's' detrás, en estéreo (ST)
 const MODES = ['Espectro', 'Radial', 'Océano', 'Vórtice', 'Seda', 'Onda', 'Onda de seda'];   // (las reglas CSS por vista usan este orden: Radial = 1, Océano = 2, Vórtice = 3)
 const [SPECTRUM, RADIAL, OCEAN, VORTEX, SILK_MODE, WAVE, SILK_WAVE] = MODES.map((_, i) => i);
 const IDLE_MS = 4000;       // sin tocar nada, se esconden el botón de salir, el puntero y (en pantallas táctiles) los paneles
 const TOP_ZONE = { w: 340, h: 230 };   // con el ratón en esta esquina (px) aparece el control
-const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras
+const BOTTOM_ZONE = 150;               // y con el ratón a esta distancia del borde inferior (px), las emisoras   // [NEO]
 const MAX_PIXELS = 2.6e6;   // tope de píxeles del canvas en pantallas grandes
 const PEAK_HOLD_S = 0.35;   // tiempo que se queda cada pico arriba antes de caer
 const N = viz.levels.length;
@@ -347,10 +353,11 @@ function drawVortex(w, h, dt, dpr) {
   const m = Math.min(w, h), cx = w / 2, cy = h / 2, an = viz.analyser, cw = ctx.canvas.width, ch = ctx.canvas.height;
   // forma de onda con ganancia automática (siempre llena el anillo, suene fuerte o flojo)
   let mx = 0;
-  if (an && !viz.synthetic) {
+  if (an && !viz.synthetic) {   // [NEO]
     if (wave.length !== an.fftSize) wave = new Float32Array(an.fftSize);
     an.getFloatTimeDomainData(wave);
     for (let i = 0; i < wave.length; i++) { const a = Math.abs(wave[i]); if (a > mx) mx = a; }
+  // [NEO>
   } else if (viz.synthetic) {
     // emisora sin Web Audio: no hay forma de onda real, se dibuja una a partir de los niveles sintéticos de las barras
     const lv = viz.levels, t = spin * 3;
@@ -360,6 +367,7 @@ function drawVortex(w, h, dt, dpr) {
       const a = Math.abs(v);
       if (a > mx) mx = a;
     }
+  // <NEO]
   } else wave.fill(0);
   env = Math.max(mx, env - dt * 0.25);
   wgain = follow(wgain, Math.min(8, 0.9 / Math.max(env, 0.04)), dt, 3);
@@ -902,7 +910,7 @@ function syncRange(copy, orig, label, origLabel) {
   setText(label, origLabel.textContent);
 }
 
-// Emisoras: una tarjeta por cada botón de la página (se actualizan en su sitio; se rehacen solo si cambia su número)
+// Emisoras: una tarjeta por cada botón de la página (se actualizan en su sitio; se rehacen solo si cambia su número)   // [NEO]
 let stripCenter = true;   // la activa se centra solo al abrir la presentación (y si se rehace la tira), nunca al elegir otra: la tira no salta
 function syncStrip() {
   const src = Array.from(presetsBox.querySelectorAll('.preset:not(.more)'));
@@ -931,6 +939,7 @@ function syncStrip() {
   }
 }
 
+// [NEO>
 // Nombre que no cabe (con nombres largos, en los modos que no son el Radial): va de un lado a otro, con una pausa en cada extremo. En el Radial se reparte en varias líneas
 let fitKey = '';
 const measure = document.createElement('canvas').getContext('2d');
@@ -989,12 +998,15 @@ function presName() {
   const st = shownStation();
   return st ? emisoraName(st, shownVariant(), true).replace(/\s+web$/i, '') || emisoraName(st, shownVariant(), true) : '—';
 }
+// <NEO]
 function info() {
+  // [NEO>
   const name = presName();
   setText(presPsText, mode === RADIAL || !fitsOneLine(name) ? twoLines(name) : name);
   presPs.classList.toggle('pending', S.pending);
   fitName();
   setText(presQual, S.current ? [S.quality, S.degraded ? 'sin EQ' : ''].filter(Boolean).join(' • ') : '');
+  // <NEO]
   setText(presClock, clockEl.textContent);
   const on = !stop.disabled;
   if (on !== playing) {
@@ -1019,7 +1031,7 @@ presPlay.addEventListener('click', () => (playing ? stop : toggle).click());
 window.addEventListener('pointerup', () => { dragging = null; });
 window.addEventListener('pointercancel', () => { dragging = null; });
 presNews.addEventListener('change', () => { newsToggle.checked = presNews.checked; newsToggle.dispatchEvent(new Event('change')); });
-// La tira de emisoras se mueve con la rueda (también con deltas en líneas, como en Firefox) y arrastrándola con el ratón; al soltarla sigue un poco
+// La tira de emisoras se mueve con la rueda (también con deltas en líneas, como en Firefox) y arrastrándola con el ratón; al soltarla sigue un poco   // [NEO]
 // con la velocidad que llevaba y frena poco a poco (inercia, como la que pone el navegador al deslizar con el dedo)
 presStrip.addEventListener('wheel', e => {
   stopGlide();
@@ -1061,7 +1073,7 @@ const endStripDrag = e => {
     glideV = t1 > t0 && e.timeStamp - t1 < 60 ? (x1 - x0) / (t1 - t0) * 1000 : 0;
     if (Math.abs(glideV) > 150) { glidePos = presStrip.scrollLeft; glideT = performance.now(); glide = requestAnimationFrame(glideStep); }
   }
-  if (stripDrag && stripDrag.moved) { stripDragged = true; setTimeout(() => { stripDragged = false; }, 60); }   // el clic que sigue a un arrastre no elige emisora
+  if (stripDrag && stripDrag.moved) { stripDragged = true; setTimeout(() => { stripDragged = false; }, 60); }   // el clic que sigue a un arrastre no elige emisora   // [NEO]
   stripDrag = null;
   presStrip.classList.remove('dragging');
 };
@@ -1186,7 +1198,7 @@ document.addEventListener('visibilitychange', () => { if (open && !document.hidd
 // y la ventana pone ella al día los niveles (viz.tick). Si la presentación está dibujando (lo ha hecho hace nada: en el PC, Chrome puede seguir dándole
 // fotogramas con la página oculta), la ventana copia su lienzo (recortado a su forma) en vez de dibujar otra vez: dibujando las dos, las vistas
 // avanzaban dos veces y el Vórtice, que se construye sobre el fotograma anterior, empezaba de cero en cada uno (sin estela, luz ni golpes).
-const PIP_KEY = 'rn_pip';                     // '0' = no se abre sola (el botón sigue funcionando)
+const PIP_KEY = APP_ID + '_pip';                   // '0' = no se abre sola (el botón sigue funcionando)
 const PIP_TEXTS = true;                       // nombre de la emisora (y en el Radial la hora) sobre el dibujo; false = solo el dibujo
 const PIP_START = 480;                        // alto (px) del primer fotograma, antes de que la ventana diga su tamaño
 const PIP_HIDDEN_FPS = 60;                    // con la página oculta (temporizador)
@@ -1228,12 +1240,14 @@ function pipTick() {
   if (PIP_TEXTS) pipTexts(cw, ch);
 }
 
+// [NEO>
 // Los textos de cada vista (en pantalla completa son de la página, no del dibujo): el nombre arriba (en el Océano, en su ventana de cristal);
 // en el Radial, el nombre y la hora en el centro; el Vórtice, sin textos
+// <NEO]
 function pipTexts(w, h) {
   if (mode === VORTEX) return;
   if (!pipFont) pipFont = getComputedStyle(document.body).fontFamily;
-  const c = pipCtx, name = presName();
+  const c = pipCtx, name = presName();   // [NEO]
   c.save();
   c.setTransform(1, 0, 0, 1, 0, 0);
   c.textAlign = 'center';
@@ -1242,19 +1256,23 @@ function pipTexts(w, h) {
   const fit = (text, px, max, weight) => { font(px, weight); const tw = c.measureText(text).width; if (tw > max) font(px * max / tw, weight); };   // reduce la letra si no cabe
   const glow = () => { c.shadowColor = rgba(palColor(), 0.55); c.shadowBlur = h * 0.03; };
   if (mode === RADIAL) {
+    // [NEO>
     const lines = twoLines(name).split('\n'), px = h * 0.056, lh = px * 1.15, clock = clockEl.textContent;
     const y0 = h / 2 - (lines.length * lh + px * 0.75) / 2 + lh / 2;
+    // <NEO]
     c.fillStyle = '#f1f5f9';
     glow();
-    lines.forEach((ln, i) => { fit(ln, px, h * 0.34, 750); c.fillText(ln, w / 2, y0 + i * lh); });
+    lines.forEach((ln, i) => { fit(ln, px, h * 0.34, 750); c.fillText(ln, w / 2, y0 + i * lh); });   // [NEO]
     c.shadowBlur = 0;
     c.fillStyle = '#cbd5e1';
+    // [NEO>
     font(px * 0.62, 600);
     c.fillText(clock, w / 2, y0 + lines.length * lh + px * 0.1);
+    // <NEO]
   } else if (mode === OCEAN) {
-    const px = h * 0.075;
+    const px = h * 0.075;   // [NEO]
     fit(name, px, w * 0.8, 750);
-    const tw = c.measureText(name).width, bw = tw + px * 1.6, bh = px * 1.6, x = (w - bw) / 2, y = h * 0.07;
+    const tw = c.measureText(name).width, bw = tw + px * 1.6, bh = px * 1.6, x = (w - bw) / 2, y = h * 0.07;   // [NEO]
     c.fillStyle = 'rgba(14, 18, 28, .5)';
     c.strokeStyle = 'rgba(255, 255, 255, .12)';
     c.lineWidth = 1;
@@ -1264,7 +1282,7 @@ function pipTexts(w, h) {
     c.stroke();
     c.fillStyle = '#f1f5f9';
     glow();
-    c.fillText(name, w / 2, y + bh / 2);
+    c.fillText(name, w / 2, y + bh / 2);   // [NEO]
   } else {
     c.fillStyle = '#f1f5f9';
     glow();
