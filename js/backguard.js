@@ -1,9 +1,11 @@
 // ==================================
 // == PROTECCIÓN DEL BOTÓN ATRÁS ==
 // ==================================
-// Con la radio en marcha, el botón (o el gesto) de atrás no saca de la aplicación sin preguntar: al empezar a sonar se añade una entrada propia
-// al historial (con el mismo documento) y, si se vuelve de ella con la radio puesta, sale la ventana "¿Seguro que quieres salir?".
-// Cancelar (o la ✕, o Escape) vuelve a poner la entrada; "Sí, cerrar" sigue hacia atrás y, si no hay página anterior, intenta cerrar la ventana.
+// Con la radio en marcha, el botón (o el gesto) de atrás no saca de la aplicación sin preguntar: sale la ventana "¿Seguro que quieres salir?".
+// En pantallas táctiles con CloseWatcher (Chrome, como en Radio Web Fast) el navegador avisa del gesto atrás sin tocar el historial: así Android no
+// anima la "vista previa" de la página anterior (que aquí sería la propia app). Sin CloseWatcher, o en PC (botón atrás del ratón, Alt+←), se añade una
+// entrada propia al historial al empezar a sonar y se pregunta al volver de ella.
+// Cancelar (o la ✕, o Escape, o otro gesto atrás con la ventana abierta) sigue en la página; "Sí, cerrar" sigue hacia atrás y, si no hay página anterior, intenta cerrar la ventana.
 // Sin la radio puesta, el atrás sigue su camino sin preguntar.
 // "Sí, cerrar" detiene la radio (si graba, antes pregunta) y sigue hacia atrás; si la página sigue ahí (una app instalada no se puede cerrar desde la web), avisa de que ya se puede salir.
 // Al cerrar o recargar la pestaña con la radio puesta, el navegador pregunta con su propio aviso (la web no puede poner el suyo).
@@ -19,15 +21,38 @@ document.getElementById('exitNote').textContent = MOBILE
   : 'No cierres la pestaña para seguir escuchando la radio';
 
 const playing = () => !stop.disabled;   // hay una sesión de escucha (el botón Detener se puede pulsar)
-let guarded = false, leaving = false;
+let guarded = false, leaving = false, watcher = null;
+const useWatcher = MOBILE && 'CloseWatcher' in window;
+
+// Con CloseWatcher: un vigilante nuevo por cada pregunta (Chrome solo deja cancelar el mismo un par de veces). Con la radio parada se quita
+function armWatcher() {
+  if (watcher || leaving || !playing() || dlg.open) return;
+  const w = new CloseWatcher();
+  watcher = w;
+  // Primer gesto atrás: abre la ventana. Chrome solo deja cancelarlo si se ha tocado la página desde el último; si no, salta a "close" para que nadie quede atrapado
+  w.addEventListener('cancel', e => {
+    if (!e.cancelable) return;
+    e.preventDefault();
+    w.destroy();
+    watcher = null;
+    if (playing()) openDialog(dlg);
+  });
+  w.addEventListener('close', () => { watcher = null; if (!leaving) history.back(); });
+}
+function disarmWatcher() {
+  if (!watcher) return;
+  watcher.destroy();
+  watcher = null;
+}
 
 // Añade la entrada propia (una sola vez); el navegador solo respeta las añadidas después de que se haya tocado la página, y para sonar ya se ha tocado
 function arm() {
+  if (useWatcher) { armWatcher(); return; }
   if (guarded || leaving) return;
   history.pushState({ backGuard: 1 }, '');
   guarded = true;
 }
-new MutationObserver(() => { if (playing()) arm(); }).observe(stop, { attributes: true, attributeFilter: ['disabled'] });
+new MutationObserver(() => { if (playing()) arm(); else disarmWatcher(); }).observe(stop, { attributes: true, attributeFilter: ['disabled'] });
 if (playing()) arm();
 
 window.addEventListener('popstate', e => {
