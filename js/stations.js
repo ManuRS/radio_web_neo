@@ -7,7 +7,7 @@
 import { S, endNewsState } from './state.js';
 import { emisoraName, emisoraSub } from './utils.js';
 import { presetsBox, psText, psValue } from './dom.js';
-import { applyAccent, paletteColor, setText } from './ui.js';
+import { applyAccent, desk, paletteColor, setText } from './ui.js';
 import { switchStation } from './transitions.js';
 import { play, stopAll, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
@@ -140,10 +140,10 @@ document.addEventListener('selectstart', e => { if ((pressing || tdrag) && !(e.t
 // El clic que puede llegar al soltar tras arrastrar no debe sintonizar la cadena que quede debajo
 presetsBox.addEventListener('click', e => { if (Date.now() < ignoreClickUntil) { e.preventDefault(); e.stopPropagation(); } }, true);
 
-// Zona que se desplaza con la rejilla: la columna interna (pantallas altas) o la página entera
+// Zona que se desplaza con la rejilla: el panel de presintonías (pantallas grandes), la columna interna (pantallas altas) o la página entera
 function scrollArea() {
-  const s = presetsBox.closest('.scroller');
-  if (s && s.scrollHeight > s.clientHeight + 1 && getComputedStyle(s).overflowY !== 'visible') {
+  const s = [presetsBox, presetsBox.closest('.scroller')].find(el => el && el.scrollHeight > el.clientHeight + 1 && getComputedStyle(el).overflowY !== 'visible');
+  if (s) {
     const r = s.getBoundingClientRect();
     return { top: Math.max(0, r.top), bottom: Math.min(window.innerHeight, r.bottom), by: dy => { s.scrollTop += dy; } };
   }
@@ -462,11 +462,12 @@ function barLabel(bar, open, hiddenN) {
   bar.setAttribute('aria-expanded', String(open));
   bar.firstChild.textContent = open ? 'Mostrar menos' : hiddenN ? 'Mostrar ' + hiddenN + ' más' : 'Mostrar más';
 }
-// De cada grupo se ven dos filas enteras de cadenas; si con el "+" no caben todas, la barra de debajo despliega el resto (y el "+", siempre el último)
+// De cada grupo se ven dos filas enteras de cadenas; si con el "+" no caben todas, la barra de debajo despliega el resto (y el "+", siempre el último).
+// En pantallas grandes, todo desplegado y sin barra (el panel se desplaza por dentro)
 function applyVisibility() {
   groups.forEach(g => {
     const capacity = columns(g.grid) * 2;
-    const fold = g.buttons.length + 1 > capacity;
+    const fold = !desk.matches && g.buttons.length + 1 > capacity;
     const open = fold && expandedGroups.has(g.id);
     g.buttons.forEach((b, i) => { b.hidden = fold && !open && i >= capacity; });
     g.more.hidden = fold && !open;
@@ -475,6 +476,7 @@ function applyVisibility() {
   });
 }
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(applyVisibility).observe(presetsBox);
+desk.addEventListener('change', applyVisibility);
 
 // ¿Esta emisora impide el modo boletines? (las generalistas, salvo las marcadas con news: true)
 export const blocksNews = st => !!st && st.group !== 'musical' && !st.news;

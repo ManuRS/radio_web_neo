@@ -580,3 +580,63 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 .ndel[hidden] { display: block; visibility: hidden; }
 .nadd { flex: none; padding: 10px; color: #cbd5e1; background: none; box-shadow: inset 0 0 0 1px #3a4554; }
 .nadd[hidden] { display: none; }
+
+/* ====================================================
+   == PANTALLAS GRANDES (PC): DOS PANELES Y LUZ DE FONDO ==
+   ==================================================== */
+/* Por debajo de este tamaño (móvil, tableta en vertical, ventanas bajas) los contenedores de los paneles no cuentan para la maqueta y todo queda
+   en una columna, como siempre. La misma condición está en ui.js (DESK_MQ) */
+.panes, .pane { display: contents; }
+.psize, #bgGlow { display: none; }
+/* Ajustes > General, "Color de fondo": fuera de las pantallas grandes, en gris y con la nota debajo */
+.bgonly { display: block; margin-top: 1px; font-size: .74rem; color: #6f7b8b; }
+#bgRow.off > label:first-child { color: #6f7b8b; }
+#bgRow .switch input:disabled + .track { background: #2a3039; }
+#bgRow .switch input:disabled + .track::after { background: #5c6877; }
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
+  :root { --hf: 150px; --dw: min(1160px, calc(100vw - 64px)); }
+  html.psmall { --dw: min(962px, calc(100vw - 64px)); }
+  html, body { background: #0c1015; }
+  main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
+  /* La página no se desplaza: solo el panel de presintonías. Si falta alto, primero se recorta el pie y, como último recurso, el panel 1 se desplaza por dentro */
+  .scroller { display: flex; flex-direction: column; overflow: hidden; margin-inline: -32px; padding-inline: 32px; padding-bottom: 16px; }   /* margen extra: sitio para la sombra de los paneles */
+  .scroller > * { flex: none; }
+  html.pane-anim main, html.pane-anim .hin { transition: width .35s ease; }   /* solo al cambiar de tamaño con el botón, no al cargar */
+
+  /* Cabecera fija (no se encoge con el scroll): título a la izquierda y, a la derecha, la píldora del reloj arriba y la barra de controles debajo */
+  .hin { display: grid; grid-template-columns: auto minmax(0, 1fr) 360px; grid-template-rows: auto auto; align-content: center; align-items: center; row-gap: 12px; width: var(--dw); height: var(--hf); padding: 0; }
+  .hrow { display: contents; }
+  .logo, .titles { grid-row: 1 / 3; }
+  .status { grid-column: 3; grid-row: 1; justify-self: end; margin: 0; }
+  .bar { grid-column: 3; grid-row: 2; margin: 0; }
+
+  /* Los dos paneles: fondo, marco y sombra; el 2 mide lo mismo de alto que el 1 y se desplaza por dentro */
+  .scroller > .panes { display: grid; flex: 0 1 auto; min-height: 0; grid-template-columns: 470px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 22px; margin-top: 26px; }
+  .pane { position: relative; display: block; box-sizing: border-box; padding: 20px; border: 1px solid #29323f; border-radius: 18px; background: #1a2029; box-shadow: 0 10px 28px rgba(0, 0, 0, .4); }
+  .pane1 { min-height: 0; overflow-y: auto; scrollbar-width: none; }
+  .pane1::-webkit-scrollbar { display: none; }
+  .pane1 > .now { margin-top: 0; }
+  .pane2 { height: 0; min-height: 100%; padding: 0; overflow: hidden; }
+  .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3a4554 transparent; }
+  .pane2 .presets::-webkit-scrollbar { width: 6px; }
+  .pane2 .presets::-webkit-scrollbar-thumb { background: #3a4554; border-radius: 3px; }
+  .pane2 .pgroup:first-child { margin-top: 0; }
+  .pane2 .pgroup + .pgroup { margin-top: 22px; }
+  .pane2 .pgrid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+  /* Botón de tamaño, arriba a la derecha del panel 2 (en la línea de "Generalistas"): con el ratón se aviva el icono, sin bloque de fondo */
+  .psize { position: absolute; top: 9px; right: 12px; z-index: 1; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border-radius: 8px; background: #1a2029; color: #9fabb9; -webkit-tap-highlight-color: transparent; }
+  .psize svg { display: block; }
+  .psize .pz-out, html.psmall .psize .pz-in { display: none; }
+  html.psmall .psize .pz-out { display: inline; }
+  @media (hover: hover) { .psize:hover { color: #fff; } }
+  .psize:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .scroller > .foot { flex: 0 100000 auto; min-height: 0; overflow: hidden; margin-top: 0; }
+  .scroller > .foot::before { content: ''; display: block; height: 34px; }   /* el hueco hasta los paneles va dentro del pie: si se recorta, se va con él */
+
+  /* Luz desde abajo: las barras del ecualizador en un lienzo pequeño, estirado y muy difuminado, detrás de todo (glow.js) */
+  #bgGlow { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; width: 100%; height: 62vh; pointer-events: none; filter: blur(34px); opacity: .55; }
+  #bgGlow[hidden] { display: none; }
+  .bgonly { display: none; }
+}

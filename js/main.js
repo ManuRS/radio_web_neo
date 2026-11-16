@@ -21,6 +21,7 @@ import './importer.js';
 import './intro.js';
 import './eqtab.js';
 import './newstab.js';
+import './glow.js';
 import { setFootPhrases } from './foot.js';
 
 // ===============================

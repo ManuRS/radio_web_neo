@@ -143,6 +143,32 @@ export function layoutCheck() {
 
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutCheck).observe(mainEl);
 
+// ==========================================
+// == PANTALLAS GRANDES (PC): DOS PANELES ==
+// ==========================================
+// Misma condición que en styles.css: por encima, dos paneles, la cabecera fija sin encogerse, las presintonías desplegadas y la luz de fondo
+export const DESK_MQ = '(min-width: 1024px) and (min-height: 600px)';
+export const desk = matchMedia(DESK_MQ);
+
+// Tamaño del panel de presintonías: grande (por defecto) o pequeño, igual que el panel 1. Se guarda en el navegador (rn_psmall)
+const PSMALL_KEY = 'rn_psmall';
+const paneSize = document.getElementById('paneSize');
+function setPaneSmall(small) {
+  document.documentElement.classList.toggle('psmall', small);
+  paneSize.title = small ? 'Ampliar panel' : 'Reducir panel';
+  paneSize.setAttribute('aria-label', (small ? 'Ampliar' : 'Reducir') + ' panel de presintonías');
+}
+try { setPaneSmall(localStorage.getItem(PSMALL_KEY) === '1'); } catch (_) { setPaneSmall(false); }
+let paneAnim = 0;
+paneSize.addEventListener('click', () => {
+  const small = !document.documentElement.classList.contains('psmall');
+  document.documentElement.classList.add('pane-anim');   // la transición del ancho, solo al pulsar (no al cargar)
+  clearTimeout(paneAnim);
+  paneAnim = setTimeout(() => document.documentElement.classList.remove('pane-anim'), 450);
+  setPaneSmall(small);
+  try { localStorage.setItem(PSMALL_KEY, small ? '1' : '0'); } catch (_) {}
+});
+
 // Zona de abajo con scroll propio (ver .scroller en styles.css): pasa por debajo de la cabecera, que va fija encima, y se corta en su línea
 const scroller = document.querySelector('.scroller');
 
@@ -155,6 +181,7 @@ let hdrP = -1;
 function hdrUpdate() {
   let p = Math.min(1, Math.max(0, Math.max(scroller.scrollTop, window.scrollY) / HDR_DIST));
   if (reduceMotion.matches) p = p > .5 ? 1 : 0;
+  if (desk.matches) p = 0;   // en pantallas grandes la cabecera no se encoge
   p = Math.round(p * 100) / 100;
   if (p === hdrP) return;
   hdrP = p;
@@ -163,6 +190,7 @@ function hdrUpdate() {
 }
 scroller.addEventListener('scroll', hdrUpdate, { passive: true });
 window.addEventListener('scroll', hdrUpdate, { passive: true });
+desk.addEventListener('change', hdrUpdate);
 
 window.addEventListener('resize', layoutCheck);
 

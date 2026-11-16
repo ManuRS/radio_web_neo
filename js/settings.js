@@ -8,8 +8,9 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
-import { closeDialog, log, openDialog, toast } from './ui.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, bgRow, bgSwitch, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { closeDialog, desk, log, openDialog, toast } from './ui.js';
+import { glowOn, setGlow } from './glow.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
 import { restartAudio } from './player.js';
@@ -400,6 +401,19 @@ colorSwitch.addEventListener('change', () => {
   log('Color personalizado por la cadena: ' + (S.stationColors ? 'activado' : 'desactivado'));
   syncAccentRow();
   refreshAccent();
+});
+
+// Color de fondo (activado por defecto): la luz desde abajo con el sonido (glow.js). Solo en pantallas grandes: en las demás, en gris y sin poder tocarse
+bgSwitch.checked = glowOn();
+function syncBgRow() {
+  bgSwitch.disabled = !desk.matches;
+  bgRow.classList.toggle('off', !desk.matches);
+}
+syncBgRow();
+desk.addEventListener('change', syncBgRow);
+bgSwitch.addEventListener('change', () => {
+  setGlow(bgSwitch.checked);
+  log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
 });
 
 // Color por defecto (Ajustes > General): Verde (el de styles.css), Azul o uno personalizado con el selector. Solo cuenta con
