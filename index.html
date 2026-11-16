@@ -487,6 +487,23 @@
   </dialog>
 
 
+  <!-- ================================================================ -->
+  <!-- == SALIR CON LA RADIO SONANDO (BOTÓN ATRÁS, VER backguard.js) == -->
+  <!-- ================================================================ -->
+  <dialog id="exitDlg" class="intro exit" aria-labelledby="exitTitle">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b id="exitTitle">¿Seguro que quieres salir?</b>
+        <button id="exitClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <p class="exit-note" id="exitNote"></p>
+      <div class="dlg-actions">
+        <button id="exitCancel" type="button" autofocus>Cancelar</button>
+        <button id="exitGo" type="button" class="primary">Sí, cerrar</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- ===================================================== -->
   <!-- == PREGUNTA (GRABACIÓN EN CURSO, GRABACIÓN SIN TERMINAR) == -->
   <!-- ===================================================== -->

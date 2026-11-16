@@ -4,11 +4,11 @@
 // Excepción: stations.json (los ajustes por defecto, con las URL de los streams, que cambian con el tiempo) y los archivos de bbdd/ (la base de datos de emisoras, para la búsqueda) van "red primero", con la caché de respaldo.
 // Los sonidos y la imagen de la notificación (sounds/, img/) NO se gestionan aquí: la propia página los guarda en la caché "rn-sounds", que este archivo respeta.
 // Los streams (otro origen) tampoco pasan por aquí.
-const CACHE = 'rn-shell-200-2';   // versión 200, segunda publicación (sin el sufijo, la caché no se renovaría)
+const CACHE = 'rn-shell-200-3';   // versión 200 (la pública, APP_VERSION) y el número de publicación dentro de ella: sin cambiar el nombre, la caché no se renovaría
 const NET_WAIT_MS = 3000;   // lo que se espera a la red por stations.json y bbdd/ antes de tirar de la copia guardada
 const SHELL = [
   './', './css/styles.css', './fonts/barlow-latin-400-normal.woff2', './fonts/barlow-latin-500-normal.woff2', './fonts/barlow-latin-600-normal.woff2', './fonts/barlow-latin-700-normal.woff2', './fonts/barlow-condensed-latin-700-normal.woff2', './favicon.ico', './favicon-32.png', './icon.svg', './stations.json', './bbdd/ser.json', './bbdd/los40.json', './bbdd/resto.json',
-  './js/audio.js', './js/boletines.js', './js/clock.js', './js/custom.js', './js/deck.js', './js/dom.js', './js/eqtab.js', './js/importer.js', './js/intro.js', './js/foot.js', './js/glow.js', './js/jsonc.js', './js/main.js', './js/mediasession.js', './js/newstab.js', './js/player.js', './js/presentation.js', './js/recorder.js', './js/rec-worker.js', './js/rec-worklet.js', './js/settings.js', './js/sounds.js', './js/state.js', './js/tdt.js', './js/stations.js', './js/transitions.js', './js/ui.js', './js/utils.js', './js/viz.js',
+  './js/audio.js', './js/backguard.js', './js/boletines.js', './js/clock.js', './js/custom.js', './js/deck.js', './js/dom.js', './js/eqtab.js', './js/importer.js', './js/intro.js', './js/foot.js', './js/glow.js', './js/jsonc.js', './js/main.js', './js/mediasession.js', './js/newstab.js', './js/player.js', './js/presentation.js', './js/recorder.js', './js/rec-worker.js', './js/rec-worklet.js', './js/settings.js', './js/sounds.js', './js/state.js', './js/tdt.js', './js/stations.js', './js/transitions.js', './js/ui.js', './js/utils.js', './js/viz.js',
   './vendor/hls.light.min.js', './vendor/wasm-media-encoder.min.js', './vendor/mp3.wasm',
   './img/cap1-wide.webp', './img/cap2-wide.webp', './img/cap3-wide.webp',
   './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png',
