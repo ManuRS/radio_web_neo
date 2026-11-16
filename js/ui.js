@@ -160,10 +160,10 @@ function setPaneSmall(small) {
 }
 try { setPaneSmall(localStorage.getItem(PSMALL_KEY) === '1'); } catch (_) { setPaneSmall(false); }
 
-// El reloj: en pantallas grandes va dentro de la barra, detrás de Reproducir; en las demás, en su píldora de la cabecera, como siempre
-const hrow = statusBox.parentElement;
+// El reloj: en pantallas grandes va dentro de la barra, detrás de Reproducir y una separación; en las demás, en su píldora de la cabecera, como siempre
+const hrow = statusBox.parentElement, sepClk = document.querySelector('.sepclk');
 function placeClock() {
-  if (desk.matches) playBtn.after(statusBox); else hrow.appendChild(statusBox);
+  if (desk.matches) sepClk.after(statusBox); else hrow.appendChild(statusBox);
 }
 placeClock();
 desk.addEventListener('change', placeClock);

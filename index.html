@@ -102,6 +102,7 @@
          En pantallas grandes también lleva el reloj (detrás de Reproducir, lo mueve ui.js) y el botón de tamaño de las presintonías -->
     <div class="bar" id="ctlBar" role="toolbar" aria-label="Controles">
       <button id="playBtn" type="button" data-state="play" aria-label="Reproducir"><span class="pi" aria-hidden="true"></span><span class="pl" aria-hidden="true"><span class="l1">Reproducir</span><span class="l2">Detener</span></span></button>
+      <span class="sep sepclk" aria-hidden="true"></span>   <!-- antes del reloj, solo en pantallas grandes -->
       <span class="sep" aria-hidden="true"></span>
       <!-- Tamaño del panel de presintonías (solo en pantallas grandes): grande o igual que el panel 1 -->
       <button id="paneSize" class="ibtn psize" type="button" aria-label="Reducir panel de presintonías" title="Reducir panel"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="pz-in" d="M2.5 12H10M5.5 7l5 5-5 5M21.5 12H14M18.5 7l-5 5 5 5"/><path class="pz-out" d="M10 12H2.5M7.5 7l-5 5 5 5M14 12h7.5M16.5 7l5 5-5 5"/></svg></button>
@@ -335,15 +336,6 @@
             <input id="customInput" type="file" accept=".js,text/javascript,application/javascript,text/plain" hidden>
           </div>
         </div>
-        <div class="group">
-          <div class="clockrow">
-            <label for="logSwitch">Mostrar registro</label>
-            <label class="switch">
-              <input type="checkbox" id="logSwitch">
-              <span class="track"></span>
-            </label>
-          </div>
-        </div>
       </div>
       <!-- Ecualizador: los modos que se eligen pulsando el visualizador (detrás del "normal", que no se toca); se activan o desactivan, no se borran. Bloque "eq" de los ajustes -->
       <div class="tab" id="tabEq" hidden>
@@ -403,7 +395,15 @@
             <button id="cfgClear" class="danger" type="button">Borrar</button>
           </div>
         </div>
+        <!-- Registro: la pestaña se muestra solo durante esta sesión -->
+        <div class="group">
+          <div class="clockrow">
+            <span>Registro</span>
+            <button id="logShow" type="button">Mostrar</button>
+          </div>
+        </div>
         <div id="cfgMsg" class="cfgmsg" role="status"></div>
+        <div class="appver" id="appVer"></div>
       </div>
       <div class="tab" id="tabLog" hidden>
         <textarea id="log" readonly spellcheck="false">Listo</textarea>

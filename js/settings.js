@@ -7,8 +7,8 @@
 // normalización, color personalizado por cadena y script de personalización (custom.js).
 
 import { pad, parseNumber } from './utils.js';
-import { S, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, bgRow, bgSwitch, colorSwitch, logSwitch, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentRow, accentSelect, bgRow, bgSwitch, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, desk, log, openDialog, toast } from './ui.js';
 import { glowOn, setGlow } from './glow.js';
 import { prefetchSounds } from './sounds.js';
@@ -217,7 +217,7 @@ function showCfgMsg(lines, isError) {
   if (!settingsDlg.open && !document.getElementById('tdtDlg').open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
 }
 
-// Pestañas de la ventana: General (reloj y audio), Ecualizador y Boletines (eqtab.js y newstab.js), Configuración (exportar e importar) y Registro (oculta salvo con "Mostrar registro").
+// Pestañas de la ventana: General (reloj y audio), Ecualizador y Boletines (eqtab.js y newstab.js), Configuración (exportar e importar) y Registro (oculta salvo con "Mostrar", en Configuración).
 // Al mostrarse, cada pestaña recibe el evento "show" para pintarse con los ajustes de ese momento
 const tabPanels = { general: tabGeneral, eq: document.getElementById('tabEq'), news: document.getElementById('tabNews'), config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
@@ -228,19 +228,18 @@ settingsTabs.forEach(b => b.addEventListener('click', () => {
   b.scrollIntoView({ block: 'nearest', inline: 'nearest' });   // en el móvil las pestañas pueden no caber: la elegida, a la vista
 }));
 
-// La pestaña Registro está oculta: "Mostrar registro" (General) la saca solo durante esta sesión; al cerrar y volver a abrir la aplicación vuelve a estar oculta
+// La pestaña Registro está oculta: "Mostrar" (Configuración) la saca y la abre, solo durante esta sesión; al cerrar y volver a abrir la aplicación vuelve a estar oculta
 const SHOWLOG_KEY = 'rn_showlog';
 const logTabBtn = [...settingsTabs].find(b => b.dataset.tab === 'log');
-function applyShowLog(on) {
-  logTabBtn.hidden = !on;
-  if (!on && !tabLog.hidden) settingsTabs[0].click();
-}
-try { logSwitch.checked = sessionStorage.getItem(SHOWLOG_KEY) === '1'; } catch (_) {}
-applyShowLog(logSwitch.checked);
-logSwitch.addEventListener('change', () => {
-  try { if (logSwitch.checked) sessionStorage.setItem(SHOWLOG_KEY, '1'); else sessionStorage.removeItem(SHOWLOG_KEY); } catch (_) {}
-  applyShowLog(logSwitch.checked);
+try { logTabBtn.hidden = sessionStorage.getItem(SHOWLOG_KEY) !== '1'; } catch (_) {}
+logShow.addEventListener('click', () => {
+  try { sessionStorage.setItem(SHOWLOG_KEY, '1'); } catch (_) {}
+  logTabBtn.hidden = false;
+  logTabBtn.click();
 });
+
+// Versión de la aplicación, al final de Configuración (la misma numeración en Neo y Proxy; se sube con cada cambio, como la caché de sw.js)
+document.getElementById('appVer').textContent = 'Versión ' + APP_VERSION;
 
 function openSettings() {
   refreshDelayUi();

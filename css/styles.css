@@ -284,6 +284,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .cfgacts { flex: none; display: flex; gap: 10px; }
 #tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de la lista solo cuando hay algo que decir */
 #tabConfig .cfgmsg:empty { display: none; }
+.appver { margin-top: auto; padding-top: 8px; text-align: center; font-size: .78rem; color: #6f7b8b; }   /* versión, al final de Configuración */
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 .cfgacts button.danger.armed { color: #fff; background: #b8414d; }
@@ -446,7 +447,7 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 .tdtstatus { font-size: .78rem; color: #8c98a8; line-height: 1.4; }
 .tdtstatus.err { color: #ff8a8a; }
 .tdtlist { flex: 1 1 0; min-height: 120px; overflow-y: auto; overscroll-behavior: contain; margin: 0 -4px; padding: 0 4px; }
-.tdtinfo { font-size: .72rem; color: #6f7b8b; line-height: 1.35; }
+.tdtinfo { font-size: .72rem; color: #6f7b8b; line-height: 1.35; text-align: center; }
 .tdtinfo:empty { display: none; }
 .tdtsec { display: flex; align-items: center; gap: 12px; margin: 34px 2px 12px; font-size: 1rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); }
 .tdtsec::after { content: ''; flex: 1; height: 2px; border-radius: 1px; background: var(--accent); opacity: .4; }
@@ -588,7 +589,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* Por debajo de este tamaño (móvil, tableta en vertical, ventanas bajas) los contenedores de los paneles no cuentan para la maqueta y todo queda
    en una columna, como siempre. La misma condición está en ui.js (DESK_MQ) */
 .panes, .pane { display: contents; }
-.psize, #bgGlow { display: none; }
+.psize, .sepclk, #bgGlow { display: none; }
 /* Ajustes > General, "Color de fondo": fuera de las pantallas grandes, en gris y con la nota debajo */
 .bgonly { display: block; margin-top: 1px; font-size: .74rem; color: #6f7b8b; }
 #bgRow.off > label:first-child { color: #6f7b8b; }
@@ -614,6 +615,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .bar #playBtn { flex: 1 1 0; }
   .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */
   .bar .psize { display: flex; }
+  .bar .sepclk { display: block; }
 
   /* Los dos paneles: fondo, marco y sombra; el 2 mide lo mismo de alto que el 1 y se desplaza por dentro */
   .scroller > .panes { display: grid; flex: 0 1 auto; min-height: 0; grid-template-columns: 470px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 22px; margin-top: 26px; }
@@ -622,12 +624,12 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .pane1::-webkit-scrollbar { display: none; }
   .pane1 > .now { margin-top: 0; }
   .pane2 { height: 0; min-height: 100%; padding: 0; overflow: hidden; }
-  .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #3a4554 transparent; }
+  .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }   /* barra propia de 6 px (con la fina del sistema, más ancha, cabían 4 columnas en vez de 5); scrollbar-color o scrollbar-width la anularían en Chrome */
+  @supports not selector(::-webkit-scrollbar) { .pane2 .presets { scrollbar-width: thin; scrollbar-color: #3a4554 transparent; } }
   .pane2 .presets::-webkit-scrollbar { width: 6px; }
   .pane2 .presets::-webkit-scrollbar-thumb { background: #3a4554; border-radius: 3px; }
   .pane2 .pgroup:first-child { margin-top: 0; }
   .pane2 .pgroup + .pgroup { margin-top: 22px; }
-  .pane2 .pgrid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
   /* Botón de tamaño de las presintonías (en la barra): flechas hacia dentro para reducir y hacia fuera para ampliar */
   .psize .pz-out, html.psmall .psize .pz-in { display: none; }
   html.psmall .psize .pz-out { display: inline; }
