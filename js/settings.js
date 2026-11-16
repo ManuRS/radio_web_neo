@@ -731,7 +731,7 @@ export async function addChainFromForm() {
   stAdd.textContent = 'Comprobando…';
   showCfgMsg(['Comprobando el enlace…'], false);
   try {
-    const err = await createChain({ name: field('stName').value, short: field('stShort').value, group: field('stType').value, color: field('stColor').value, url });
+    const err = await createChain({ name: field('stName').value, short: field('stShort').value, group: field('stType').value, color: field('stColor').value, url, label: field('stLabel').value });
     if (err) { showCfgMsg([err], true); return false; }
     stForm.reset();
     field('stColorPick').value = '#4da3ff';

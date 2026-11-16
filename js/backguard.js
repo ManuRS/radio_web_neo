@@ -5,9 +5,12 @@
 // al historial (con el mismo documento) y, si se vuelve de ella con la radio puesta, sale la ventana "¿Seguro que quieres salir?".
 // Cancelar (o la ✕, o Escape) vuelve a poner la entrada; "Sí, cerrar" sigue hacia atrás y, si no hay página anterior, intenta cerrar la ventana.
 // Sin la radio puesta, el atrás sigue su camino sin preguntar.
+// "Sí, cerrar" detiene la radio (si graba, antes pregunta) y sigue hacia atrás; si la página sigue ahí (una app instalada no se puede cerrar desde la web), avisa de que ya se puede salir.
+// Al cerrar o recargar la pestaña con la radio puesta, el navegador pregunta con su propio aviso (la web no puede poner el suyo).
 
 import { stop } from './dom.js';
-import { closeDialog, openDialog } from './ui.js';
+import { closeDialog, openDialog, toast } from './ui.js';
+import { requestStop } from './recorder.js';
 
 const dlg = document.getElementById('exitDlg');
 const MOBILE = matchMedia('(pointer: coarse)').matches;   // pantalla táctil: móvil o tableta
@@ -43,10 +46,24 @@ function cancel() {
 document.getElementById('exitCancel').addEventListener('click', cancel);
 document.getElementById('exitClose').addEventListener('click', cancel);
 dlg.addEventListener('cancel', e => { e.preventDefault(); cancel(); });   // Escape
-document.getElementById('exitGo').addEventListener('click', () => {
+document.getElementById('exitGo').addEventListener('click', async () => {
+  if (leaving) return;
   leaving = true;
   closeDialog(dlg);
+  await requestStop();   // para la radio; si graba, pregunta antes y, si se cancela, la radio sigue
+  if (playing()) { leaving = false; arm(); return; }
   history.back();
-  // si no había página anterior, la ventana no se va: se intenta cerrar (el navegador solo lo permite si la pestaña no tiene más historial que esta página)
-  setTimeout(() => { window.close(); leaving = false; }, 300);
+  // si no había página anterior, la ventana no se va: se intenta cerrar (el navegador solo lo permite si la abrió la propia web) y, si sigue ahí, se avisa
+  setTimeout(() => {
+    window.close();
+    setTimeout(() => {
+      leaving = false;
+      if (document.visibilityState === 'visible') toast(MOBILE ? 'Ya puedes salir de la app' : 'Ya puedes cerrar la pestaña');
+    }, 200);
+  }, 300);
+});
+
+// Cerrar o recargar la pestaña con la radio puesta: aviso del propio navegador (sin texto propio; solo sale si la página se ha tocado, y para sonar ya se ha tocado)
+window.addEventListener('beforeunload', e => {
+  if (playing() && !leaving) { e.preventDefault(); e.returnValue = ''; }
 });
