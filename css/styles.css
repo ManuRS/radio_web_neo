@@ -255,6 +255,14 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .clockrow { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: .88rem; color: #cbd5e1; }
 /* En todas las pestañas de Ajustes, como una lista: el texto a la izquierda y su control (interruptor, campo, desplegable o botón) a la derecha,
    con la misma altura en todas las filas */
+/* La ventana de Ajustes tiene siempre el mismo tamaño (algo más alta que antes, sin pasar de la pantalla): lo que no cabe en una pestaña se
+   desplaza dentro de ella, debajo de la cabecera y las pestañas, que se quedan quietas */
+#settings { height: min(680px, calc(100vh - 44px)); height: min(680px, calc(100dvh - 44px)); min-height: 0; overflow: hidden; }
+#settings .dlg { flex: 1 1 auto; min-height: 0; }
+#settings .tabs { flex: none; }
+#settings .tab { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; margin-inline: -6px; padding-inline: 6px; padding-bottom: 2px; scrollbar-width: thin; scrollbar-color: #3a4554 transparent; }
+#settings .tab::-webkit-scrollbar { width: 6px; }
+#settings .tab::-webkit-scrollbar-thumb { background: #3a4554; border-radius: 3px; }
 #settings .clockrow { min-height: 36px; }
 #settings .clockrow > :first-child { margin-right: auto; }
 #settings .clockrow select { min-width: 132px; }
