@@ -3,7 +3,7 @@
   {
    "name": "SER Web",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "SER Alternativa", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER_ALT1.mp3", "kind": "mp3"},
     {"label": "SER Alternativa 2", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASER_ALT2.mp3", "kind": "mp3"},
@@ -14,7 +14,7 @@
   {
    "name": "SER Andalucía",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Algeciras", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ALGECIRAS.mp3", "kind": "mp3"},
     {"label": "Radio Axarquía", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_AXARQUIA.mp3", "kind": "mp3"},
@@ -59,7 +59,7 @@
   {
    "name": "SER Aragón",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Graus", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_GRAUS.mp3", "kind": "mp3"},
     {"label": "Radio Huesca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_HUESCA.mp3", "kind": "mp3"},
@@ -78,7 +78,7 @@
   {
    "name": "SER Asturias",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Asturias", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ASTURIAS.mp3", "kind": "mp3"},
     {"label": "SER Avilés", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_AVILES.mp3", "kind": "mp3"},
@@ -90,7 +90,7 @@
   {
    "name": "SER Canarias",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Club Tenerife", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_TENERIFE.mp3", "kind": "mp3"},
     {"label": "Radio La Palma", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LA_PALMA.mp3", "kind": "mp3"},
@@ -101,7 +101,7 @@
   {
    "name": "SER Cantabria",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Santander", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_SANTANDER.mp3", "kind": "mp3"},
     {"label": "SER Asón", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASON.mp3", "kind": "mp3"},
@@ -113,7 +113,7 @@
   {
    "name": "SER Castilla y León",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Aranda", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ARANDA.mp3", "kind": "mp3"},
     {"label": "Radio Bierzo", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_BIERZO.mp3", "kind": "mp3"},
@@ -137,7 +137,7 @@
   {
    "name": "SER Castilla-La Mancha",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio 90 Motilla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_MOTILLA.mp3", "kind": "mp3"},
     {"label": "Radio Albacete", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ALBACETE.mp3", "kind": "mp3"},
@@ -158,7 +158,7 @@
   {
    "name": "SER Cataluña",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Ràdio Barcelona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_BARCELONA.mp3", "kind": "mp3"},
     {"label": "Ràdio Girona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_GIRONA.mp3", "kind": "mp3"},
@@ -175,7 +175,7 @@
   {
    "name": "SER Ceuta",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Ceuta", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CEUTA.mp3", "kind": "mp3"}
    ]
@@ -183,7 +183,7 @@
   {
    "name": "SER Comunidad Valenciana",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Alcoy", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_ALCOY.mp3", "kind": "mp3"},
     {"label": "Radio Alicante", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ALICANTE.mp3", "kind": "mp3"},
@@ -207,7 +207,7 @@
   {
    "name": "SER Extremadura",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Extremadura", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_EXTREMADURA.mp3", "kind": "mp3"},
     {"label": "SER Cáceres", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CACERES.mp3", "kind": "mp3"},
@@ -221,7 +221,7 @@
   {
    "name": "SER Galicia",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Arosa", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_AROSA.mp3", "kind": "mp3"},
     {"label": "Radio Coruña", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_CORUNA.mp3", "kind": "mp3"},
@@ -240,7 +240,7 @@
   {
    "name": "SER Islas Baleares",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Ibiza", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ASO_IBIZA.mp3", "kind": "mp3"},
     {"label": "Radio Mallorca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MALLORCA.mp3", "kind": "mp3"},
@@ -250,7 +250,7 @@
   {
    "name": "SER La Rioja",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Calahorra", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CALAHORRA.mp3", "kind": "mp3"},
     {"label": "Radio Haro", "url": "https://streaming.radioharo.com/radioharo.mp3", "kind": "mp3"},
@@ -260,7 +260,7 @@
   {
    "name": "SER Madrid",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Madrid", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MADRID.mp3", "kind": "mp3"},
     {"label": "SER Henares", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_HENARES.mp3", "kind": "mp3"},
@@ -274,7 +274,7 @@
   {
    "name": "SER Melilla",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Melilla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_MELILLA.mp3", "kind": "mp3"}
    ]
@@ -282,7 +282,7 @@
   {
    "name": "SER Murcia",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Cartagena", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CARTAGENA.mp3", "kind": "mp3"},
     {"label": "Radio Lorca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_LORCA.mp3", "kind": "mp3"},
@@ -293,7 +293,7 @@
   {
    "name": "SER Navarra",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Pamplona", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_PAMPLONA.mp3", "kind": "mp3"},
     {"label": "Radio Tafalla", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_TAFALLA.mp3", "kind": "mp3"},
@@ -304,7 +304,7 @@
   {
    "name": "SER País Vasco",
    "group": "general",
-   "color": "#ffc72c",
+   "color": "#ffa800",
    "urls": [
     {"label": "Radio Bilbao", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_BILBAO.mp3", "kind": "mp3"},
     {"label": "Radio Eibar", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_EIBAR.mp3", "kind": "mp3"},

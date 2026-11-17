@@ -106,7 +106,7 @@
   {
    "name": "MegaStar",
    "group": "musical",
-   "color": "#ffe135",
+   "color": "#ffbf1f",
    "urls": [
     {"label": "MegaStar Web", "url": "https://megastar-cope-rrcast.flumotion.com/cope/megastar.mp3", "kind": "mp3"}
    ]
@@ -187,7 +187,7 @@
    "name": "LOS40 URBAN",
    "short": "Urban",
    "group": "musical",
-   "color": "#ffd23f",
+   "color": "#ff9500",
    "urls": [
     {"label": "LOS40 URBAN Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_URBAN.mp3", "kind": "mp3"}
    ]
@@ -195,7 +195,7 @@
   {
    "name": "RAC105",
    "group": "musical",
-   "color": "#ffd23f",
+   "color": "#ffb52e",
    "urls": [
     {"label": "RAC105 Web", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC105.mp3", "kind": "mp3"}
    ]
