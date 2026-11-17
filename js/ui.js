@@ -211,21 +211,14 @@ new MutationObserver(syncMini).observe(playBtn, { attributes: true, attributeFil
 syncMini();
 miniPlay.addEventListener('click', () => playBtn.click());
 miniSet.addEventListener('click', () => document.getElementById('settingsBtn').click());
-// Fases del scroll en el móvil: 0 cabecera grande; 1 cabecera encogida; 2 la tarjeta del RDS queda fija (sticky, ver .stack en styles.css) y las otras dos pasan por debajo, una y luego la otra;
-// 3 solo queda el RDS y las presintonías; 4 el RDS se suelta y sube con todo. Aquí solo se calcula dónde empieza a verse el contenido (--e) y cuánto se desvanece (--fade)
-const HF = 182, HMIN = 74, PIN_TOP = 86;   // alto de la cabecera grande y encogida, y dónde queda fijo el RDS (igual que .stack > .now en styles.css)
-const rds = document.querySelector('.stack > .now');
-let edgeV = -1, fadeV = -1;
+let fadeV = -1;
 function hdrUpdate() {
-  const st = Math.max(scroller.scrollTop, window.scrollY);
-  const rel = desk.matches ? 0 : Math.max(0, PIN_TOP - rds.getBoundingClientRect().top);   // lo que el RDS ya se ha soltado hacia arriba (0 mientras está fijo o sin bajar)
+  const st = Math.max(scroller.scrollTop, window.scrollY), fade = Math.round(Math.min(st, 40));
+  if (fade !== fadeV) { fadeV = fade; document.documentElement.style.setProperty('--fade', fade + 'px'); }
   let p = Math.min(1, Math.max(0, st / HDR_DIST));
   if (reduceMotion.matches) p = p > .5 ? 1 : 0;
   if (desk.matches) p = 0;   // en pantallas grandes la cabecera no se encoge
   p = Math.round(p * 100) / 100;
-  const edge = Math.round(Math.max(HF - (HF - HMIN) * p, PIN_TOP - Math.min(rel, PIN_TOP - HMIN))), fade = Math.round(Math.min(rel, 40));
-  if (edge !== edgeV) { edgeV = edge; document.documentElement.style.setProperty('--e', edge + 'px'); }
-  if (fade !== fadeV) { fadeV = fade; document.documentElement.style.setProperty('--fade', fade + 'px'); }
   if (p === hdrP) return;
   hdrP = p;
   document.documentElement.style.setProperty('--p', p);

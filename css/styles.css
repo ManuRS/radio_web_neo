@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #323c4a; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -40,13 +40,8 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
   main > :not(.scroller) { flex: none; }
   .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 6px 28px; }
   .scroller::-webkit-scrollbar { display: none; }
-  /* lo que sube por debajo de la cabecera (o de la tarjeta del RDS cuando está fija) se va desvaneciendo en vez de cortarse: ui.js pone --e (la línea desde la que se ve el contenido) y --fade (lo que dura el desvanecido) */
-  .scroller { -webkit-mask-image: linear-gradient(to bottom, transparent var(--e, var(--hf)), #000 calc(var(--e, var(--hf)) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent var(--e, var(--hf)), #000 calc(var(--e, var(--hf)) + var(--fade, 0px))); }
-}
-/* Móvil con altura suficiente: la tarjeta del RDS se queda fija bajo la cabecera encogida (74 px + 12 px de aire) y las otras dos pasan por debajo; cuando acaban de pasar, el RDS se suelta y sube con todo lo demás.
-   Lo hace solo el scroll: .now es sticky dentro de .stack y se suelta cuando .stack termina (ui.js solo ajusta el desvanecido) */
-@media (min-height: 600px) and (max-width: 1023.98px) {
-  .stack > .now { position: sticky; top: calc(86px - var(--hf)); z-index: 3; }   /* el relleno de arriba del scroller (--hf) cuenta en el sticky: se resta para que quede a 86 px del borde */
+  /* lo que sube por debajo de la cabecera se va desvaneciendo en vez de cortarse: --hh es la altura de la cabecera ahora y --fade lo pone ui.js según el scroll */
+  .scroller { --hh: calc(var(--hf) - (var(--hf) - 74px) * var(--p)); -webkit-mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); }
 }
 
 /* ==========================================
@@ -78,7 +73,7 @@ p { color: #aeb9c8; line-height: 1.45; }
 /* ====================================================================
    == BARRA DE CONTROLES (EN LA CABECERA): REPRODUCIR/DETENER, INFORMACIÓN Y AJUSTES ==
    ==================================================================== */
-.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 14px; background: rgba(0, 0, 0, .14); box-shadow: inset 0 0 0 1px #5a6573; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* en el móvil, integrada en la cabecera: solo el contorno */
+.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 14px; background: none; box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* en el móvil, integrada en la cabecera: solo el contorno */
 .bar button { border-radius: 0; padding: 0; background: none; height: 52px; -webkit-tap-highlight-color: transparent; }
 .bar button:active { background: rgba(255, 255, 255, .07); }
 /* Con el ratón no se pinta un bloque encima del botón (casi del mismo tono que la barra): se aviva su icono o su texto */
@@ -87,13 +82,13 @@ p { color: #aeb9c8; line-height: 1.45; }
 /* Botón de Reproducir/Detener solo con el icono, a la derecha de la cabecera encogida (lo crea ui.js y copia el estado de #playBtn) */
 .mini { position: absolute; top: 15px; right: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); opacity: clamp(0, calc(2 * var(--p) - 1), 1); transition: color .3s ease; -webkit-tap-highlight-color: transparent; }
 .mini-set { right: 56px; color: #cbd5e1; }
-.mini .pi { width: 22px; height: 22px; }
+.mini .pi { width: 30px; height: 30px; }
 .mini svg { display: block; width: 24px; height: 24px; }
 .mini[data-state="stop"] { color: #ff7a7a; }
-.mini[data-state="stop"] .pi { clip-path: polygon(25% 25%, 75% 25%, 75% 75%, 25% 75%); }
+.mini[data-state="stop"] .pi { clip-path: polygon(20% 20%, 80% 20%, 80% 80%, 20% 80%); }
 .mini:active { background: rgba(255, 255, 255, .07); }
 .mini:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
-.sep { flex: 0 0 1px; margin: 12px 0; background: rgba(255, 255, 255, .09); }
+.sep { flex: 0 0 1px; margin: 12px 0; background: var(--line); }
 .ibtn { flex: 0 0 54px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; }
 /* Un solo botón: verde (el color de énfasis) para Reproducir y rojo suave para Detener. Al cambiar, el triángulo se vuelve cuadrado, un texto sube y el otro entra desde abajo,
    el color pasa de uno a otro y nace un destello del color nuevo (ui.js pone data-state y la clase "swap"; --w1 y --w2 son los anchos de cada texto) */
@@ -636,6 +631,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .mini { display: none; }
   .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; justify-content: flex-start; }
   .bar { background: #1d242d; box-shadow: none; border-radius: 12px; }
+  .sep { background: rgba(255, 255, 255, .09); }
   .bar { flex: 0 0 auto; width: 500px; margin: 0; }
   .bar #playBtn { flex: 1 1 0; }
   .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */
@@ -647,7 +643,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .pane { position: relative; display: block; box-sizing: border-box; padding: 20px; border: 1px solid #29323f; border-radius: 18px; background: #1a2029; box-shadow: 0 10px 28px rgba(0, 0, 0, .4); }
   .pane1 { min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .pane1::-webkit-scrollbar { display: none; }
-  .stack > .now { margin-top: 0; }
+  .pane1 > .now { margin-top: 0; }
   .pane2 { height: 0; min-height: 100%; padding: 0; overflow: hidden; }
   .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }   /* barra propia de 6 px (con la fina del sistema, más ancha, cabían 4 columnas en vez de 5); scrollbar-color o scrollbar-width la anularían en Chrome */
   @supports not selector(::-webkit-scrollbar) { .pane2 .presets { scrollbar-width: thin; scrollbar-color: #3a4554 transparent; } }
