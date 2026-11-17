@@ -10,24 +10,22 @@
 
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
 @property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
-@property --nk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca el énfasis al blanco grisáceo (Material Design en móvil con la radio parada) */
 @property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca al tono de la cabecera el color de énfasis del resto de la página (0% = el color de siempre) */
-@property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #938bff; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow { --nk: 100%; }   /* Material Design (móvil), radio parada: énfasis en un blanco algo gris */
-html.bgglow.playing { --tint: 32%; --hk: 100%; --nk: 0%; }
+html.bgglow.playing { --tint: 32%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
-  --accent: #58dfa3;
-  transition: --accent .6s ease, --tint .6s ease, --hk .6s ease, --nk .6s ease;
+  --accent: #938bff;   /* el violeta del logo (mitad del degradado #5f8bff → #c68cff) */
+  transition: --accent .6s ease, --tint .6s ease, --hk .6s ease;
   --acc-raw: var(--accent);   /* el color de énfasis sin tocar (el body lo sustituye por --acc-e, y la cabecera, que cuelga de él, necesita el de verdad) */
   --hfull: color-mix(in srgb, var(--acc-raw) 32%, var(--hdr));   /* el tono de la cabecera coloreada (32 % como --tint) */
-  --acc-e: color-mix(in srgb, #d9dee5 var(--nk), color-mix(in srgb, var(--hfull) var(--hk), var(--accent)));   /* el color de énfasis que ve el resto de la página */
+  --acc-e: color-mix(in srgb, var(--hfull) var(--hk), var(--accent));   /* el color de énfasis que ve el resto de la página */
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
   --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
@@ -637,7 +635,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .lbl-mob { display: none; }
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
-  html.bgglow, html.bgglow.playing { --tint: 0%; --hk: 0%; --nk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
+  html.bgglow.playing { --tint: 0%; --hk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }

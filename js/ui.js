@@ -87,11 +87,11 @@ export function paletteColor(key) {
 }
 
 // Color de énfasis con "Material Design" (el ajuste "Color de fondo") en móvil: sonando, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
-// como --hfull del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr); parada, un blanco algo gris (NEUTRAL, como --acc-e). Si no, el de énfasis tal cual
-const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3', NEUTRAL = '#d9dee5';
-const matMode = () => {   // 0 = nada, 1 = parada, 2 = sonando
+// como --hfull del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr); parada, el de énfasis tal cual. Si no hay modo, también
+const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#938bff';
+const matMode = () => {   // 0 = nada o parada, 1 = sonando con "Material Design"
   const c = document.documentElement.classList;
-  return !c.contains('bgglow') || desk.matches ? 0 : c.contains('playing') ? 2 : 1;
+  return c.contains('bgglow') && c.contains('playing') && !desk.matches ? 1 : 0;
 };
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
@@ -102,7 +102,7 @@ export function applyAccent(hex) {
   accentHex = hex;
   const root = document.documentElement, m = matMode();
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(m === 2 ? tinted(hex) : m === 1 ? NEUTRAL : hex, m > 0);
+  viz.setAccent(m ? tinted(hex) : hex, m > 0);
   if (!viz.looping) viz.draw();
 }
 // Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
