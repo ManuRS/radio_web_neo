@@ -261,7 +261,7 @@ body.no-config .panel.vols > * { visibility: visible; }
 .preset .pf:empty { display: none; }
 .preset[hidden] { display: none; }
 .preset.more { justify-content: center; font-size: 1.8rem; font-weight: 600; line-height: 1; color: var(--accent); background: #1a2029; border: 1px dashed #303a47; }
-.preset.active { background: var(--accent-bg); }   /* solo se colorea por dentro, sin cerco */
+.preset.active { background: color-mix(in srgb, var(--accent) 30%, #1b1f1f); }   /* solo se colorea por dentro, sin cerco; con más fuerza que --accent-bg para que se distinga a primera vista */
 .preset:disabled { opacity: .4; }
 /* Grabando: cadenas cuya emisora no se puede grabar (modo degradado). No se pueden poner */
 .preset.recoff { background: #231b20; border-color: #3a2830; color: #7d6b72; cursor: not-allowed; }
@@ -633,6 +633,8 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
   .lbl-desk { display: none; }   /* el ajuste se llama "Color de fondo" en PC y "Material Design" en móvil */
   html.bgglow .now .ps, html.bgglow .eq-label, html.bgglow .pres-open, html.bgglow .vols label, html.bgglow .vols span { color: var(--accent); }   /* con Material Design, los textos e iconos de los tres paneles (emisora, ecualizador, volúmenes) en el color de énfasis (el del cuerpo: el de la cabecera mientras suena) */
+  html.bgglow.playing .now .ps, html.bgglow.playing .eq-label, html.bgglow.playing .pres-open, html.bgglow.playing .vols label, html.bgglow.playing .vols span { color: color-mix(in srgb, var(--accent) 50%, #fff); }   /* sonando, el tono de la cabecera queda apagado sobre los paneles negros: se aclara para darle vida */
+  html.bgglow .preset.active { background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* la presintonía activa, del mismo tono que el fondo de la cabecera */
   html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
   html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
 }
