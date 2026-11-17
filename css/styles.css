@@ -637,6 +637,15 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   html.bgglow .preset.active { background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* la presintonía activa, del mismo tono que el fondo de la cabecera */
   html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
   html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
+  @supports (color: oklch(from red l c h)) {   /* con Material Design los blancos se tiñen del color de énfasis (los de siempre quedan de reserva) */
+    html.bgglow body { --w1: oklch(from var(--accent) .95 calc(c * .4) h); --w2: oklch(from var(--accent) .92 calc(c * .8) h); }   /* w1: blanco suave, para lo que va sobre el fondo coloreado; w2: blanco teñido, para el resto */
+    html.bgglow body, html.bgglow dialog.settings, html.bgglow .preset:not(.recoff), html.bgglow .preset:not(.recoff) .pn, html.bgglow .panel .info b, html.bgglow .panel.search input { color: var(--w2); }
+    html.bgglow .panel.search input::placeholder { color: oklch(from var(--accent) .7 calc(c * .5) h); }
+    html.bgglow header h1, html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
+    html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state],
+    html.bgglow .preset.active, html.bgglow .preset.active .pn { color: var(--w1); }   /* cabecera y presintonía activa (ya coloreada): contraste con el fondo */
+    html.bgglow.playing .now .ps, html.bgglow.playing .eq-label, html.bgglow.playing .pres-open, html.bgglow.playing .vols label, html.bgglow.playing .vols span { color: oklch(from var(--accent) calc(l + .14) calc(c * 1.5) h); }   /* sonando: el color de énfasis aclarado sin perder su saturación (mezclarlo con blanco lo dejaba pastel y gris) */
+  }
 }
 
 @media (min-width: 1024px) and (min-height: 600px) {
