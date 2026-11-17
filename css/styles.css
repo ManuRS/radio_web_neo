@@ -10,11 +10,13 @@
 
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
 @property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
+@property --nk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca el énfasis al blanco grisáceo (Material Design en móvil con la radio parada) */
 @property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca al tono de la cabecera el color de énfasis del resto de la página (0% = el color de siempre) */
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow.playing { --tint: 56%; --hk: 100%; }
+html.bgglow { --nk: 100%; }   /* Material Design (móvil), radio parada: énfasis en un blanco algo gris */
+html.bgglow.playing { --tint: 32%; --hk: 100%; --nk: 0%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -22,9 +24,10 @@ html.bgglow.playing { --tint: 56%; --hk: 100%; }
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
   --accent: #58dfa3;
-  transition: --accent .6s ease, --tint .6s ease, --hk .6s ease;
-  --hfull: color-mix(in srgb, var(--accent) 56%, var(--hdr));   /* el tono de la cabecera coloreada (56 % como --tint) */
-  --acc-e: color-mix(in srgb, var(--hfull) var(--hk), var(--accent));   /* el color de énfasis que ve el resto de la página */
+  transition: --accent .6s ease, --tint .6s ease, --hk .6s ease, --nk .6s ease;
+  --acc-raw: var(--accent);   /* el color de énfasis sin tocar (el body lo sustituye por --acc-e, y la cabecera, que cuelga de él, necesita el de verdad) */
+  --hfull: color-mix(in srgb, var(--acc-raw) 32%, var(--hdr));   /* el tono de la cabecera coloreada (32 % como --tint) */
+  --acc-e: color-mix(in srgb, #d9dee5 var(--nk), color-mix(in srgb, var(--hfull) var(--hk), var(--accent)));   /* el color de énfasis que ve el resto de la página */
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
   --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
@@ -63,7 +66,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--accent) var(--tint), var(--hdr)); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
 .hin { position: relative; box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 48px * var(--p)); height: calc(48px - 48px * var(--p)); margin-right: calc(12px - 12px * var(--p)); border-radius: 27%; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* al encoger el icono desaparece y el título queda solo, a la izquierda */
@@ -634,7 +637,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .lbl-mob { display: none; }
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
-  html.bgglow.playing { --tint: 0%; --hk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
+  html.bgglow, html.bgglow.playing { --tint: 0%; --hk: 0%; --nk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }

@@ -86,10 +86,13 @@ export function paletteColor(key) {
   return STATION_PALETTE[(h >>> 0) % STATION_PALETTE.length];
 }
 
-// Color de las barras del ecualizador: con "Color de fondo" activado y sonando, en móvil, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
-// como el --hdrc del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr). Si no, el de énfasis tal cual
-const TINT = .56, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3';
-const tintOn = () => document.documentElement.classList.contains('bgglow') && document.documentElement.classList.contains('playing') && !desk.matches;
+// Color de énfasis con "Material Design" (el ajuste "Color de fondo") en móvil: sonando, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
+// como --hfull del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr); parada, un blanco algo gris (NEUTRAL, como --acc-e). Si no, el de énfasis tal cual
+const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3', NEUTRAL = '#d9dee5';
+const matMode = () => {   // 0 = nada, 1 = parada, 2 = sonando
+  const c = document.documentElement.classList;
+  return !c.contains('bgglow') || desk.matches ? 0 : c.contains('playing') ? 2 : 1;
+};
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
   return '#' + HDR_BASE.map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
@@ -97,16 +100,16 @@ function tinted(hex) {
 let accentHex;
 export function applyAccent(hex) {
   accentHex = hex;
-  const root = document.documentElement;
+  const root = document.documentElement, m = matMode();
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(tintOn() ? tinted(hex) : hex, tintOn());
+  viz.setAccent(m === 2 ? tinted(hex) : m === 1 ? NEUTRAL : hex, m > 0);
   if (!viz.looping) viz.draw();
 }
 // Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
-let tintShown = false;
-const tintCheck = () => { if (tintOn() !== tintShown) { tintShown = tintOn(); applyAccent(accentHex); } };
-new MutationObserver(tintCheck).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-desk.addEventListener('change', tintCheck);
+let matShown = 0;
+const matCheck = () => { if (matMode() !== matShown) { matShown = matMode(); applyAccent(accentHex); } };
+new MutationObserver(matCheck).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+desk.addEventListener('change', matCheck);
 
 // ===============================================
 // == VENTANAS (DIALOG) ==
