@@ -463,11 +463,11 @@ function barLabel(bar, open, hiddenN) {
   bar.firstChild.textContent = open ? 'Mostrar menos' : hiddenN ? 'Mostrar ' + hiddenN + ' más' : 'Mostrar más';
 }
 // De cada grupo se ven dos filas enteras de cadenas; si con el "+" no caben todas, la barra de debajo despliega el resto (y el "+", siempre el último).
-// También en pantallas grandes (contraídas por defecto; al desplegar, el panel se desplaza por dentro)
+// En pantallas grandes, todo desplegado y sin barra (el panel se desplaza por dentro)
 function applyVisibility() {
   groups.forEach(g => {
     const capacity = columns(g.grid) * 2;
-    const fold = g.buttons.length + 1 > capacity;
+    const fold = !desk.matches && g.buttons.length + 1 > capacity;
     const open = fold && expandedGroups.has(g.id);
     g.buttons.forEach((b, i) => { b.hidden = fold && !open && i >= capacity; });
     g.more.hidden = fold && !open;

@@ -148,7 +148,7 @@ if (typeof ResizeObserver !== 'undefined') new ResizeObserver(layoutCheck).obser
 // ==========================================
 // Por encima de DESK_MQ (dom.js): dos paneles, la cabecera fija sin encogerse, las presintonías desplegadas y la luz de fondo
 
-// Tamaño del panel de presintonías: grande (por defecto) o pequeño, igual que el panel 1. Se guarda en el navegador (rn_psmall)
+// Tamaño del panel de presintonías: pequeño (por defecto, igual que el panel 1) o grande. Se guarda en el navegador (rn_psmall)
 const PSMALL_KEY = 'rn_psmall';
 const paneSize = document.getElementById('paneSize');
 function setPaneSmall(small) {
@@ -156,7 +156,7 @@ function setPaneSmall(small) {
   paneSize.title = small ? 'Ampliar panel' : 'Reducir panel';
   paneSize.setAttribute('aria-label', (small ? 'Ampliar' : 'Reducir') + ' panel de presintonías');
 }
-try { setPaneSmall(localStorage.getItem(PSMALL_KEY) === '1'); } catch (_) { setPaneSmall(false); }
+try { setPaneSmall(localStorage.getItem(PSMALL_KEY) !== '0'); } catch (_) { setPaneSmall(true); }
 
 // El reloj: en pantallas grandes va dentro de la barra, detrás de Reproducir y una separación; en las demás, en su píldora de la cabecera, como siempre
 const hrow = statusBox.parentElement, sepClk = document.querySelector('.sepclk');
