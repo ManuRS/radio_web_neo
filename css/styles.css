@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #2b3693; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #1c2d6b; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
