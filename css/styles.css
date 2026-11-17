@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #3a4cc8; --hf: 180px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #2b3693; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -49,7 +49,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
 header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
-.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin-top: calc(16px * (1 - var(--p))); }
+.hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
 .titles { flex: 1 1 auto; min-width: 0; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
@@ -604,7 +604,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
-  :root { --hf: 74px; --dw: min(1160px, calc(100vw - 64px)); }
+  :root { --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
