@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #344050; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #212530; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -40,6 +40,8 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
   main > :not(.scroller) { flex: none; }
   .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 6px 28px; }
   .scroller::-webkit-scrollbar { display: none; }
+  /* lo que sube por debajo de la cabecera se va desvaneciendo en vez de cortarse: --hh es la altura de la cabecera ahora y --fade lo pone ui.js según el scroll */
+  .scroller { --hh: calc(var(--hf) - (var(--hf) - 74px) * var(--p)); -webkit-mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); }
 }
 
 /* ==========================================
@@ -47,11 +49,11 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); box-shadow: 0 1px 0 rgba(255, 255, 255, .10) inset, 0 6px 16px rgba(0, 0, 0, .45); }   /* color liso: la presencia la dan el filo claro de arriba y la sombra */
-.hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
+.hin { position: relative; box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
-.logo { transform: translateX(var(--tx, 0px)); display: block; flex: 0 0 auto; width: calc(48px - 48px * var(--p)); height: calc(48px - 48px * var(--p)); margin-right: calc(12px - 12px * var(--p)); border-radius: 27%; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* al encoger el icono desaparece y el título queda solo y centrado */
-.titles { flex: 0 1 auto; min-width: 0; margin-right: 14px; transform: translateX(var(--tx, 0px)); margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
+.logo { display: block; flex: 0 0 auto; width: calc(48px - 48px * var(--p)); height: calc(48px - 48px * var(--p)); margin-right: calc(12px - 12px * var(--p)); border-radius: 27%; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* al encoger el icono desaparece y el título queda solo, a la izquierda */
+.titles { flex: 0 1 auto; min-width: 0; margin-right: 14px; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
 h1 { font-size: calc(var(--t0) - (var(--t0) - 1.75rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
@@ -71,12 +73,19 @@ p { color: #aeb9c8; line-height: 1.45; }
 /* ====================================================================
    == BARRA DE CONTROLES (EN LA CABECERA): REPRODUCIR/DETENER, INFORMACIÓN Y AJUSTES ==
    ==================================================================== */
-.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 12px; background: #1d242d; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
+.bar { display: flex; height: calc(52px * (1 - var(--p))); margin-top: calc(12px * (1 - var(--p))); margin-bottom: calc(24px * (1 - var(--p))); border-radius: 14px; background: rgba(0, 0, 0, .14); box-shadow: inset 0 0 0 1.5px #484f59; overflow: hidden; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* en el móvil, integrada en la cabecera: solo el contorno */
 .bar button { border-radius: 0; padding: 0; background: none; height: 52px; -webkit-tap-highlight-color: transparent; }
 .bar button:active { background: rgba(255, 255, 255, .07); }
 /* Con el ratón no se pinta un bloque encima del botón (casi del mismo tono que la barra): se aviva su icono o su texto */
 @media (hover: hover) { .bar button:hover { background: none; filter: brightness(1.25); } .bar .ibtn:hover, .bar .sbtn:hover { color: #fff; } .bar button:active { background: rgba(255, 255, 255, .07); } }
 .bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
+/* Botón de Reproducir/Detener solo con el icono, a la derecha de la cabecera encogida (lo crea ui.js y copia el estado de #playBtn) */
+.mini { position: absolute; top: 15px; right: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); opacity: clamp(0, calc(2 * var(--p) - 1), 1); transition: color .3s ease; -webkit-tap-highlight-color: transparent; }
+.mini .pi { width: 22px; height: 22px; }
+.mini[data-state="stop"] { color: #ff7a7a; }
+.mini[data-state="stop"] .pi { clip-path: polygon(25% 25%, 75% 25%, 75% 75%, 25% 75%); }
+.mini:active { background: rgba(255, 255, 255, .07); }
+.mini:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 .sep { flex: 0 0 1px; margin: 12px 0; background: rgba(255, 255, 255, .09); }
 .ibtn { flex: 0 0 54px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; }
 /* Un solo botón: verde (el color de énfasis) para Reproducir y rojo suave para Detener. Al cambiar, el triángulo se vuelve cuadrado, un texto sube y el otro entra desde abajo,
@@ -604,7 +613,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
-  :root { --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
+  :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
@@ -616,7 +625,10 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   /* Cabecera fija en una sola fila (no se encoge con el scroll): título a la izquierda y la barra a la derecha con Reproducir, el reloj (sin píldora,
      en el fondo de la barra; ui.js lo mueve aquí), la separación y los botones de tamaño de las presintonías, información y ajustes */
   .hin { display: flex; align-items: center; gap: 24px; width: var(--dw); height: var(--hf); padding: 0; }
+  .scroller { -webkit-mask-image: none; mask-image: none; }
+  .mini { display: none; }
   .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; justify-content: flex-start; }
+  .bar { background: #1d242d; box-shadow: none; border-radius: 12px; }
   .bar { flex: 0 0 auto; width: 500px; margin: 0; }
   .bar #playBtn { flex: 1 1 0; }
   .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */

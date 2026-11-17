@@ -197,21 +197,19 @@ const ctlBar = document.getElementById('ctlBar');
 const HDR_DIST = 108;   // px de scroll hasta que queda del todo encogida: lo que mide de menos (así el contenido sube a la vez que baja la cabecera)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let hdrP = -1;
-// Al encoger, icono y título (juntos) se van al centro de la cabecera: --tx desplaza los dos a la vez, en proporción al scroll
-const hrowEl = document.querySelector('.hrow'), logoEl = hrowEl.querySelector('.logo'), titlesEl = hrowEl.querySelector('.titles'), titleEl = document.getElementById('title');
-let headTx = 0;
-function centerHead(p) {
-  let tx = 0;
-  if (p > 0) {
-    const r = document.createRange(); r.selectNodeContents(titleEl);
-    const textW = r.getBoundingClientRect().width, a = logoEl.getBoundingClientRect(), t = titlesEl.getBoundingClientRect(), h = hrowEl.getBoundingClientRect();
-    const right = t.left + textW + (t.width - textW) * (1 - p);   // el subtítulo (más ancho o más estrecho) deja de contar al desaparecer
-    tx = Math.round((h.left + h.width / 2 - (a.left + right) / 2 + headTx) * p * 10) / 10;
-  }
-  headTx = tx;
-  document.documentElement.style.setProperty('--tx', tx + 'px');
-}
+// Botón de Reproducir/Detener solo con el icono, a la derecha de la cabecera encogida: copia el estado de #playBtn y lo pulsa
+const miniPlay = document.createElement('button');
+miniPlay.type = 'button'; miniPlay.className = 'mini'; miniPlay.inert = true;
+miniPlay.innerHTML = '<span class="pi" aria-hidden="true"></span>';
+document.querySelector('.hin').appendChild(miniPlay);
+const syncMini = () => { miniPlay.dataset.state = playBtn.dataset.state || 'play'; miniPlay.setAttribute('aria-label', playBtn.getAttribute('aria-label') || 'Reproducir'); miniPlay.disabled = playBtn.disabled; };
+new MutationObserver(syncMini).observe(playBtn, { attributes: true, attributeFilter: ['data-state', 'aria-label', 'disabled'] });
+syncMini();
+miniPlay.addEventListener('click', () => playBtn.click());
+let fadeV = -1;
 function hdrUpdate() {
+  const st = Math.max(scroller.scrollTop, window.scrollY), fade = Math.round(Math.min(st, 40));
+  if (fade !== fadeV) { fadeV = fade; document.documentElement.style.setProperty('--fade', fade + 'px'); }
   let p = Math.min(1, Math.max(0, Math.max(scroller.scrollTop, window.scrollY) / HDR_DIST));
   if (reduceMotion.matches) p = p > .5 ? 1 : 0;
   if (desk.matches) p = 0;   // en pantallas grandes la cabecera no se encoge
@@ -219,8 +217,8 @@ function hdrUpdate() {
   if (p === hdrP) return;
   hdrP = p;
   document.documentElement.style.setProperty('--p', p);
-  centerHead(p);
-  ctlBar.inert = p > .5;   // con la cabecera encogida la barra no se ve: tampoco se pulsa ni se llega con el tabulador
+  ctlBar.inert = p > .5;
+  miniPlay.inert = p <= .5;   // solo se pulsa con la cabecera encogida   // con la cabecera encogida la barra no se ve: tampoco se pulsa ni se llega con el tabulador
 }
 scroller.addEventListener('scroll', hdrUpdate, { passive: true });
 window.addEventListener('scroll', hdrUpdate, { passive: true });
