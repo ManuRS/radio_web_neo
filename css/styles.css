@@ -8,9 +8,12 @@
 @font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-latin-700-normal.woff2) format('woff2'); }
 @font-face { font-family: 'Barlow Condensed'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-condensed-latin-700-normal.woff2) format('woff2'); }
 
-/* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen) */
+/* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
+@property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
+/* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
+html.bgglow.playing { --tint: 24%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -18,7 +21,7 @@
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
   --accent: #58dfa3;
-  transition: --accent .6s ease;
+  transition: --accent .6s ease, --tint .6s ease;
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
   --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
@@ -49,7 +52,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--accent) var(--tint), var(--hdr)); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
 .hin { position: relative; box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 48px * var(--p)); height: calc(48px - 48px * var(--p)); margin-right: calc(12px - 12px * var(--p)); border-radius: 27%; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* al encoger el icono desaparece y el título queda solo, a la izquierda */
@@ -607,15 +610,11 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
    en una columna, como siempre. La misma condición está en ui.js (DESK_MQ) */
 .panes, .pane { display: contents; }
 .psize, .sepclk, #bgGlow { display: none; }
-/* Ajustes > General, "Color de fondo": fuera de las pantallas grandes, en gris y con la nota debajo */
-.bgonly { display: block; margin-top: 1px; font-size: .74rem; color: #6f7b8b; }
-#bgRow.off > label:first-child { color: #6f7b8b; }
-#bgRow .switch input:disabled + .track { background: #2a3039; }
-#bgRow .switch input:disabled + .track::after { background: #5c6877; }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
+  html.bgglow.playing { --tint: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
@@ -632,7 +631,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; justify-content: flex-start; }
   .bar { background: #1d242d; box-shadow: none; border-radius: 12px; }
   .sep { background: rgba(255, 255, 255, .09); }
-  .bar { flex: 0 0 auto; width: 500px; margin: 0; }
+  .bar { flex: 0 0 auto; width: 460px; margin: 0; }
   .bar #playBtn { flex: 1 1 0; }
   .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */
   .bar .psize { display: flex; }
@@ -665,5 +664,4 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   /* Luz desde abajo: las barras del ecualizador en un lienzo pequeño, estirado y muy difuminado, detrás de todo (glow.js) */
   #bgGlow { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; width: 100%; height: 62vh; pointer-events: none; filter: blur(34px); opacity: .55; }
   #bgGlow[hidden] { display: none; }
-  .bgonly { display: none; }
 }

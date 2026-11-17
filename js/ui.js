@@ -50,6 +50,7 @@ export function updateButtons(connected, canPlay = false) {
 // El botón único de la cabecera: con sesión de escucha es Detener y sin ella, Reproducir (como el de la pantalla completa). Al cambiar, se lanza el efecto (clase "swap")
 function setPlayBtn(connected) {
   const state = connected ? 'stop' : 'play';
+  document.documentElement.classList.toggle('playing', !!connected);   // con "Color de fondo" activado, el CSS colorea la cabecera mientras suena
   if (playBtn.dataset.state === state) return;
   playBtn.dataset.state = state;
   playBtn.setAttribute('aria-label', connected ? 'Detener' : 'Reproducir');
@@ -211,6 +212,19 @@ new MutationObserver(syncMini).observe(playBtn, { attributes: true, attributeFil
 syncMini();
 miniPlay.addEventListener('click', () => playBtn.click());
 miniSet.addEventListener('click', () => document.getElementById('settingsBtn').click());
+// El color de la barra del sistema (theme-color) sigue al de la cabecera mientras este cambia (al empezar o parar, o al cambiar el color de énfasis de la cadena)
+const themeMeta = document.querySelector('meta[name="theme-color"]'), hdrEl = document.getElementById('hdr');
+const px = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+let themeRaf = 0, themeEnd = 0;
+function syncTheme() {
+  px.clearRect(0, 0, 1, 1); px.fillStyle = '#000'; px.fillStyle = getComputedStyle(hdrEl).backgroundColor; px.fillRect(0, 0, 1, 1);
+  const d = px.getImageData(0, 0, 1, 1).data;
+  themeMeta.content = '#' + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, '0')).join('');
+  themeRaf = performance.now() < themeEnd ? requestAnimationFrame(syncTheme) : 0;
+}
+const themeKick = () => { themeEnd = performance.now() + 750; if (!themeRaf) themeRaf = requestAnimationFrame(syncTheme); };
+document.documentElement.addEventListener('transitionstart', e => { if (e.target === document.documentElement && (e.propertyName === '--tint' || e.propertyName === '--accent')) themeKick(); });
+desk.addEventListener('change', themeKick);
 let fadeV = -1;
 function hdrUpdate() {
   const st = Math.max(scroller.scrollTop, window.scrollY), fade = Math.round(Math.min(st, 40));

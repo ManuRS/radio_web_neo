@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgRow, bgSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { glowOn, setGlow } from './glow.js';
 import { prefetchSounds } from './sounds.js';
@@ -402,14 +402,8 @@ colorSwitch.addEventListener('change', () => {
   refreshAccent();
 });
 
-// Color de fondo (activado por defecto): la luz desde abajo con el sonido (glow.js). Solo en pantallas grandes: en las demás, en gris y sin poder tocarse
+// Color de fondo (activado por defecto): en pantallas grandes, la luz desde abajo con el sonido (glow.js); en las pequeñas, la cabecera se colorea mientras suena (styles.css)
 bgSwitch.checked = glowOn();
-function syncBgRow() {
-  bgSwitch.disabled = !desk.matches;
-  bgRow.classList.toggle('off', !desk.matches);
-}
-syncBgRow();
-desk.addEventListener('change', syncBgRow);
 bgSwitch.addEventListener('change', () => {
   setGlow(bgSwitch.checked);
   log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));

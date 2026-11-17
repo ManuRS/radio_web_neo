@@ -19,11 +19,14 @@ canvas.width = W; canvas.height = H;
 
 let on = true;
 try { on = localStorage.getItem(KEY) !== '0'; } catch (_) {}
+// La clase "bgglow" del <html> dice si "Color de fondo" está activado: en pantallas pequeñas lo usa el CSS para colorear la cabecera mientras suena (ver --tint en styles.css)
+document.documentElement.classList.toggle('bgglow', on);
 let lv = [], raf = 0, idleTimer = 0, drawn = false;
 
 export const glowOn = () => on;
 export function setGlow(v) {
   on = !!v;
+  document.documentElement.classList.toggle('bgglow', on);
   try { localStorage.setItem(KEY, on ? '1' : '0'); } catch (_) {}
   kick();
 }
