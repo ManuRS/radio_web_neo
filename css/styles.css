@@ -8,12 +8,12 @@
 @font-face { font-family: 'Barlow'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-latin-700-normal.woff2) format('woff2'); }
 @font-face { font-family: 'Barlow Condensed'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-condensed-latin-700-normal.woff2) format('woff2'); }
 
-/* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
+/* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada); --hk, cuánto se acerca el énfasis del resto de la página al tono de la cabecera */
 @property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
-@property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca al tono de la cabecera el color de énfasis del resto de la página (0% = el color de siempre) */
+@property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #566db9; }
 
-/* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
+/* Con Material Design y sonando, la cabecera se colorea con el color de énfasis y el resto de la página toma su tono */
 html.material.playing { --tint: 32%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
@@ -31,7 +31,7 @@ html.material.playing { --tint: 32%; --hk: 100%; }
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
 }
 
-/* Todo lo que hay en la página (y las ventanas, que cuelgan del body) usa --acc-e como color de énfasis: el de siempre, o el tono de la cabecera con "Color de fondo" y sonando en móvil */
+/* Todo lo que hay en la página (y las ventanas, que cuelgan del body) usa --acc-e como color de énfasis: el de siempre, o el tono de la cabecera con Material Design y sonando */
 body {
   --accent: var(--acc-e);
   --on-accent: color-mix(in srgb, var(--acc-e) 9%, #000);
@@ -64,7 +64,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* en el móvil, panel liso y algo más claro que el fondo (#212530), con la barra dentro; en PC vuelve el gris de antes */
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* panel liso y algo más claro que el fondo (#212530), con la barra dentro; con Material Design y sonando, teñido por el énfasis (--tint) */
 .hin { position: relative; box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 48px * var(--p)); height: calc(48px - 48px * var(--p)); margin-right: calc(12px - 12px * var(--p)); border-radius: 27%; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* al encoger el icono desaparece y el título queda solo, a la izquierda */
@@ -145,11 +145,12 @@ button:disabled { opacity: .45; cursor: default; }
 input { width: 100%; accent-color: var(--accent); }
 /* Deslizadores propios: el nativo de Chrome dibuja un contorno gris alrededor del relleno. --r (0-1) lo pone ui.js (paintRange); el relleno llega al centro del pulgar (18 px) */
 input[type="range"] { -webkit-appearance: none; appearance: none; height: 24px; margin: 0; background: transparent; cursor: pointer; --r: 1; }
-input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--accent) calc(9px + (100% - 18px) * var(--r)), #2c3542 0); }
-input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -5px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 1px 3px #0008; }
+input[type="range"]::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--rng, var(--accent)) calc(9px + (100% - 18px) * var(--r)), #2c3542 0); }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -5px; border: 0; border-radius: 50%; background: var(--rng, var(--accent)); box-shadow: 0 1px 3px #0008; }
 input[type="range"]::-moz-range-track { height: 8px; border-radius: 4px; background: #2c3542; }
-input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--accent); }
-input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: var(--accent); box-shadow: 0 1px 3px #0008; }
+input[type="range"]::-moz-range-progress { height: 8px; border-radius: 4px; background: var(--rng, var(--accent)); }
+input[type="range"]::-moz-range-thumb { width: 18px; height: 18px; border: 0; border-radius: 50%; background: var(--rng, var(--accent)); box-shadow: 0 1px 3px #0008; }
+.vols input[type="range"] { --rng: color-mix(in srgb, var(--accent) 78%, #000); }   /* los deslizadores de volumen, del tono medio de las barras del EQ (que tienen degradado hacia abajo) y no del énfasis a pleno */
 input[type="range"]:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent); outline-offset: 3px; border-radius: 12px; }
 input[type="range"]:disabled { opacity: .4; }
 
@@ -629,31 +630,38 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 .panes, .pane { display: contents; }
 .psize, .sepclk, #bgGlow { display: none; }
 
-/* Cabecera coloreada (con "Material Design" y sonando): todo lo que hay en ella pasa a blanco para que se lea sobre el color; la píldora del reloj ya tiene su propio fondo */
+/* ===== MATERIAL DESIGN (ajuste "Material Design"; la clase html.material, en PC y en móvil) =====
+   Sonando, la cabecera toma el color de énfasis (--tint) y lo de abajo se tiñe de su familia: los tonos salen del propio color de la cabecera (--hfull)
+   con colores relativos de OKLCH, definidos una vez aquí y usados por las reglas de más abajo (sin esa función, los de reserva son blanco y el énfasis tal cual).
+   ui.js calcula con el mismo L y croma (panelTone) el tono de las barras del EQ */
 .subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
-@media not all and (min-width: 1024px) and (min-height: 600px) {
-  .pc-only { display: none; }   /* "Color de fondo" (la luz de abajo) es solo de PC */
+@media not all and (min-width: 1024px) and (min-height: 600px) { .pc-only { display: none; } }   /* "Color de fondo" (la luz de abajo) es solo de PC */
+@supports (color: oklch(from red l c h)) {
+  html.material body {
+    --tx1: oklch(from var(--accent) .95 calc(c * .4) h);   /* blanco suave: la cabecera y la presintonía activa, que tienen fondo de color */
+    --tx2: oklch(from var(--accent) .92 calc(c * .8) h);   /* blanco teñido: el resto de lo blanco (ajustes) */
+    --t-pan: oklch(from var(--hfull) .68 calc(c * 1.6) h);   /* los tres paneles negros (RDS, EQ, volúmenes): todo en este tono */
+    --t-sub: oklch(from var(--hfull) .64 calc(c * 1.5) h);   /* presintonías, títulos, buscador y boletines */
+    --t-frq: oklch(from var(--hfull) .56 calc(c * 1.4) h);   /* frecuencias de las presintonías */
+    --t-act: oklch(from var(--hfull) calc(l + .08) calc(c * 1.25) h);   /* fondo de la presintonía activa: más claro que la cabecera para destacar */
+  }
+  html.material .vols input[type="range"] { --rng: var(--t-pan); }
 }
-/* Material Design (PC y móvil): sonando, la cabecera toma el color de énfasis, los blancos se tiñen y los textos de los paneles también */
-html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span { color: var(--accent); }   /* con Material Design, los textos e iconos de los tres paneles (emisora, ecualizador, volúmenes) en el color de énfasis (el del cuerpo: el de la cabecera mientras suena) */
-html.material.playing .now .ps, html.material.playing .eq-label, html.material.playing .pres-open, html.material.playing .vols label, html.material.playing .vols span { color: color-mix(in srgb, var(--accent) 50%, #fff); }   /* sonando, el tono de la cabecera queda apagado sobre los paneles negros: se aclara para darle vida */
-html.material .preset.active { background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* la presintonía activa, del mismo tono que el fondo de la cabecera */
-html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
-html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: #fff; }
-@supports (color: oklch(from red l c h)) {   /* con Material Design los blancos se tiñen del color de énfasis (los de siempre quedan de reserva) */
-  html.material body { --w1: oklch(from var(--accent) .95 calc(c * .4) h); --w2: oklch(from var(--accent) .92 calc(c * .8) h); }   /* w1: blanco suave, para lo que va sobre el fondo coloreado; w2: blanco teñido, para el resto */
-  html.material body, html.material dialog.settings { color: var(--w2); }
-  html.material .panel.search input, html.material .panel.search .badge { color: oklch(from var(--hfull) .68 calc(c * 1.5) h); }   /* los textos de los paneles son tonos más claros del propio color de la cabecera (--hfull), como en Material: ni blanco, que llama la atención, ni gris, que no se adapta, ni el énfasis a pelo, que desentona con la cabecera */
-  html.material .ptitle, html.material .panel.search input::placeholder, html.material .panel .info b, html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn, html.material .mbar { color: oklch(from var(--hfull) .64 calc(c * 1.5) h); }   /* los títulos, el buscador, Modo boletines y las presintonías, todos al mismo tono apagado */
-  html.material .preset:not(.recoff):not(.active) .pf { color: oklch(from var(--hfull) .56 calc(c * 1.4) h); }   /* y las frecuencias, un punto más */
-  html.material .preset.active .pf { color: oklch(from var(--accent) .88 calc(c * .5) h); }
-  html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
-  html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state],
-  html.material .preset.active, html.material .preset.active .pn { color: var(--w1); }   /* cabecera y presintonía activa (ya coloreada): contraste con el fondo */
-  html.material .eq-label, html.material.playing .eq-label, html.material .pres-open, html.material.playing .pres-open, html.material .vols label, html.material.playing .vols label, html.material .vols span, html.material.playing .vols span { color: oklch(from var(--hfull) .68 calc(c * 1.6) h); }   /* los tres paneles negros: un mismo tono para todo (EQ, iconos, volúmenes, RDS y sus barras): más claro que la cabecera, de su familia */   /* sonando: el color de énfasis aclarado sin perder su saturación (mezclarlo con blanco lo dejaba pastel y gris) */
-  html.material .now .ps, html.material.playing .now .ps { color: oklch(from var(--hfull) .68 calc(c * 1.6) h); }   /* el nombre de la emisora (RDS): el mismo tono que lo demás de los tres paneles */
-  html.material .vols input[type="range"] { --accent: oklch(from var(--hfull) .68 calc(c * 1.6) h); }   /* y los deslizadores de volumen */
-  body { --on-txt: oklch(from var(--accent) clamp(.1, (.62 - l) * 1000, .97) calc(c * .25) h); }   /* texto sobre fondo de énfasis: claro si el énfasis es oscuro (como el tono de la cabecera) y oscuro si es claro */
+html.material body, html.material dialog.settings { color: var(--tx2, #edf2f7); }
+html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
+html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: var(--tx1, #fff); }
+html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span,
+html.material .panel.search input, html.material .panel.search .badge { color: var(--t-pan, var(--accent)); }
+html.material .ptitle, html.material .panel .info b, html.material .panel.search input::placeholder, html.material .mbar,
+html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }
+html.material .preset:not(.recoff):not(.active) .pf { color: var(--t-frq, var(--accent)); }
+html.material .preset.active { background: var(--t-act, color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr))); color: var(--tx1, #fff); }
+html.material .preset.active .pn { color: var(--tx1, #fff); }
+html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80%, transparent); }
+
+/* Texto sobre un fondo de énfasis (botón principal de las ventanas, modos activos del EQ y de boletines): claro si el énfasis es oscuro, oscuro si es claro */
+@supports (color: oklch(from red l c h)) {
+  body { --on-txt: oklch(from var(--accent) clamp(.1, (.62 - l) * 1000, .97) calc(c * .25) h); }
   .dlg-actions .primary, .eqmodes button.active, .nseg button.active { color: var(--on-txt); }
 }
 
