@@ -616,6 +616,12 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
   html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
   html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
+  /* Y el resto de la pantalla toma el mismo tono, más suave (--t2: una parte del tinte de la cabecera): el fondo y las tarjetas se mezclan con el color de énfasis */
+  html.bgglow.playing { --t2: calc(var(--tint) * .3); }
+  html.bgglow.playing, html.bgglow.playing body { background: color-mix(in srgb, var(--accent) var(--t2), #1a2029); }
+  html.bgglow.playing :is(.now, .viz, .panel) { background: color-mix(in srgb, var(--accent) var(--t2), #11161d); }
+  html.bgglow.playing :is(.panel.news, .panel.search, .panel.access, .mbar, .preset) { background: color-mix(in srgb, var(--accent) var(--t2), #1f2632); }
+  html.bgglow.playing :is(.preset.more, .panel:not(.live) .badge) { background: color-mix(in srgb, var(--accent) var(--t2), #1a2029); }
 }
 
 @media (min-width: 1024px) and (min-height: 600px) {
