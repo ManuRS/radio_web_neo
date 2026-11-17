@@ -72,7 +72,7 @@
 <link rel="icon" type="image/svg+xml" href="icon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#212530">
+<meta name="theme-color" content="#323c4a">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Radio Neo">
@@ -123,6 +123,8 @@
        En el móvil estos contenedores no cuentan para la maqueta (display: contents) y todo queda en una columna, como siempre -->
   <div class="panes">
   <div class="pane pane1">
+  <!-- Las tres tarjetas negras (emisora/RDS, ecualizador y volúmenes): en el móvil, al hacer scroll, la del RDS se queda fija bajo la cabecera y las otras dos pasan por debajo (ver .stack en styles.css) -->
+  <div class="stack">
   <div class="now">
     <div class="ps idle" id="psValue"><span id="psText">—</span></div>
     <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
@@ -145,6 +147,7 @@
       <input id="newsVolume" type="range" min="0.001" max="1.0" step="any" value="1.0">
       <span id="newsVolValue">100%</span>
     </div>
+  </div>
   </div>
 
   <!-- ===================================================== -->

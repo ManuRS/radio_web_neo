@@ -197,28 +197,40 @@ const ctlBar = document.getElementById('ctlBar');
 const HDR_DIST = 108;   // px de scroll hasta que queda del todo encogida: lo que mide de menos (así el contenido sube a la vez que baja la cabecera)
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let hdrP = -1;
-// Botón de Reproducir/Detener solo con el icono, a la derecha de la cabecera encogida: copia el estado de #playBtn y lo pulsa
+// Botones de Reproducir/Detener y de Ajustes solo con el icono, a la derecha de la cabecera encogida: copian el estado de #playBtn / pulsan #settingsBtn
 const miniPlay = document.createElement('button');
 miniPlay.type = 'button'; miniPlay.className = 'mini'; miniPlay.inert = true;
 miniPlay.innerHTML = '<span class="pi" aria-hidden="true"></span>';
-document.querySelector('.hin').appendChild(miniPlay);
+const miniSet = document.createElement('button');
+miniSet.type = 'button'; miniSet.className = 'mini mini-set'; miniSet.inert = true;
+miniSet.setAttribute('aria-label', 'Ajustes');
+miniSet.innerHTML = document.getElementById('settingsBtn').innerHTML;
+document.querySelector('.hin').append(miniSet, miniPlay);
 const syncMini = () => { miniPlay.dataset.state = playBtn.dataset.state || 'play'; miniPlay.setAttribute('aria-label', playBtn.getAttribute('aria-label') || 'Reproducir'); miniPlay.disabled = playBtn.disabled; };
 new MutationObserver(syncMini).observe(playBtn, { attributes: true, attributeFilter: ['data-state', 'aria-label', 'disabled'] });
 syncMini();
 miniPlay.addEventListener('click', () => playBtn.click());
-let fadeV = -1;
+miniSet.addEventListener('click', () => document.getElementById('settingsBtn').click());
+// Fases del scroll en el móvil: 0 cabecera grande; 1 cabecera encogida; 2 la tarjeta del RDS queda fija (sticky, ver .stack en styles.css) y las otras dos pasan por debajo, una y luego la otra;
+// 3 solo queda el RDS y las presintonías; 4 el RDS se suelta y sube con todo. Aquí solo se calcula dónde empieza a verse el contenido (--e) y cuánto se desvanece (--fade)
+const HF = 182, HMIN = 74, PIN_TOP = 86;   // alto de la cabecera grande y encogida, y dónde queda fijo el RDS (igual que .stack > .now en styles.css)
+const rds = document.querySelector('.stack > .now');
+let edgeV = -1, fadeV = -1;
 function hdrUpdate() {
-  const st = Math.max(scroller.scrollTop, window.scrollY), fade = Math.round(Math.min(st, 40));
-  if (fade !== fadeV) { fadeV = fade; document.documentElement.style.setProperty('--fade', fade + 'px'); }
-  let p = Math.min(1, Math.max(0, Math.max(scroller.scrollTop, window.scrollY) / HDR_DIST));
+  const st = Math.max(scroller.scrollTop, window.scrollY);
+  const rel = desk.matches ? 0 : Math.max(0, PIN_TOP - rds.getBoundingClientRect().top);   // lo que el RDS ya se ha soltado hacia arriba (0 mientras está fijo o sin bajar)
+  let p = Math.min(1, Math.max(0, st / HDR_DIST));
   if (reduceMotion.matches) p = p > .5 ? 1 : 0;
   if (desk.matches) p = 0;   // en pantallas grandes la cabecera no se encoge
   p = Math.round(p * 100) / 100;
+  const edge = Math.round(Math.max(HF - (HF - HMIN) * p, PIN_TOP - Math.min(rel, PIN_TOP - HMIN))), fade = Math.round(Math.min(rel, 40));
+  if (edge !== edgeV) { edgeV = edge; document.documentElement.style.setProperty('--e', edge + 'px'); }
+  if (fade !== fadeV) { fadeV = fade; document.documentElement.style.setProperty('--fade', fade + 'px'); }
   if (p === hdrP) return;
   hdrP = p;
   document.documentElement.style.setProperty('--p', p);
   ctlBar.inert = p > .5;
-  miniPlay.inert = p <= .5;   // solo se pulsa con la cabecera encogida   // con la cabecera encogida la barra no se ve: tampoco se pulsa ni se llega con el tabulador
+  miniPlay.inert = miniSet.inert = p <= .5;   // solo se pulsan con la cabecera encogida (con ella desplegada la barra de controles es la que se usa)
 }
 scroller.addEventListener('scroll', hdrUpdate, { passive: true });
 window.addEventListener('scroll', hdrUpdate, { passive: true });
