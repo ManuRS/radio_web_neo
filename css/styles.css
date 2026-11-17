@@ -14,7 +14,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow.playing { --tint: 44%; --hk: 100%; }
+html.bgglow.playing { --tint: 56%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -23,7 +23,7 @@ html.bgglow.playing { --tint: 44%; --hk: 100%; }
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
   --accent: #58dfa3;
   transition: --accent .6s ease, --tint .6s ease, --hk .6s ease;
-  --hfull: color-mix(in srgb, var(--accent) 44%, var(--hdr));   /* el tono de la cabecera coloreada (44 % como --tint) */
+  --hfull: color-mix(in srgb, var(--accent) 56%, var(--hdr));   /* el tono de la cabecera coloreada (56 % como --tint) */
   --acc-e: color-mix(in srgb, var(--hfull) var(--hk), var(--accent));   /* el color de énfasis que ve el resto de la página */
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
   --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
@@ -73,7 +73,7 @@ h1 { font-size: calc(var(--t0) - (var(--t0) - min(1.75rem, calc((100vw - 140px) 
 p { color: #aeb9c8; line-height: 1.45; }
 /* Subtítulo bajo el título: se va cerrando en altura y desvaneciendo con el scroll */
 .subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; color: #c4cdd9; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
-.status { display: flex; margin-left: auto; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
+.status { display: flex; margin-left: auto; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: rgba(17, 22, 29, .5); color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
 .dot.err { background: #ff7070; }
@@ -255,7 +255,7 @@ body.no-config .panel.vols > * { visibility: visible; }
 .preset .pf:empty { display: none; }
 .preset[hidden] { display: none; }
 .preset.more { justify-content: center; font-size: 1.8rem; font-weight: 600; line-height: 1; color: var(--accent); background: #1a2029; border: 1px dashed #303a47; }
-.preset.active { border-color: var(--accent); background: var(--accent-bg); }
+.preset.active { background: var(--accent-bg); }   /* solo se colorea por dentro, sin cerco */
 .preset:disabled { opacity: .4; }
 /* Grabando: cadenas cuya emisora no se puede grabar (modo degradado). No se pueden poner */
 .preset.recoff { background: #231b20; border-color: #3a2830; color: #7d6b72; cursor: not-allowed; }
@@ -625,11 +625,13 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* Cabecera coloreada (móvil, "Color de fondo" y sonando): todo lo que hay en ella pasa a blanco para que se lea sobre el color; la píldora del reloj ya tiene su propio fondo */
 .subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
+  .lbl-desk { display: none; }   /* el ajuste se llama "Color de fondo" en PC y "Material Design" en móvil */
   html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
   html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
 }
 
 @media (min-width: 1024px) and (min-height: 600px) {
+  .lbl-mob { display: none; }
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
   html.bgglow.playing { --tint: 0%; --hk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */

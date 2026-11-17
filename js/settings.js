@@ -402,11 +402,11 @@ colorSwitch.addEventListener('change', () => {
   refreshAccent();
 });
 
-// Color de fondo (activado por defecto): en pantallas grandes, la luz desde abajo con el sonido (glow.js); en las pequeñas, la cabecera se colorea mientras suena (styles.css)
+// Color de fondo (en móvil se llama "Material Design"; activado por defecto): en pantallas grandes, la luz desde abajo con el sonido (glow.js); en las pequeñas, la cabecera se colorea mientras suena (styles.css)
 bgSwitch.checked = glowOn();
 bgSwitch.addEventListener('change', () => {
   setGlow(bgSwitch.checked);
-  log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
+  log((desk.matches ? 'Color de fondo' : 'Material Design') + ': ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
 });
 
 // Color por defecto (Ajustes > General): Verde (el de styles.css), Azul o uno personalizado con el selector. Solo cuenta con

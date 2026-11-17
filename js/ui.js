@@ -88,7 +88,7 @@ export function paletteColor(key) {
 
 // Color de las barras del ecualizador: con "Color de fondo" activado y sonando, en móvil, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
 // como el --hdrc del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr). Si no, el de énfasis tal cual
-const TINT = .44, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3';
+const TINT = .56, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3';
 const tintOn = () => document.documentElement.classList.contains('bgglow') && document.documentElement.classList.contains('playing') && !desk.matches;
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
