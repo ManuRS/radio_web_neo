@@ -86,16 +86,17 @@ export function paletteColor(key) {
   return STATION_PALETTE[(h >>> 0) % STATION_PALETTE.length];
 }
 
-// Color de énfasis con "Material Design" (el ajuste "Color de fondo") en móvil: sonando, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
-// como --hfull del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr); parada, el de énfasis tal cual. Si no hay modo, también
-const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#566db9';
+// Color de énfasis con "Material Design": sonando, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
+// como --hfull del CSS; TINT y hdrBase son los de styles.css: --tint y --hdr); parada, el de énfasis tal cual. Si no hay modo, también
+const TINT = .32, ACCENT_DEF = '#566db9';
+const hdrBase = () => desk.matches ? [0x26, 0x2d, 0x37] : [0x32, 0x3c, 0x4a];   // el --hdr de styles.css: el de PC es más oscuro
 const matMode = () => {   // 0 = nada o parada, 1 = sonando con "Material Design"
   const c = document.documentElement.classList;
-  return c.contains('bgglow') && c.contains('playing') && !desk.matches ? 1 : 0;
+  return c.contains('material') && c.contains('playing') ? 1 : 0;
 };
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
-  return '#' + HDR_BASE.map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
+  return '#' + hdrBase().map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
 }
 let accentHex;
 export function applyAccent(hex) {
@@ -109,7 +110,7 @@ export function applyAccent(hex) {
 let matShown = 0;
 const matCheck = () => { if (matMode() !== matShown) { matShown = matMode(); applyAccent(accentHex); } };
 new MutationObserver(matCheck).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-desk.addEventListener('change', matCheck);
+desk.addEventListener('change', () => { matShown = matMode(); applyAccent(accentHex); });
 
 // ===============================================
 // == VENTANAS (DIALOG) ==

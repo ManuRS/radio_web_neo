@@ -8,9 +8,9 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
-import { glowOn, setGlow } from './glow.js';
+import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
 import { restartAudio } from './player.js';
@@ -402,12 +402,19 @@ colorSwitch.addEventListener('change', () => {
   refreshAccent();
 });
 
-// Color de fondo (en móvil se llama "Material Design"; activado por defecto): en pantallas grandes, la luz desde abajo con el sonido (glow.js); en las pequeñas, la cabecera se colorea mientras suena (styles.css)
+// Color de fondo (solo PC; activado por defecto): la luz desde abajo con el sonido (glow.js)
 bgSwitch.checked = glowOn();
 bgSwitch.addEventListener('change', () => {
   setGlow(bgSwitch.checked);
-  log((desk.matches ? 'Color de fondo' : 'Material Design') + ': ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
+  log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
 });
+// Material Design (PC y móvil; por defecto activado en móvil y desactivado en PC): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
+matSwitch.checked = matOn();
+matSwitch.addEventListener('change', () => {
+  setMaterial(matSwitch.checked);
+  log('Material Design: ' + (matSwitch.checked ? 'activado' : 'desactivado'));
+});
+desk.addEventListener('change', () => { matSwitch.checked = matOn(); });   // sin ajuste guardado, el de por defecto cambia con la pantalla
 
 // Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul o uno personalizado con el selector. Solo cuenta con
 // siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "indigo", "green", "blue" o "#rrggbb")

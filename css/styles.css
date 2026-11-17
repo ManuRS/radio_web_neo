@@ -14,7 +14,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #566db9; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow.playing { --tint: 32%; --hk: 100%; }
+html.material.playing { --tint: 32%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -628,33 +628,32 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 .panes, .pane { display: contents; }
 .psize, .sepclk, #bgGlow { display: none; }
 
-/* Cabecera coloreada (móvil, "Color de fondo" y sonando): todo lo que hay en ella pasa a blanco para que se lea sobre el color; la píldora del reloj ya tiene su propio fondo */
+/* Cabecera coloreada (con "Material Design" y sonando): todo lo que hay en ella pasa a blanco para que se lea sobre el color; la píldora del reloj ya tiene su propio fondo */
 .subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
-  .lbl-desk { display: none; }   /* el ajuste se llama "Color de fondo" en PC y "Material Design" en móvil */
-  html.bgglow .now .ps, html.bgglow .eq-label, html.bgglow .pres-open, html.bgglow .vols label, html.bgglow .vols span { color: var(--accent); }   /* con Material Design, los textos e iconos de los tres paneles (emisora, ecualizador, volúmenes) en el color de énfasis (el del cuerpo: el de la cabecera mientras suena) */
-  html.bgglow.playing .now .ps, html.bgglow.playing .eq-label, html.bgglow.playing .pres-open, html.bgglow.playing .vols label, html.bgglow.playing .vols span { color: color-mix(in srgb, var(--accent) 50%, #fff); }   /* sonando, el tono de la cabecera queda apagado sobre los paneles negros: se aclara para darle vida */
-  html.bgglow .preset.active { background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* la presintonía activa, del mismo tono que el fondo de la cabecera */
-  html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
-  html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
-  @supports (color: oklch(from red l c h)) {   /* con Material Design los blancos se tiñen del color de énfasis (los de siempre quedan de reserva) */
-    html.bgglow body { --w1: oklch(from var(--accent) .95 calc(c * .4) h); --w2: oklch(from var(--accent) .92 calc(c * .8) h); }   /* w1: blanco suave, para lo que va sobre el fondo coloreado; w2: blanco teñido, para el resto */
-    html.bgglow body, html.bgglow dialog.settings { color: var(--w2); }
-    html.bgglow .preset:not(.recoff):not(.active), html.bgglow .preset:not(.recoff):not(.active) .pn, html.bgglow .panel .info b, html.bgglow .panel.search input, html.bgglow .panel.search .badge, html.bgglow .mbar { color: oklch(from var(--acc-raw) .72 calc(c * .6) h); }   /* de Presintonías para abajo el fondo no cambia: los textos toman un tono del énfasis que se sumerge en él (ni blanco, que llama la atención, ni gris, que no se adapta) */
-    html.bgglow .ptitle, html.bgglow .panel.search input::placeholder, html.bgglow .preset:not(.recoff):not(.active) .pf { color: oklch(from var(--acc-raw) .56 calc(c * .5) h); }   /* los secundarios, más apagados */
-    html.bgglow .preset.active .pf { color: oklch(from var(--accent) .88 calc(c * .5) h); }
-    html.bgglow header h1, html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
-    html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state],
-    html.bgglow .preset.active, html.bgglow .preset.active .pn { color: var(--w1); }   /* cabecera y presintonía activa (ya coloreada): contraste con el fondo */
-    html.bgglow.playing .now .ps, html.bgglow.playing .eq-label, html.bgglow.playing .pres-open, html.bgglow.playing .vols label, html.bgglow.playing .vols span { color: oklch(from var(--accent) calc(l + .14) calc(c * 1.5) h); }   /* sonando: el color de énfasis aclarado sin perder su saturación (mezclarlo con blanco lo dejaba pastel y gris) */
-  }
+  .pc-only { display: none; }   /* "Color de fondo" (la luz de abajo) es solo de PC */
+}
+/* Material Design (PC y móvil): sonando, la cabecera toma el color de énfasis, los blancos se tiñen y los textos de los paneles también */
+html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span { color: var(--accent); }   /* con Material Design, los textos e iconos de los tres paneles (emisora, ecualizador, volúmenes) en el color de énfasis (el del cuerpo: el de la cabecera mientras suena) */
+html.material.playing .now .ps, html.material.playing .eq-label, html.material.playing .pres-open, html.material.playing .vols label, html.material.playing .vols span { color: color-mix(in srgb, var(--accent) 50%, #fff); }   /* sonando, el tono de la cabecera queda apagado sobre los paneles negros: se aclara para darle vida */
+html.material .preset.active { background: color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr)); }   /* la presintonía activa, del mismo tono que el fondo de la cabecera */
+html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
+html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: #fff; }
+@supports (color: oklch(from red l c h)) {   /* con Material Design los blancos se tiñen del color de énfasis (los de siempre quedan de reserva) */
+  html.material body { --w1: oklch(from var(--accent) .95 calc(c * .4) h); --w2: oklch(from var(--accent) .92 calc(c * .8) h); }   /* w1: blanco suave, para lo que va sobre el fondo coloreado; w2: blanco teñido, para el resto */
+  html.material body, html.material dialog.settings { color: var(--w2); }
+  html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn, html.material .panel .info b, html.material .panel.search input, html.material .panel.search .badge, html.material .mbar { color: oklch(from var(--acc-raw) .72 calc(c * .6) h); }   /* de Presintonías para abajo el fondo no cambia: los textos toman un tono del énfasis que se sumerge en él (ni blanco, que llama la atención, ni gris, que no se adapta) */
+  html.material .ptitle, html.material .panel.search input::placeholder, html.material .preset:not(.recoff):not(.active) .pf { color: oklch(from var(--acc-raw) .56 calc(c * .5) h); }   /* los secundarios, más apagados */
+  html.material .preset.active .pf { color: oklch(from var(--accent) .88 calc(c * .5) h); }
+  html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
+  html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state],
+  html.material .preset.active, html.material .preset.active .pn { color: var(--w1); }   /* cabecera y presintonía activa (ya coloreada): contraste con el fondo */
+  html.material.playing .now .ps, html.material.playing .eq-label, html.material.playing .pres-open, html.material.playing .vols label, html.material.playing .vols span { color: oklch(from var(--accent) calc(l + .14) calc(c * 1.5) h); }   /* sonando: el color de énfasis aclarado sin perder su saturación (mezclarlo con blanco lo dejaba pastel y gris) */
 }
 
 @media (min-width: 1024px) and (min-height: 600px) {
-  .lbl-mob { display: none; }
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
-  html.bgglow.playing { --tint: 0%; --hk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }

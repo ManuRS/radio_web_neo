@@ -19,8 +19,7 @@ canvas.width = W; canvas.height = H;
 
 let on = true;
 try { on = localStorage.getItem(KEY) !== '0'; } catch (_) {}
-// La clase "bgglow" del <html> dice si "Color de fondo" está activado: en pantallas pequeñas lo usa el CSS para colorear la cabecera mientras suena (ver --tint en styles.css)
-document.documentElement.classList.toggle('bgglow', on);
+document.documentElement.classList.toggle('bgglow', on);   // "Color de fondo": solo en PC (la luz de abajo); en móvil el ajuste no se ofrece
 let lv = [], raf = 0, idleTimer = 0, drawn = false;
 
 export const glowOn = () => on;
@@ -32,6 +31,22 @@ export function setGlow(v) {
 }
 
 const active = () => on && desk.matches && !document.hidden;
+
+// "Material Design" (ajuste propio, en PC y en móvil): la clase "material" del <html> hace que el CSS coloree la cabecera y los textos con el énfasis mientras suena (ver --tint en styles.css).
+// Por defecto, activado en móvil y desactivado en PC; quien tenía apagado el ajuste único de antes en el móvil (el "bgglow") lo conserva apagado
+const MKEY = APP_ID + '_material';   // '1' = encendido, '0' = apagado, nada = el de por defecto de la pantalla
+export function matOn() {
+  try { const v = localStorage.getItem(MKEY); if (v === '1') return true; if (v === '0') return false; } catch (_) {}
+  if (desk.matches) return false;
+  try { return localStorage.getItem(KEY) !== '0'; } catch (_) { return true; }
+}
+const applyMat = () => document.documentElement.classList.toggle('material', matOn());
+applyMat();
+desk.addEventListener('change', applyMat);
+export function setMaterial(v) {
+  try { localStorage.setItem(MKEY, v ? '1' : '0'); } catch (_) {}
+  applyMat();
+}
 
 function draw(accent) {
   ctx.clearRect(0, 0, W, H);
