@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #3a4656; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: linear-gradient(180deg, #05306d, #105aad); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -50,14 +50,14 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
 header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 2px * var(--p)); margin-top: calc(18px * (1 - var(--p))); }
-.logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
-.titles { flex: 1 1 auto; min-width: 0; margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
+.logo { transform: translateX(var(--tx, 0px)); display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
+.titles { flex: 0 1 auto; min-width: 0; margin-right: 14px; transform: translateX(var(--tx, 0px)); margin-top: calc(-4px * (1 - var(--p))); }   /* corrección óptica: título y subtítulo juntos quedaban ~2 px por debajo del centro del icono */
 /* tamaño grande según el ancho (que quepa en una línea junto al icono y la hora) y 1.25rem ya encogida */
-h1 { font-size: calc(var(--t0) - (var(--t0) - 1.25rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
+h1 { font-size: calc(var(--t0) - (var(--t0) - min(1.5rem, var(--t0))) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
 /* Subtítulo bajo el título: se va cerrando en altura y desvaneciendo con el scroll */
 .subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; color: #c4cdd9; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
-.status { display: flex; margin-left: 14px; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
+.status { display: flex; margin-left: auto; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
 .dot.err { background: #ff7070; }
@@ -616,7 +616,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   /* Cabecera fija en una sola fila (no se encoge con el scroll): título a la izquierda y la barra a la derecha con Reproducir, el reloj (sin píldora,
      en el fondo de la barra; ui.js lo mueve aquí), la separación y los botones de tamaño de las presintonías, información y ajustes */
   .hin { display: flex; align-items: center; gap: 24px; width: var(--dw); height: var(--hf); padding: 0; }
-  .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; }
+  .hrow { flex: 1 1 auto; min-width: 0; min-height: 0; margin: 0; justify-content: flex-start; }
   .bar { flex: 0 0 auto; width: 500px; margin: 0; }
   .bar #playBtn { flex: 1 1 0; }
   .bar .status { flex: 1 1 0; justify-content: center; margin: 0; padding: 0; border-radius: 0; background: none; }   /* el reloj, con aire a los dos lados como Reproducir: se reparten el hueco a partes iguales */
