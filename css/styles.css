@@ -13,7 +13,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow.playing { --tint: 24%; }
+html.bgglow.playing { --tint: 44%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -610,6 +610,13 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
    en una columna, como siempre. La misma condición está en ui.js (DESK_MQ) */
 .panes, .pane { display: contents; }
 .psize, .sepclk, #bgGlow { display: none; }
+
+/* Cabecera coloreada (móvil, "Color de fondo" y sonando): todo lo que hay en ella pasa a blanco para que se lea sobre el color; la píldora del reloj ya tiene su propio fondo */
+.subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
+@media not all and (min-width: 1024px) and (min-height: 600px) {
+  html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
+  html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
+}
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
