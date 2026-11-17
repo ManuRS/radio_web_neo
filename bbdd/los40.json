@@ -86,6 +86,7 @@
     {"label": "LOS40 Salamanca", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SALAMANCA.mp3", "kind": "mp3"},
     {"label": "LOS40 Segovia", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_SEGOVIA.mp3", "kind": "mp3"},
     {"label": "LOS40 Soria", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_SORIA.mp3", "kind": "mp3"},
+    {"label": "LOS40 Valladolid", "url": "https://27903.live.streamtheworld.com/LOS40_VALLADOLID.mp3", "kind": "mp3"},
     {"label": "LOS40 Zamora", "url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_ASO_ZAMORA.mp3", "kind": "mp3"}
    ]
   },

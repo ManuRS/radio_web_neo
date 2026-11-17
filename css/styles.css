@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hf: 180px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #3a4cc8; --hf: 180px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -47,7 +47,7 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
    ========================================== */
 /* Cabecera a todo el ancho y pegada al borde de arriba, con el mismo color que la barra del sistema (theme-color) y el corte recto.
    Va fija arriba y el contenido pasa por debajo; se encoge al deslizar: ui.js pone --p (0 = grande, 1 = encogida) y con él se reduce la altura, desaparecen el icono, el subtítulo y la barra de controles y el título baja de tamaño */
-header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: #262d37; }
+header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: fixed; top: 0; left: 0; right: 0; z-index: 5; background: var(--hdr); }
 .hin { box-sizing: border-box; width: min(520px, 100%); margin: 0 auto; padding: 0 20px; }
 .hrow { display: flex; align-items: center; justify-content: space-between; min-height: calc(76px - 20px * var(--p)); margin-top: calc(16px * (1 - var(--p))); }
 .logo { display: block; flex: 0 0 auto; width: calc(48px - 24px * var(--p)); height: calc(48px - 24px * var(--p)); margin-right: calc(12px - 3px * var(--p)); border-radius: 27%; }   /* al encoger queda pequeño (24 px) junto al título */
@@ -56,8 +56,8 @@ header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: f
 h1 { font-size: calc(var(--t0) - (var(--t0) - 1.25rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
 /* Subtítulo bajo el título: se va cerrando en altura y desvaneciendo con el scroll */
-.subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
-.status { display: flex; margin-left: 14px; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; }
+.subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; color: #d5dbf7; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
+.status { display: flex; margin-left: 14px; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
 .dot.err { background: #ff7070; }
@@ -604,7 +604,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
-  :root { --hf: 112px; --dw: min(1160px, calc(100vw - 64px)); }
+  :root { --hf: 74px; --dw: min(1160px, calc(100vw - 64px)); }
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }
