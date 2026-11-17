@@ -12,7 +12,7 @@
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #1c2d6b; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --hdr: #3a4656; --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -56,7 +56,7 @@ header { --t0: clamp(1.2rem, calc((100vw - 220px) / 6.8), 1.625rem); position: f
 h1 { font-size: calc(var(--t0) - (var(--t0) - 1.25rem) * var(--p)); line-height: 1.1; font-weight: 700; margin: 0; white-space: nowrap; }
 p { color: #aeb9c8; line-height: 1.45; }
 /* Subtítulo bajo el título: se va cerrando en altura y desvaneciendo con el scroll */
-.subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; color: #d5dbf7; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
+.subtitle { height: calc(1.2em * (1 - var(--p))); margin: calc(3px * (1 - var(--p))) 0 0; overflow: hidden; font-size: .94rem; line-height: 1.2; font-weight: 500; white-space: nowrap; text-overflow: ellipsis; color: #c4cdd9; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }
 .status { display: flex; margin-left: 14px; align-items: center; flex: 0 0 auto; gap: 9px; min-width: 0; padding: 5px 13px; border-radius: 999px; background: #11161d; color: #cbd5e1; font-size: .78rem; user-select: none; -webkit-tap-highlight-color: transparent; opacity: clamp(0, calc(1 - 2 * var(--p)), 1); }   /* el reloj se desvanece con el scroll, como la barra de controles */
 .dot { width: 10px; height: 10px; border-radius: 50%; background: #778394; flex: 0 0 auto; }
 .dot.on { background: #48d597; box-shadow: 0 0 12px #48d59766; }
