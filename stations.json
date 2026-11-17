@@ -527,20 +527,6 @@
       "color": "#ff8a1f"
     },
     {
-      "id": "clasica",
-      "name": "Radio Clásica",
-      "short": "Clásica",
-      "group": "musical",
-      "urls": [
-        {
-          "label": "Radio Clásica Web",
-          "url": "https://dispatcher.rndfnk.com/crtve/rnerc/main/mp3/high",
-          "kind": "mp3"
-        }
-      ],
-      "color": "#e31b2d"
-    },
-    {
       "id": "radiole",
       "name": "Radiolé",
       "group": "musical",

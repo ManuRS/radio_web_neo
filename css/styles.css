@@ -119,6 +119,7 @@ p { color: #aeb9c8; line-height: 1.45; }
 @media (prefers-reduced-motion: reduce) { #playBtn:not([data-state="stop"]), #playBtn:not([data-state="stop"]) .l1 { animation: none; } }
 .pi { position: relative; flex: none; width: 18px; height: 18px; background: currentColor; clip-path: polygon(25% 17%, 83% 50%, 83% 50%, 25% 83%); transition: clip-path .3s ease; }
 #playBtn[data-state="stop"] .pi { clip-path: polygon(25% 25%, 75% 25%, 75% 75%, 25% 75%); }
+#playBtn .pi, #playBtn .pl { left: -1.5px; top: -1px; }   /* centra a la vista el conjunto icono + texto en su celda: la tinta (triángulo y letras de Barlow) queda ~1,5 px a la derecha y ~1 px por debajo del centro de la caja; con padding cambiaría el ancho de la celda */
 #playBtn .pi { transform: translateY(1.4px); }   /* el centro de las mayúsculas de Barlow cae ~1,4 px por debajo del de la línea: el símbolo baja ese poco para quedar alineado con el texto */
 .pl { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); width: var(--w1, 6.5em); overflow: hidden; padding: 2px 0; transition: width .3s ease; }
 #playBtn[data-state="stop"] .pl { width: var(--w2, 4.8em); }
