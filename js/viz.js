@@ -10,7 +10,7 @@
 // <NEO]
 
 // Colores por defecto de las barras (el verde de siempre); con setAccent se sustituyen por los del color de énfasis
-const DEF_TOP = '#938bff';
+const DEF_TOP = '#566db9';
 const DEF_BOTTOM = '#2f9e74';
 const HEX6 = /^#[0-9a-f]{6}$/i;
 const ACCENT_FADE_MS = 600;

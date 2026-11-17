@@ -88,7 +88,7 @@ export function paletteColor(key) {
 
 // Color de énfasis con "Material Design" (el ajuste "Color de fondo") en móvil: sonando, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
 // como --hfull del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr); parada, el de énfasis tal cual. Si no hay modo, también
-const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#938bff';
+const TINT = .32, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#566db9';
 const matMode = () => {   // 0 = nada o parada, 1 = sonando con "Material Design"
   const c = document.documentElement.classList;
   return c.contains('bgglow') && c.contains('playing') && !desk.matches ? 1 : 0;

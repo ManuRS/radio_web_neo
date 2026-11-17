@@ -11,7 +11,7 @@
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
 @property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
 @property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca al tono de la cabecera el color de énfasis del resto de la página (0% = el color de siempre) */
-@property --accent { syntax: '<color>'; inherits: true; initial-value: #938bff; }
+@property --accent { syntax: '<color>'; inherits: true; initial-value: #566db9; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
 html.bgglow.playing { --tint: 32%; --hk: 100%; }
@@ -21,7 +21,7 @@ html.bgglow.playing { --tint: 32%; --hk: 100%; }
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
-  --accent: #938bff;   /* el violeta del logo (mitad del degradado #5f8bff → #c68cff) */
+  --accent: #566db9;   /* el índigo de serie (el color por defecto) */
   transition: --accent .6s ease, --tint .6s ease, --hk .6s ease;
   --acc-raw: var(--accent);   /* el color de énfasis sin tocar (el body lo sustituye por --acc-e, y la cabecera, que cuelga de él, necesita el de verdad) */
   --hfull: color-mix(in srgb, var(--acc-raw) 32%, var(--hdr));   /* el tono de la cabecera coloreada (32 % como --tint) */

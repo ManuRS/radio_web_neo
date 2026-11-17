@@ -117,7 +117,7 @@ function draw() {
   const f = typeof S.eq.lowHz === 'number' ? S.eq : DEFAULT_EQ;
   const r = response(m, f);
   if (!r) return;
-  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#938bff';
+  const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#566db9';
   g.beginPath();
   for (let i = 0; i < N; i++) { const px = x(freqs[i]), py = y(r[i]); if (i) g.lineTo(px, py); else g.moveTo(px, py); }
   g.save();

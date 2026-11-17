@@ -3,7 +3,7 @@
     "js/anchor.js": "af6f0908e24385a8",
     "js/backguard.js": "21b8608e40123bc8",
     "js/custom.js": "fcc2e1d963a28a07",
-    "js/eqtab.js": "c106beac04b06d99",
+    "js/eqtab.js": "3965c29efadc3a01",
     "js/foot.js": "4e0206d435adbfd6",
     "js/glow.js": "7abece2a9147f4e4",
     "js/jsonc.js": "59633a5473e181af",
@@ -22,6 +22,6 @@
     "js/newstab.js": "c8da69a43adaa8f9",
     "js/presentation.js": "8e2acde075e94551",
     "js/recorder.js": "ede13a44bd0c4590",
-    "js/viz.js": "ce8d947e98c5a33d"
+    "js/viz.js": "d70173adcb0d9a03"
   }
 }

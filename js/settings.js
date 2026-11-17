@@ -409,16 +409,16 @@ bgSwitch.addEventListener('change', () => {
   log((desk.matches ? 'Color de fondo' : 'Material Design') + ': ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
 });
 
-// Color por defecto (Ajustes > General): Violeta (el del logo, el de serie), Verde, Azul o uno personalizado con el selector. Solo cuenta con
-// siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "green", "blue" o "#rrggbb")
+// Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul o uno personalizado con el selector. Solo cuenta con
+// siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "indigo", "green", "blue" o "#rrggbb")
 const ACCENT_KEY = 'rn_accent';
-const ACCENT_GREEN = '#58dfa3', ACCENT_BLUE = '#38bdf8', ACCENT_VIOLET = '#938bff';   // el violeta es el del logo (mitad del degradado)
-function accentHex(v) { return v === 'green' ? ACCENT_GREEN : v === 'blue' ? ACCENT_BLUE : v === 'violet' ? ACCENT_VIOLET : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ACCENT_VIOLET; }
-let accentSaved = 'violet';
-try { accentSaved = localStorage.getItem(ACCENT_KEY) || 'violet'; } catch (_) {}
+const ACCENT_GREEN = '#58dfa3', ACCENT_BLUE = '#38bdf8', ACCENT_INDIGO = '#566db9';   // el índigo, #566db9, es el de serie
+function accentHex(v) { return v === 'green' ? ACCENT_GREEN : v === 'blue' ? ACCENT_BLUE : v === 'indigo' ? ACCENT_INDIGO : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ACCENT_INDIGO; }
+let accentSaved = 'indigo';
+try { accentSaved = localStorage.getItem(ACCENT_KEY) || 'indigo'; } catch (_) {}
 S.accent = accentHex(accentSaved);
-accentSelect.value = ['violet', 'green', 'blue'].includes(accentSaved) ? accentSaved : 'custom';
-if (accentSelect.value === 'custom') accentPick.value = S.accent || ACCENT_VIOLET;
+accentSelect.value = ['indigo', 'green', 'blue'].includes(accentSaved) ? accentSaved : 'custom';
+if (accentSelect.value === 'custom') accentPick.value = S.accent || ACCENT_INDIGO;
 function syncAccentRow() {
   accentPick.hidden = accentSelect.value !== 'custom';
 }
@@ -436,7 +436,7 @@ accentPick.addEventListener('input', () => {
   if (luminance(accentPick.value) < ACCENT_MIN_LUM) return;   // demasiado oscuro sobre el fondo: se queda el anterior
   setDefaultAccent(accentPick.value);
 });
-accentPick.addEventListener('change', () => { if (luminance(accentPick.value) < ACCENT_MIN_LUM) accentPick.value = S.accent || ACCENT_VIOLET; });
+accentPick.addEventListener('change', () => { if (luminance(accentPick.value) < ACCENT_MIN_LUM) accentPick.value = S.accent || ACCENT_INDIGO; });
 syncAccentRow();
 
 settingsClose.addEventListener('click', closeSettings);
