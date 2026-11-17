@@ -30,7 +30,7 @@ export function createVisualizer(canvas, isPaused) {
   let audioCtx = null, analyser = null, freqData = null, binRanges = null, src = null;
   let stereoOn = false, up = null, split = null, anR = null, freqR = null;   // estéreo: nodos que solo existen mientras está activo
   let running = false, looping = false;   // [NEO]
-  let colTop = DEF_TOP, colBottom = DEF_BOTTOM, fadeId = 0, first = true;
+  let colTop = DEF_TOP, colBottom = DEF_BOTTOM, flatK = 0, fadeId = 0, first = true;   // flatK: 0 = degradado hacia un tono más oscuro por abajo, 1 = barras de un solo tono
   // [NEO>
   let synth = false, smooth = false, tSyn = 0, lastT = 0;
   const synPhase = Array.from({ length: BARS }, () => Math.random() * 6.283), synSpeed = Array.from({ length: BARS }, () => 1.2 + Math.random() * 2.6);
@@ -181,15 +181,17 @@ export function createVisualizer(canvas, isPaused) {
     setStereo(on) { stereoOn = !!on; wireStereo(stereoOn); },
     // color de énfasis ("#rrggbb"); vacío o no válido = el verde por defecto
     // Cambia el color de las barras con una transición suave (misma duración que la de --accent en el CSS)
-    setAccent(hex) {
+    setAccent(hex, flat) {   // flat: barras de un solo tono (el de la cabecera coloreada), sin el degradado oscuro de abajo
       const top = typeof hex === 'string' && HEX6.test(hex) ? hex : DEF_TOP;
+      const f0 = flatK, f1 = flat ? 1 : 0;
       const from = colTop, t0 = first ? -ACCENT_FADE_MS : performance.now();   // el primer color (el de los ajustes al cargar) se pone sin transición
       first = false;
       cancelAnimationFrame(fadeId);
       const step = now => {
         const k = Math.max(0, Math.min(1, (now - t0) / ACCENT_FADE_MS));   // el sello de rAF puede ser algo anterior a t0
         colTop = mix(from, top, k);
-        colBottom = shade(colTop, 0.7);
+        flatK = f0 + (f1 - f0) * k;
+        colBottom = mix(shade(colTop, 0.7), colTop, flatK);
         grad = null;
         if (!looping) draw();
         if (k < 1) fadeId = requestAnimationFrame(step);

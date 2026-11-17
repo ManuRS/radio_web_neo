@@ -10,10 +10,11 @@
 
 /* --accent se registra como color para poder animar su cambio (los derivados con color-mix lo siguen); --tint, cuánto se colorea la cabecera con él (0% = nada) */
 @property --tint { syntax: '<percentage>'; inherits: true; initial-value: 0%; }
+@property --hk { syntax: '<percentage>'; inherits: true; initial-value: 0%; }   /* cuánto se acerca al tono de la cabecera el color de énfasis del resto de la página (0% = el color de siempre) */
 @property --accent { syntax: '<color>'; inherits: true; initial-value: #58dfa3; }
 
 /* "Color de fondo" activado y sonando: en el móvil la cabecera se colorea con el color de énfasis (en pantallas grandes, la luz de fondo) */
-html.bgglow.playing { --tint: 44%; }
+html.bgglow.playing { --tint: 44%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
@@ -21,10 +22,20 @@ html.bgglow.playing { --tint: 44%; }
 :root {
   color-scheme: dark; font-family: 'Barlow', system-ui, -apple-system, Segoe UI, sans-serif;
   --accent: #58dfa3;
-  transition: --accent .6s ease, --tint .6s ease;
+  transition: --accent .6s ease, --tint .6s ease, --hk .6s ease;
+  --hfull: color-mix(in srgb, var(--accent) 44%, var(--hdr));   /* el tono de la cabecera coloreada (44 % como --tint) */
+  --acc-e: color-mix(in srgb, var(--hfull) var(--hk), var(--accent));   /* el color de énfasis que ve el resto de la página */
   --on-accent: color-mix(in srgb, var(--accent) 9%, #000);          /* texto sobre fondo de énfasis */
   --accent-bg: color-mix(in srgb, var(--accent) 12%, #1b1f1f);      /* fondo de la cadena activa */
   --accent-soft: color-mix(in srgb, var(--accent) 55%, transparent); /* icono de noticias en directo */
+}
+
+/* Todo lo que hay en la página (y las ventanas, que cuelgan del body) usa --acc-e como color de énfasis: el de siempre, o el tono de la cabecera con "Color de fondo" y sonando en móvil */
+body {
+  --accent: var(--acc-e);
+  --on-accent: color-mix(in srgb, var(--acc-e) 9%, #000);
+  --accent-bg: color-mix(in srgb, var(--acc-e) 12%, #1b1f1f);
+  --accent-soft: color-mix(in srgb, var(--acc-e) 55%, transparent);
 }
 
 /* ======================================================
@@ -616,21 +627,12 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
   html.bgglow.playing .subtitle, html.bgglow.playing .ibtn, html.bgglow.playing .bar .sbtn,
   html.bgglow.playing #playBtn[data-state], html.bgglow.playing .mini, html.bgglow.playing .mini[data-state] { color: #fff; }
-  /* Y los elementos que se colorean con el de énfasis (barras del ecualizador, volúmenes, interruptores, presintonía activa...) toman el mismo tono que la cabecera:
-     --hdrc es ese tono y la zona de abajo lo usa como su color de énfasis (las barras del ecualizador lo toman de ui.js, applyAccent) */
-  html.bgglow.playing { --hdrc: color-mix(in srgb, var(--accent) var(--tint), var(--hdr)); }
-  html.bgglow.playing .scroller {
-    --accent: var(--hdrc);
-    --on-accent: color-mix(in srgb, var(--hdrc) 9%, #000);
-    --accent-bg: color-mix(in srgb, var(--hdrc) 12%, #1b1f1f);
-    --accent-soft: color-mix(in srgb, var(--hdrc) 55%, transparent);
-  }
 }
 
 @media (min-width: 1024px) and (min-height: 600px) {
   /* --dw: ancho del contenido (del inicio del panel 1 al final del panel 2), el mismo para la cabecera; con el panel de presintonías pequeño, los dos paneles miden igual */
   :root { --hdr: #262d37; --hf: 114px; --dw: min(1160px, calc(100vw - 64px)); }
-  html.bgglow.playing { --tint: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
+  html.bgglow.playing { --tint: 0%; --hk: 0%; }   /* en pantallas grandes la cabecera no se colorea: ahí "Color de fondo" es la luz de abajo */
   html.psmall { --dw: min(962px, calc(100vw - 64px)); }
   html, body { background: #0c1015; }
   main { position: relative; z-index: 1; width: var(--dw); padding-inline: 0; }

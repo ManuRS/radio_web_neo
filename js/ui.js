@@ -99,7 +99,7 @@ export function applyAccent(hex) {
   accentHex = hex;
   const root = document.documentElement;
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(tintOn() ? tinted(hex) : hex);
+  viz.setAccent(tintOn() ? tinted(hex) : hex, tintOn());
   if (!viz.looping) viz.draw();
 }
 // Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
