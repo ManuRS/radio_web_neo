@@ -90,20 +90,40 @@ export function paletteColor(key) {
 // como --hfull del CSS; TINT y hdrBase son los de styles.css: --tint y --hdr); parada, el de énfasis tal cual. Si no hay modo, también
 const TINT = .32, ACCENT_DEF = '#566db9';
 const hdrBase = () => desk.matches ? [0x26, 0x2d, 0x37] : [0x32, 0x3c, 0x4a];   // el --hdr de styles.css: el de PC es más oscuro
-const matMode = () => {   // 0 = nada o parada, 1 = sonando con "Material Design"
+const matMode = () => {   // 0 = sin Material Design, 1 = con él
   const c = document.documentElement.classList;
-  return c.contains('material') && c.contains('playing') ? 1 : 0;
+  return c.contains('material') ? 1 : 0;
 };
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
   return '#' + hdrBase().map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
 }
+// Color en OKLCH (el mismo espacio que usa el CSS): L, C y matiz de un "#rrggbb", y de vuelta (reduciendo el croma si se sale de gama, como hace el navegador)
+const lin = v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4, gam = v => v <= .0031308 ? 12.92 * v : 1.055 * v ** (1 / 2.4) - .055;
+function okCH(hex) {
+  const [r, g, b] = [1, 3, 5].map(i => lin(parseInt(hex.slice(i, i + 2), 16) / 255));
+  const l = Math.cbrt(.4122214708 * r + .5363325363 * g + .0514459929 * b), m = Math.cbrt(.2119034982 * r + .6806995451 * g + .1073969566 * b), s = Math.cbrt(.0883024619 * r + .2817188376 * g + .6299787005 * b);
+  const a = 1.9779984951 * l - 2.428592205 * m + .4505937099 * s, c = .0259040371 * l + .7827717662 * m - .808675766 * s;
+  return [Math.hypot(a, c), Math.atan2(c, a)];
+}
+function okHex(L, C, h) {
+  for (let k = 0; k < 40; k++, C *= .95) {
+    const a = C * Math.cos(h), b = C * Math.sin(h);
+    const l = (L + .3963377774 * a + .2158037573 * b) ** 3, m = (L - .1055613458 * a - .0638541728 * b) ** 3, s = (L - .0894841775 * a - 1.291485548 * b) ** 3;
+    const rgb = [4.0767416621 * l - 3.3077115913 * m + .2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - .3413193965 * s, -.0041960863 * l - .7034186147 * m + 1.707614701 * s];
+    if (rgb.every(v => v >= -.0005 && v <= 1.0005)) return '#' + rgb.map(v => Math.round(gam(Math.min(1, Math.max(0, v))) * 255).toString(16).padStart(2, '0')).join('');
+  }
+  return '#888888';
+}
+// Con "Material Design", todo lo de los tres paneles negros (barras del EQ, deslizadores, textos e iconos) lleva un mismo tono: más claro que el de la cabecera, de su misma familia
+// (L .68 y croma ×1,6, como en styles.css: html.material .vols input, .eq-label, .now .ps...)
+const panelTone = hex => { const [C, h] = okCH(tinted(hex)); return okHex(.68, C * 1.6, h); };
 let accentHex;
 export function applyAccent(hex) {
   accentHex = hex;
-  const root = document.documentElement, m = matMode();
+  const root = document.documentElement, m = matMode();   // m: Material Design activado (suene o no)
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(m ? tinted(hex) : hex, m > 0);
+  viz.setAccent(m ? panelTone(hex) : hex, m > 0);
   if (!viz.looping) viz.draw();
 }
 // Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
