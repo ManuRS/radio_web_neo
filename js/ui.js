@@ -86,12 +86,27 @@ export function paletteColor(key) {
   return STATION_PALETTE[(h >>> 0) % STATION_PALETTE.length];
 }
 
+// Color de las barras del ecualizador: con "Color de fondo" activado y sonando, en móvil, el mismo tono que la cabecera (mezcla del color de énfasis con el de la cabecera,
+// como el --hdrc del CSS; TINT y HDR_BASE son los de styles.css: --tint y --hdr). Si no, el de énfasis tal cual
+const TINT = .44, HDR_BASE = [0x32, 0x3c, 0x4a], ACCENT_DEF = '#58dfa3';
+const tintOn = () => document.documentElement.classList.contains('bgglow') && document.documentElement.classList.contains('playing') && !desk.matches;
+function tinted(hex) {
+  const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
+  return '#' + HDR_BASE.map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
+}
+let accentHex;
 export function applyAccent(hex) {
+  accentHex = hex;
   const root = document.documentElement;
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(hex);
+  viz.setAccent(tintOn() ? tinted(hex) : hex);
   if (!viz.looping) viz.draw();
 }
+// Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
+let tintShown = false;
+const tintCheck = () => { if (tintOn() !== tintShown) { tintShown = tintOn(); applyAccent(accentHex); } };
+new MutationObserver(tintCheck).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+desk.addEventListener('change', tintCheck);
 
 // ===============================================
 // == VENTANAS (DIALOG) ==
