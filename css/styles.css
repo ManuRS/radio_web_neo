@@ -95,11 +95,10 @@ p { color: #aeb9c8; line-height: 1.45; }
 @media (hover: hover) { .bar button:hover { background: none; filter: brightness(1.25); } .bar .ibtn:hover, .bar .sbtn:hover { color: #fff; } .bar button:active { background: rgba(255, 255, 255, .07); } }
 .bar button:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
 /* Botón de Reproducir/Detener solo con el icono, a la derecha de la cabecera encogida (lo crea ui.js y copia el estado de #playBtn) */
-.mini { position: absolute; top: 15px; right: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--accent); opacity: clamp(0, calc(2 * var(--p) - 1), 1); transition: color .3s ease; -webkit-tap-highlight-color: transparent; }
+.mini { position: absolute; top: 15px; right: 12px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: none; color: #cbd5e1; opacity: clamp(0, calc(2 * var(--p) - 1), 1); transition: color .3s ease; -webkit-tap-highlight-color: transparent; }
 .mini-set { right: 56px; color: #cbd5e1; }
 .mini .pi { width: 30px; height: 30px; }
 .mini svg { display: block; width: 24px; height: 24px; }
-.mini[data-state="stop"] { color: #ff7a7a; }
 .mini[data-state="stop"] .pi { clip-path: polygon(20% 20%, 80% 20%, 80% 80%, 20% 80%); }
 .mini:active { background: rgba(255, 255, 255, .07); }
 .mini:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; }
@@ -107,7 +106,7 @@ p { color: #aeb9c8; line-height: 1.45; }
 .ibtn { flex: 0 0 54px; display: flex; align-items: center; justify-content: center; color: #cbd5e1; }
 /* Un solo botón: verde (el color de énfasis) para Reproducir y rojo suave para Detener. Al cambiar, el triángulo se vuelve cuadrado, un texto sube y el otro entra desde abajo,
    el color pasa de uno a otro y nace un destello del color nuevo (ui.js pone data-state y la clase "swap"; --w1 y --w2 son los anchos de cada texto) */
-#playBtn { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 10px; overflow: hidden; font-size: 1rem; font-weight: 700; color: var(--accent); transition: color .3s ease; }
+#playBtn { position: relative; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 10px; overflow: hidden; font-size: 1rem; font-weight: 700; color: color-mix(in srgb, var(--accent) 45%, #fff); transition: color .3s ease; }   /* "Reproducir": el color de énfasis aclarado, para que se lea sobre la cabecera con cualquiera */
 #playBtn[data-state="stop"] { color: #ff7a7a; }
 #playBtn::before { content: ''; position: absolute; left: 50%; top: 50%; width: 170px; height: 170px; margin: -85px 0 0 -85px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, currentColor 26%, transparent) 0, color-mix(in srgb, currentColor 8%, transparent) 55%, transparent 70%); opacity: 0; pointer-events: none; }
 #playBtn.swap::before { animation: play-ripple .5s ease-out; }
