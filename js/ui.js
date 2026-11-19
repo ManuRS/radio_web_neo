@@ -4,7 +4,7 @@
 // Registro de eventos (ventana), estado de conexión, botones y maquetación de la página.
 
 import { clockNow } from './state.js';
-import { copyBtn, desk, dot, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
+import { copyBtn, desk, logBox, playBtn, statusBox, stop, toastEl, toggle } from './dom.js';
 import { viz } from './audio.js';
 
 // ==================
@@ -34,10 +34,9 @@ export function setText(el, text) {
   if (el.textContent !== text) el.textContent = text;
 }
 
-// Estado de la reproducción: el punto junto a la hora (verde = suena) y, al pasar el ratón, el texto (Desconectado, Conectando…, En directo, Noticias…)
-export function setStatus(message, state = '') {
+// Estado de la reproducción: al pasar el ratón por la hora, el texto (Desconectado, Conectando…, En directo, Noticias…)
+export function setStatus(message) {
   statusBox.title = message;
-  dot.className = 'dot' + (state ? ' ' + state : '');
 }
 
 // connected: hay una sesión de escucha. canPlay: aun así se puede pulsar Reproducir (por ejemplo, durante unas noticias sin música debajo)

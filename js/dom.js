@@ -12,7 +12,6 @@ export const settingsBtn = document.getElementById('settingsBtn');
 export const infoBtn = document.getElementById('infoBtn');
 export const introDlg = document.getElementById('intro');
 // <NEO]
-export const dot = document.getElementById('dot');
 export const logBox = document.getElementById('log');
 export const volume = document.getElementById('volume');
 export const volValue = document.getElementById('volValue');

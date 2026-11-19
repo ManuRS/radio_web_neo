@@ -90,7 +90,7 @@ export function syncUi() {
   } else if (!d) {
     setStatus('Conectando…');
   } else if (d.state === 'playing') {
-    setStatus(S.newsOn ? 'Noticias' : 'En directo', 'on');
+    setStatus(S.newsOn ? 'Noticias' : 'En directo');
   } else {
     setStatus(d.everPlayed ? 'Reconectando…' : 'Conectando…');
   }

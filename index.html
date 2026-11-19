@@ -96,12 +96,12 @@
         <h1 id="title">Radio Web Neo</h1>
         <p class="subtitle">La radio siempre contigo</p>
       </div>
-      <div class="status" id="statusBox" title="Desconectado"><span class="dot" id="dot"></span><span id="clock">--:--:--</span></div>
+      <div class="status" id="statusBox" title="Desconectado"><span id="clock">--:--:--</span></div>
     </div>
     <!-- Barra de controles (solo con la cabecera desplegada): un único botón que alterna Reproducir y Detener, información y ajustes.
          En pantallas grandes también lleva el reloj (detrás de Reproducir, lo mueve ui.js) y el botón de tamaño de las presintonías -->
     <div class="bar" id="ctlBar" role="toolbar" aria-label="Controles">
-      <button id="playBtn" type="button" data-state="play" aria-label="Reproducir"><span class="pi" aria-hidden="true"></span><span class="pl" aria-hidden="true"><span class="l1">Reproducir</span><span class="l2">Detener</span></span></button>
+      <button id="playBtn" type="button" data-state="play" aria-label="Reproducir"><span class="pl" aria-hidden="true"><span class="l1">Reproducir</span><span class="l2">Detener</span></span></button>
       <span class="sep sepclk" aria-hidden="true"></span>   <!-- antes del reloj, solo en pantallas grandes -->
       <span class="sep" aria-hidden="true"></span>
       <!-- Tamaño del panel de presintonías (solo en pantallas grandes): grande o igual que el panel 1 -->
