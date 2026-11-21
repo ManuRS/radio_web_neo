@@ -275,7 +275,8 @@ audio { display: none; }
    == VENTANA DE AJUSTES ==
    ======================== */
 /* La ventana (ajustes, configuración y registro) mide lo mismo en todas las pestañas y va pegada arriba; el área central ocupa el resto y, en el texto de configuración y el registro, se puede estirar desde la esquina (la ventana crece con ella) */
-dialog.settings { width: min(560px, 94vw); min-height: min(584px, calc(100vh - 44px)); min-height: min(584px, calc(100dvh - 44px)); max-height: calc(100vh - 44px); max-height: calc(100dvh - 44px); overflow: auto; margin: 22px auto auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+/* Ventanas sin contorno: sobre el fondo oscurecido el borde se veía como una línea blanca (borde transparente, para no cambiar el tamaño) */
+dialog.settings { width: min(560px, 94vw); min-height: min(584px, calc(100vh - 44px)); min-height: min(584px, calc(100dvh - 44px)); max-height: calc(100vh - 44px); max-height: calc(100dvh - 44px); overflow: auto; margin: 22px auto auto; padding: 0; border: 1px solid transparent; outline: none; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.settings[open] { display: flex; flex-direction: column; }
 dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .dlg { flex: 1 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 18px; box-sizing: border-box; }
@@ -514,13 +515,13 @@ dialog.tdt { overflow: hidden; min-height: min(760px, calc(100vh - 44px)); min-h
 /* ===================================================
    == PREGUNTA (GRABACIÓN EN CURSO / SIN TERMINAR) ==
    =================================================== */
-dialog.ask { box-sizing: border-box; width: min(400px, calc(100vw - 40px)); margin: auto; padding: 20px; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+dialog.ask { box-sizing: border-box; width: min(400px, calc(100vw - 40px)); margin: auto; padding: 20px; border: 1px solid transparent; outline: none; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.ask::backdrop { background: rgba(0, 0, 0, .65); }
 
 /* ==========================================
    == INFORMACIÓN: TUTORIAL DE TRES PASOS ==
    ========================================== */
-dialog.intro { width: min(430px, 94vw); max-height: 94dvh; overflow-y: auto; margin: auto; padding: 0; border: 1px solid #303a47; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
+dialog.intro { width: min(430px, 94vw); max-height: 94dvh; overflow-y: auto; margin: auto; padding: 0; border: 1px solid transparent; outline: none; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.intro::backdrop { background: rgba(0, 0, 0, .65); }
 .intro-steps { display: grid; }
 .intro-step { grid-area: 1 / 1; display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 2px 0; text-align: left; }
