@@ -31,16 +31,13 @@ export function setGlow(v) {
 const active = () => on && desk.matches && !document.hidden;
 
 // "Material Design" (ajuste propio, en PC y en móvil): la clase "material" del <html> hace que el CSS coloree la cabecera y los textos con el énfasis mientras suena (ver --tint en styles.css).
-// Por defecto, activado en móvil y desactivado en PC; quien tenía apagado en el móvil el ajuste único de antes (el de "bgglow", la clave que sigue usando la luz de fondo) lo conserva apagado
-const MKEY = APP_ID + '_material';   // '1' = encendido, '0' = apagado, nada = el de por defecto de la pantalla
+// Por defecto, desactivado en PC y en móvil (solo se enciende si se activa en General)
+const MKEY = APP_ID + '_material';   // '1' = encendido; '0' o nada = apagado
 export function matOn() {
-  try { const v = localStorage.getItem(MKEY); if (v === '1') return true; if (v === '0') return false; } catch (_) {}
-  if (desk.matches) return false;
-  try { return localStorage.getItem(KEY) !== '0'; } catch (_) { return true; }
+  try { return localStorage.getItem(MKEY) === '1'; } catch (_) { return false; }
 }
 const applyMat = () => document.documentElement.classList.toggle('material', matOn());
 applyMat();
-desk.addEventListener('change', applyMat);
 export function setMaterial(v) {
   try { localStorage.setItem(MKEY, v ? '1' : '0'); } catch (_) {}
   applyMat();

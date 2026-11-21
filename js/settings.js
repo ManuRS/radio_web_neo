@@ -8,7 +8,7 @@
 
 import { pad, parseNumber } from './utils.js';
 import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, desk, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
 import { prefetchSounds } from './sounds.js';
@@ -407,13 +407,12 @@ bgSwitch.addEventListener('change', () => {
   setGlow(bgSwitch.checked);
   log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
 });
-// Material Design (PC y móvil; por defecto activado en móvil y desactivado en PC): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
+// Material Design (PC y móvil; desactivado por defecto): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
 matSwitch.checked = matOn();
 matSwitch.addEventListener('change', () => {
   setMaterial(matSwitch.checked);
   log('Material Design: ' + (matSwitch.checked ? 'activado' : 'desactivado'));
 });
-desk.addEventListener('change', () => { matSwitch.checked = matOn(); });   // sin ajuste guardado, el de por defecto cambia con la pantalla
 
 // Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul o uno personalizado con el selector. Solo cuenta con
 // siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "indigo", "green", "blue" o "#rrggbb")
