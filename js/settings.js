@@ -18,7 +18,6 @@ import { stopRecording } from './recorder.js';
 import { editHooks, expandGroup, refreshAccent } from './stations.js';
 import { loadCustom, saveCustom } from './custom.js';
 import { refreshDelayUi, setAutoDelay, setManualDelay } from './clock.js';
-import { forgetNoCors } from './deck.js';
 import { parseJsonc, patchTop, stripJsonComments } from './jsonc.js';
 
 // ====================================
@@ -524,7 +523,6 @@ cfgClear.addEventListener('click', async () => {
   if (S.trans || S.newsOn) { showGenMsg('No se pueden borrar los ajustes durante un boletín o una transición', true); return; }
   if (S.session !== 'off') { showGenMsg('Detén la reproducción para cambiar los ajustes', true); return; }
   clearConfigStorage();
-  forgetNoCors();
   const text = await fetchDefaultConfigText();
   const r = text ? validateConfig(text) : null;
   if (r && !r.errors.length) {

@@ -38,18 +38,12 @@ function hlsQuality(level) {
 }
 
 // ====================================
-// == EMISORAS SIN CORS (SE RECUERDAN) ==
-// ====================================
-// Si una emisora marcada con CORS no carga y sí lo hace sin él, se anota aquí (en este navegador) y a partir de entonces va en modo degradado.
-// Se anota por emisora (su URL), no por cadena: una cadena puede reunir emisoras de servidores distintos, y que una no admita CORS no dice nada de las demás.
-// Además de lo detectado, vale "cors": false en la cadena entera o en una de sus emisoras (ajustes)
-const NOCORS_KEY = 'rn_nocors';
-let noCors = {};
-try { noCors = JSON.parse(localStorage.getItem(NOCORS_KEY)) || {}; } catch (_) {}
-for (const k of Object.keys(noCors)) if (!/^https?:/i.test(k)) delete noCors[k];   // antes se anotaba por cadena (su id): esas notas ya no valen
-const saveNoCors = () => { try { localStorage.setItem(NOCORS_KEY, JSON.stringify(noCors)); } catch (_) {} };
-export const corsAllowed = (st, vi = 0) => { const u = st.urls[vi]; return st.cors !== false && !!u && u.cors !== false && !noCors[u.url]; };
-export function forgetNoCors() { noCors = {}; saveNoCors(); }
+// == EMISORAS SIN CORS ==
+// Solo es "sin CORS" lo que dicen los ajustes ("cors": false en la cadena o en una emisora; al añadir una emisora se comprueba y se apunta ahí).
+// Un fallo al sonar nunca se toma por falta de CORS: con mala cobertura daría diagnósticos equivocados. Si una carga con CORS falla y sin él suena,
+// se usa así solo esa vez (para no dejar sin sonido); la siguiente conexión vuelve a probar con CORS.
+try { localStorage.removeItem('rn_nocors'); } catch (_) {}   // lo que se apuntaba antes por fallos al sonar ya no vale
+export const corsAllowed = (st, vi = 0) => { const u = st.urls[vi]; return st.cors !== false && !!u && u.cors !== false; };
 
 // =========================================
 // == BITRATE QUE ANUNCIA EL SERVIDOR (SE RECUERDA) ==
@@ -94,6 +88,7 @@ export class Deck {
     this.blocked = false;             // el navegador no dejó iniciar el audio (falta un gesto del usuario)
     this.everPlayed = false;
     this.triedDirect = false;
+    this.playedDirect = false;   // la última vez sonó sin CORS tras fallar con él
     this.quality = '';
     this.on = {};                     // gestores: playing(deck), failed(deck), retry(deck), quality(deck)
     this.el = null;
@@ -266,12 +261,8 @@ export class Deck {
     if (this.interrupted) { this.interrupted = false; log('Audio reanudado'); this.catchUp(LIVE_RESUME_SLACK_S, 'tras la interrupción'); }
     if (first) {
       this.everPlayed = true;
-      // si funcionó sin CORS tras fallar con él, la emisora no lo admite: se recuerda
-      if (this.triedDirect && corsAllowed(this.station, this.variant)) {
-        noCors[this.url] = 1;
-        saveNoCors();
-        log(this.station.name + ' (' + this.station.urls[this.variant].label + ') no admite CORS: esa emisora pasa a modo degradado (sin ecualizador ni barras reales)');
-      }
+      this.playedDirect = this.triedDirect;
+      if (this.triedDirect) log(this.station.name + ': suena en modo degradado solo esta vez (la próxima conexión vuelve a probar con CORS)');
       if (this.on.playing) this.on.playing(this);
     }
     this.settle(true);
@@ -280,10 +271,10 @@ export class Deck {
   onError(el, fatal = false) {
     if (el !== this.el || this.state === 'closed' || this.closing) return;
     const code = el.error ? el.error.code : 0;
-    // la primera carga con CORS ha fallado: se prueba sin él (si funciona, la emisora no tiene CORS)
+    // la primera carga con CORS ha fallado: se prueba sin él para no dejar sin sonido (no se apunta nada: ver arriba)
     // (con la red caída no se prueba: el fallo no dice nada del CORS)
     // (grabando no se prueba: una emisora sin CORS no se podría grabar, ver recorder.js)
-    if (this.cors && !this.everPlayed && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
+    if (this.cors && (!this.everPlayed || this.playedDirect) && !this.triedDirect && this.kind !== 'hls' && !(typeof navigator !== 'undefined' && navigator.onLine === false)) {
       if (S.recording) {   // no se insiste: se avisa y se renuncia (al cambiar de emisora, sigue sonando la anterior)
         toast('Esta emisora no se puede grabar');
         this.fail('falla con CORS; grabando no se prueba el modo degradado');
@@ -299,10 +290,9 @@ export class Deck {
     this.retrySoon('error ' + (code || (fatal ? 'fatal' : '')));
   }
 
-  // Una emisora solo se da por "sin CORS" si funciona a la primera en modo directo justo después de fallar con CORS. Si el modo directo también falla (o hay que esperar y reintentar),
-  // el fallo pudo ser de la red y no del CORS: se vuelve a probar con CORS, para no dejar degradada para siempre una emisora que sí lo admite
+  // Cada reconexión vuelve a probar con CORS, aunque la anterior sonara sin él: el fallo pudo ser de la red y no del CORS
   retryWithCors() {
-    if (!this.triedDirect || this.everPlayed) return;
+    if (!this.triedDirect) return;
     this.triedDirect = false;
     this.cors = corsAllowed(this.station, this.variant) && !this.direct;
   }
@@ -402,6 +392,7 @@ export class Deck {
     this.cors = corsAllowed(station, this.variant) && !this.direct;
     this.everPlayed = false;
     this.triedDirect = false;
+    this.playedDirect = false;   // la última vez sonó sin CORS tras fallar con él
     this.fails = 0;
     this.lagMin = Infinity;
     this.quality = '';
