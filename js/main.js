@@ -13,7 +13,7 @@ import { ensureSounds, ARTWORK_URL } from './sounds.js';
 import { buildStations, refreshStations, restoreLast } from './stations.js';
 import { rebuildSlots, slotPlan, tick } from './boletines.js';
 import { loadArtwork } from './mediasession.js';
-import { play, syncUi } from './player.js';
+import { play, resumePlayback, syncUi } from './player.js';
 import { initClock, setCfgStreamDelay } from './clock.js';
 import { checkUnfinished, requestStop } from './recorder.js';
 import './presentation.js';
@@ -90,7 +90,7 @@ initSettingsDialog(applyConfig, applyLive);
 initClock();
 setFootPhrases(['Con ❤️ por la 📻', '¡Viva la radio siempre!']);   // pie: se alternan cada 30 s
 refreshVolumeUi();
-toggle.addEventListener('click', () => play());
+toggle.addEventListener('click', () => (S.held ? resumePlayback() : play()));   // en pausa desde la notificación, Reproducir la reanuda en directo
 stop.addEventListener('click', () => requestStop());   // grabando, se pregunta antes (ver recorder.js)
 
 // Los ajustes guardados en el navegador mandan; si no hay (o no son válidos), los de por defecto (stations.json)

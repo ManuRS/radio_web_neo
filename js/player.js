@@ -81,7 +81,7 @@ export function syncUi() {
   viz.setSmooth(COARSE && !!d && d.kind !== 'hls');   // las barras de HLS ya van fluidas: el suavizado es para móviles y el resto de formatos
   refreshEq();
   refreshStations();
-  updateButtons(S.session !== 'off', S.newsOn && !S.prevStation);   // durante unas noticias sin música debajo se puede pulsar Reproducir
+  updateButtons(S.session !== 'off' && !S.held, S.newsOn && !S.prevStation);   // durante unas noticias sin música debajo se puede pulsar Reproducir; en pausa desde la notificación, la app se ve parada
   refreshRecBtn();
   if (S.session === 'off') {
     setStatus(S.newsMode ? 'Esperando noticias' : 'Desconectado');
