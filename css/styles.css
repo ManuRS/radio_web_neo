@@ -324,7 +324,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .appver { margin-top: auto; padding-top: 8px; text-align: center; font-size: .78rem; color: #6f7b8b; }   /* versión, al final de Configuración */
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
-.cfgacts button.danger.armed { color: #fff; background: #b8414d; }
 /* Color por defecto (General): selector y muestra del color personalizado */
 .clockrow input[type="color"] { width: 40px; height: 32px; padding: 2px; box-sizing: border-box; border: 1px solid #303a47; border-radius: 8px; background: #11161d; cursor: pointer; }
 .clockrow input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
@@ -338,6 +337,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .dlg-actions { display: flex; gap: 10px; }
 .dlg-actions .primary { color: var(--on-accent); background: var(--accent); }
 .dlg-actions button:not(.primary) { color: #e8edf5; background: #394454; }
+.dlg-actions button.danger { color: #fff; background: #b8414d; }   /* confirmar algo que borra (ventana de pregunta) */
 .dlg-links { display: flex; justify-content: space-between; gap: 10px; }
 .dlg-links[hidden] { display: none; }
 .dlg-links .link { flex: none; padding: 2px 0; background: none; color: #8c98a8; font-size: .78rem; font-weight: 500; text-decoration: underline; }
@@ -460,8 +460,6 @@ dialog.settings.sheet { min-height: 0; }
 .ctxmenu .ctxsolo .ctxname { flex: 1 1 auto; min-width: 0; max-width: 260px; padding: 8px 12px; font-size: .88rem; font-weight: 650; color: #e8edf5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* cadena con una sola emisora: su nombre, con el color normal, y "Eliminar" a su lado */
 .ctxmenu .ctxrow .ctxdel { flex: none; width: auto; padding: 8px 10px; font-size: .8rem; color: #ff7a85; }
 .ctxmenu .ctxrow .ctxdel:hover { background: #3a2227; }
-.ctxmenu .ctxrow .ctxdel.danger { color: #fff; background: #b8414d; }
-.ctxmenu .ctxrow .ctxdel.danger:hover { background: #c4525e; }
 .ctxmenu .ctxadd { margin-top: 3px; border-top: 1px solid #303a47; border-radius: 0 0 7px 7px; color: #cbd5e1; }
 #stMsg:empty { border-color: transparent; background: none; }
 .ctxmenu .ctxren { margin-top: 0; border-top: 0; border-radius: 7px; }

@@ -13,6 +13,7 @@ import { play, stopForRestart, wake } from './player.js';
 import { updateNewsSwitch } from './boletines.js';
 import { corsAllowed } from './deck.js';
 import { toast } from './ui.js';
+import { ask } from './recorder.js';
 
 // Edición de las emisoras desde la rejilla (arrastrar para reordenar; clic derecho para añadir una variante o eliminar): settings.js rellena estas funciones y escribe el JSON
 // Cada función devuelve (o resuelve con) el texto del error, o nada si todo fue bien. addVariant(id, url, nombre) comprueba la URL; rename(id, nombre, corto, nombresVariantes) cambia los nombres
@@ -375,7 +376,7 @@ function openMenu(x, y, st) {
   const head = document.createElement('div');   // cabecera gris del menú con varias emisoras
   head.className = 'ctxtitle';
   head.textContent = st.name;
-  // "Eliminar" en dos pasos: la primera pulsación pide confirmación; la segunda quita la emisora i (con una sola, la cadena entera)
+  // "Eliminar": pide confirmación en una ventana y quita la emisora i (con una sola, la cadena entera)
   const deleteButton = (i, aria) => {
     const del = document.createElement('button');
     del.type = 'button';
@@ -383,10 +384,10 @@ function openMenu(x, y, st) {
     del.setAttribute('role', 'menuitem');
     del.textContent = 'Eliminar';
     del.setAttribute('aria-label', aria);
-    let armed = false;
-    del.addEventListener('click', () => {
-      if (!armed) { armed = true; del.textContent = '¿Seguro?'; del.classList.add('danger'); return; }
+    del.addEventListener('click', async () => {
       closeMenu();
+      const what = st.urls.length > 1 ? 'la emisora ' + emisoraName(st, i) : 'la cadena ' + st.name;
+      if (!(await ask('¿Estás seguro?', 'Se elimina ' + what, 'Eliminar', 'Cancelar', true))) return;
       if (st.urls.length > 1) { if (editHooks.removeVariant) editHooks.removeVariant(st.id, i); }
       else if (editHooks.remove) editHooks.remove(st.id);
     });

@@ -302,13 +302,15 @@ recBtn.addEventListener('click', () => { if (rec) stopRecording(); else start();
 // ==================
 // == PREGUNTAS ==
 // ==================
-// Ventana pequeña con dos botones; resuelve true con el primero, false con el segundo y null si se cierra con Escape
-function ask(title, text, yes, no) {
+// Ventana pequeña con dos botones; resuelve true con el primero, false con el segundo y null si se cierra con Escape.
+// danger: el botón de confirmar en rojo (para lo que borra algo). La usan también las confirmaciones de los ajustes y de los menús
+export function ask(title, text, yes, no, danger = false) {
   return new Promise(res => {
     askTitle.textContent = title;
     askText.textContent = text;
     askYes.textContent = yes;
     askNo.textContent = no;
+    askYes.classList.toggle('danger', danger);
     const done = v => { askYes.onclick = askNo.onclick = askDlg.oncancel = null; closeDialog(askDlg); res(v); };
     askYes.onclick = () => done(true);
     askNo.onclick = () => done(false);

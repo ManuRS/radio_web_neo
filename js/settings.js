@@ -14,7 +14,7 @@ import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
 import { restartAudio } from './player.js';
-import { stopRecording } from './recorder.js';
+import { ask, stopRecording } from './recorder.js';
 import { editHooks, expandGroup, refreshAccent } from './stations.js';
 import { loadCustom, saveCustom } from './custom.js';
 import { refreshDelayUi, setAutoDelay, setManualDelay } from './clock.js';
@@ -73,6 +73,24 @@ const luminance = hex => {
   return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
 };
 const ACCENT_MIN_LUM = 0.15;   // por debajo, el color se pierde sobre el fondo oscuro y el texto oscuro de los botones no se lee
+// Un color demasiado oscuro no se rechaza: se aclara lo justo (misma tonalidad y saturación) hasta que se ve bien sobre el fondo
+function usableColor(hex) {
+  hex = hex.toLowerCase();
+  if (luminance(hex) >= ACCENT_MIN_LUM) return hex;
+  const [r, g, b] = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255);
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0, l = (max + min) / 2;
+  const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+  if (d) h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  const toHex = L => {
+    const c = (1 - Math.abs(2 * L - 1)) * s, x = c * (1 - Math.abs((h % 2 + 2) % 2 - 1)), m = L - c / 2;
+    const [a, bb, cc] = h < 1 ? [c, x, 0] : h < 2 ? [x, c, 0] : h < 3 ? [0, c, x] : h < 4 ? [0, x, c] : h < 5 ? [x, 0, c] : [c, 0, x];
+    return '#' + [a, bb, cc].map(v => Math.round(Math.min(1, Math.max(0, v + m)) * 255).toString(16).padStart(2, '0')).join('');
+  };
+  if (h < 0) h += 6;
+  for (; l < 1; l += 0.01) { const out = toHex(l); if (luminance(out) >= ACCENT_MIN_LUM) return out; }
+  return '#ffffff';
+}
 // Ecualizador por defecto (detrás del "normal", plano y sin texto): el que se usa si los ajustes no traen el bloque "eq" (con "eq" pero sin modos, no hay ecualizador)
 export const DEFAULT_EQ = {
   lowHz: 100, midHz: 1000, midQ: 0.8, highHz: 8000, defaultMode: 1,
@@ -93,11 +111,10 @@ export function validateConfig(text) {
   catch (e) { return { errors: ['JSON no válido: ' + e.message] }; }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { errors: ['El contenido debe ser un objeto { ... }'] };
   const cfg = emptyConfig();
-  const color = (v, where) => {   // "#rrggbb" con luminosidad suficiente sobre el fondo oscuro; null si no es válido (y lo anota)
+  const color = (v, where) => {   // "#rrggbb" (si es demasiado oscuro, aclarado); null si no es válido (y lo anota)
     const a = typeof v === 'string' ? v.trim() : '';
     if (!/^#[0-9a-f]{6}$/i.test(a)) { errors.push('"' + where + '": debe ser un color #rrggbb (por ejemplo "#4da3ff")'); return null; }
-    if (luminance(a) < ACCENT_MIN_LUM) { errors.push('"' + where + '": demasiado oscuro sobre el fondo oscuro; prueba un tono más claro'); return null; }
-    return a.toLowerCase();
+    return usableColor(a);   // demasiado oscuro: se aclara
   };
 
 
@@ -247,7 +264,6 @@ function openSettings() {
   refreshExportBtn();
   cfgMsg.textContent = '';
   cfgMsg.className = 'cfgmsg';
-  disarmClear();
   openDialog(settingsDlg);
   Object.values(tabPanels).forEach(p => { if (!p.hidden) p.dispatchEvent(new Event('show')); });
 }
@@ -414,15 +430,15 @@ matSwitch.addEventListener('change', () => {
   log('Material Design: ' + (matSwitch.checked ? 'activado' : 'desactivado'));
 });
 
-// Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul o uno personalizado con el selector. Solo cuenta con
-// siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "indigo", "green", "blue" o "#rrggbb")
+// Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul, Rojo o uno personalizado con el selector. Solo cuenta con
+// siempre (es el de cuando no suena nada y el de todas si "Color personalizado" está apagado). Se guarda en el navegador (rn_accent: "indigo", "green", "blue", "red" o "#rrggbb")
 const ACCENT_KEY = 'rn_accent';
-const ACCENT_GREEN = '#58dfa3', ACCENT_BLUE = '#38bdf8', ACCENT_INDIGO = '#566db9';   // el índigo, #566db9, es el de serie
-function accentHex(v) { return v === 'green' ? ACCENT_GREEN : v === 'blue' ? ACCENT_BLUE : v === 'indigo' ? ACCENT_INDIGO : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ACCENT_INDIGO; }
+const ACCENT_GREEN = '#58dfa3', ACCENT_BLUE = '#38bdf8', ACCENT_RED = '#e5484d', ACCENT_INDIGO = '#566db9';   // el índigo, #566db9, es el de serie
+function accentHex(v) { return v === 'green' ? ACCENT_GREEN : v === 'blue' ? ACCENT_BLUE : v === 'red' ? ACCENT_RED : v === 'indigo' ? ACCENT_INDIGO : /^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : ACCENT_INDIGO; }
 let accentSaved = 'indigo';
 try { accentSaved = localStorage.getItem(ACCENT_KEY) || 'indigo'; } catch (_) {}
 S.accent = accentHex(accentSaved);
-accentSelect.value = ['indigo', 'green', 'blue'].includes(accentSaved) ? accentSaved : 'custom';
+accentSelect.value = ['indigo', 'green', 'blue', 'red'].includes(accentSaved) ? accentSaved : 'custom';
 if (accentSelect.value === 'custom') accentPick.value = S.accent || ACCENT_INDIGO;
 function syncAccentRow() {
   accentPick.hidden = accentSelect.value !== 'custom';
@@ -434,14 +450,13 @@ function setDefaultAccent(v) {
 }
 accentSelect.addEventListener('change', () => {
   syncAccentRow();
-  setDefaultAccent(accentSelect.value === 'custom' ? accentPick.value : accentSelect.value);
+  setDefaultAccent(accentSelect.value === 'custom' ? usableColor(accentPick.value) : accentSelect.value);
   log('Color por defecto: ' + accentSelect.options[accentSelect.selectedIndex].text);
 });
 accentPick.addEventListener('input', () => {
-  if (luminance(accentPick.value) < ACCENT_MIN_LUM) return;   // demasiado oscuro sobre el fondo: se queda el anterior
-  setDefaultAccent(accentPick.value);
+  setDefaultAccent(usableColor(accentPick.value));   // demasiado oscuro: se aplica aclarado
 });
-accentPick.addEventListener('change', () => { if (luminance(accentPick.value) < ACCENT_MIN_LUM) accentPick.value = S.accent || ACCENT_INDIGO; });
+accentPick.addEventListener('change', () => { accentPick.value = usableColor(accentPick.value); });   // el selector enseña el que se aplica
 syncAccentRow();
 
 settingsClose.addEventListener('click', closeSettings);
@@ -501,16 +516,6 @@ customInput.addEventListener('change', async () => {
 
 // Aviso de los botones de debajo de Exportar e Importar (recargar sonidos, borrar ajustes): en el cuadro de mensajes de Configuración
 const showGenMsg = (text, isError) => showCfgMsg([text], isError);
-// "Borrar ajustes" pide una segunda pulsación ("¿Seguro?"); si no llega en 4 s, vuelve a su estado
-let clearArmed = 0;
-function armClear() {
-  if (cfgClear.classList.contains('armed')) { clearTimeout(clearArmed); disarmClear(); return true; }
-  cfgClear.classList.add('armed');
-  cfgClear.textContent = '¿Seguro?';
-  clearArmed = setTimeout(disarmClear, 4000);
-  return false;
-}
-function disarmClear() { cfgClear.classList.remove('armed'); cfgClear.textContent = 'Borrar'; }
 cfgClearSounds.addEventListener('click', async () => {
   try { await caches.delete(SOUND_CACHE); prefetchSounds(); showGenMsg('Caché de sonidos recargada: los sonidos se han vuelto a descargar', false); }
   catch (_) { showGenMsg('Este navegador no tiene caché de sonidos (solo funciona en páginas https)', true); }
@@ -518,9 +523,9 @@ cfgClearSounds.addEventListener('click', async () => {
 
 // Borrar los ajustes guardados: se vuelve a los de por defecto (stations.json)
 cfgClear.addEventListener('click', async () => {
-  if (!armClear()) return;
   if (S.trans || S.newsOn) { showGenMsg('No se pueden borrar los ajustes durante un boletín o una transición', true); return; }
   if (S.session !== 'off') { showGenMsg('Detén la reproducción para cambiar los ajustes', true); return; }
+  if (!(await ask('¿Estás seguro?', 'Se borran los ajustes guardados en este dispositivo y se vuelve a los de por defecto', 'Eliminar todo', 'Cancelar', true))) return;
   clearConfigStorage();
   const text = await fetchDefaultConfigText();
   const r = text ? validateConfig(text) : null;
