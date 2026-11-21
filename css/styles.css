@@ -15,12 +15,6 @@
 
 /* Con Material Design y sonando, la cabecera se colorea con el color de énfasis y el resto de la página toma su tono */
 
-/* Foco sin contornos: los campos de texto se aclaran un poco y el cursor va en el color de énfasis; los botones de las ventanas, sin anillo */
-input, textarea { caret-color: var(--accent); }
-input:is([type="text"], [type="search"], [type="url"]):focus, select:focus, textarea:focus { outline: none; }
-.stform input:focus, .stform select:focus, .tdtq:focus, .clockrow input[type="text"]:focus { background: #1a222d; }
-dialog button:focus-visible { outline: none; }
-
 html.material.playing { --tint: 32%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
 :root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
@@ -720,4 +714,25 @@ html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80
   /* Luz desde abajo: las barras del ecualizador en un lienzo pequeño, estirado y muy difuminado, detrás de todo (glow.js) */
   #bgGlow { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 0; width: 100%; height: 62vh; pointer-events: none; filter: blur(34px); opacity: .55; }
   #bgGlow[hidden] { display: none; }
+}
+
+/* Foco sin contornos: los campos de texto se aclaran un poco y el cursor va en el color de énfasis; los botones de las ventanas, sin anillo */
+input, textarea { caret-color: var(--accent); }
+input:is([type="text"], [type="search"], [type="url"]):focus, select:focus, textarea:focus { outline: none; }
+.stform input:focus, .stform select:focus, .tdtq:focus, .clockrow input[type="text"]:focus { background: #1a222d; }
+dialog button:focus-visible, .ctxmenu button:focus-visible { outline: none; }   /* tampoco en los menús de las presintonías */
+
+/* Móvil (pantalla táctil): menús y ventanas un punto más grandes; en PC, como siempre */
+@media (pointer: coarse) {
+  .ctxmenu { min-width: 214px; }
+  .ctxmenu button, .ctxmenu .ctxsolo .ctxname { padding: 10px 14px; font-size: .95rem; }
+  .ctxmenu .ctxtitle { padding: 7px 14px 8px; font-size: .86rem; }
+  .ctxmenu .ctxrow .ctxdel { padding: 10px 12px; font-size: .86rem; }
+  .dlg-head { font-size: 1.12rem; }
+  .tabs button { padding: 10px 6px 12px; font-size: .98rem; }
+  .clockrow { font-size: .94rem; }
+  .group { gap: 14px; }
+  .cfgacts button { padding: 11px 8px; font-size: .92rem; }
+  dialog.ask p { font-size: .98rem; }
+  .dlg-actions button { font-size: .95rem; }
 }

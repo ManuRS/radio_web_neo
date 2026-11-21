@@ -7,7 +7,7 @@
 // normalización, color personalizado por cadena y script de personalización (custom.js).
 
 import { pad, parseNumber } from './utils.js';
-import { S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
+import { APP_ID, S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
 import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
@@ -28,7 +28,6 @@ export const loadConfigText = () => { try { return localStorage.getItem(CFG_KEY)
 function saveConfigText(text) {
   try { localStorage.setItem(CFG_KEY, text); return true; } catch (_) { return false; }
 }
-function clearConfigStorage() { try { localStorage.removeItem(CFG_KEY); localStorage.removeItem(BASE_KEY); } catch (_) {} }
 // Las cadenas por defecto (stations.json) de las que partió lo guardado: sirven para saber qué ha tocado el usuario y qué no (ver syncDefaults)
 const BASE_KEY = 'rn_cfg_base';
 function loadBase() {
@@ -522,23 +521,20 @@ cfgClearSounds.addEventListener('click', async () => {
 });
 
 // Borrar los ajustes guardados: se vuelve a los de por defecto (stations.json)
+// Restablecer aplicación: se borra todo lo que la app guarda en este navegador (ajustes, preferencias, ecualizador, sonidos, grabaciones sin
+// recuperar, script de personalización...) y se recarga como recién instalada, con la bienvenida. Solo se queda la propia web (caché rn-shell-)
+async function wipeApp() {
+  try { Object.keys(localStorage).filter(k => k.startsWith(APP_ID + '_')).forEach(k => localStorage.removeItem(k)); } catch (_) {}
+  try { sessionStorage.clear(); } catch (_) {}
+  try { await Promise.all((await caches.keys()).filter(k => !k.startsWith(APP_ID + '-shell-')).map(k => caches.delete(k))); } catch (_) {}
+  try { indexedDB.deleteDatabase(APP_ID + '_rec'); } catch (_) {}
+}
 cfgClear.addEventListener('click', async () => {
-  if (S.trans || S.newsOn) { showGenMsg('No se pueden borrar los ajustes durante un boletín o una transición', true); return; }
-  if (S.session !== 'off') { showGenMsg('Detén la reproducción para cambiar los ajustes', true); return; }
-  if (!(await ask('¿Estás seguro?', 'Se borran los ajustes guardados en este dispositivo y se vuelve a los de por defecto', 'Eliminar todo', 'Cancelar', true))) return;
-  clearConfigStorage();
-  const text = await fetchDefaultConfigText();
-  const r = text ? validateConfig(text) : null;
-  if (r && !r.errors.length) {
-    applyConfigFn(r.cfg);
-    S.configText = text;
-    refreshExportBtn();
-    showGenMsg('Ajustes guardados borrados: se usan los de por defecto', false);
-  } else {
-    applyConfigFn(emptyConfig());
-    S.configText = '';
-    showGenMsg('Ajustes borrados, pero no se pudieron cargar los de por defecto', true);
-  }
+  if (S.trans || S.newsOn) { showGenMsg('No se puede restablecer durante un boletín o una transición', true); return; }
+  if (S.session !== 'off') { showGenMsg('Detén la reproducción para restablecer la aplicación', true); return; }
+  if (!(await ask('¿Estás seguro?', 'Se borra todo lo guardado en este dispositivo y la aplicación vuelve a empezar', 'Eliminar todo', 'Cancelar', true))) return;
+  await wipeApp();
+  location.reload();
 });
 
 
