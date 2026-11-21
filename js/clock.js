@@ -3,6 +3,8 @@
 // ==================
 // Retraso del reloj local (hora real = hora local + retraso): a mano o detectado solo comparando con una hora oficial.
 // Lo detectado solo corrige diferencias mayores de AUTO_DEAD_S; entre medias se queda en 0. Se aplica con decimales y se muestra con uno.
+// Una medida mala (red cortada, respuesta vieja o rara) no puede estropear la hora: una diferencia de más de MAX_DIFF_S no se cree nunca, y un
+// cambio del retraso solo se aplica si lo confirma una segunda medida.
 // Aquí también el retraso de la señal de audio (S.defaultDelayS): el de los ajustes ("defaultDelayS") salvo que se cambie en General.   // [NEO]
 
 import { parseNumber } from './utils.js';
@@ -16,6 +18,8 @@ const MAX_RTT_MS = 3000;      // si la respuesta tarda más, la medida no es fia
 const RECHECK_MS = 20 * 60000;   // además de al cargar, se repite cada tanto (y al volver a la página si la última tiene más de esto)
 const RETRY_MS = 20000;       // tras un fallo se reintenta (hasta MAX_RETRIES veces)
 const MAX_RETRIES = 3;
+const MAX_DIFF_S = 300;       // un reloj de verdad no va tan desviado: una diferencia mayor es una medida mala y se descarta
+const CONFIRM_S = 1;          // dos medidas seguidas que difieren menos que esto confirman un cambio
 
 const KEY_MANUAL = APP_ID + '_delay', KEY_AUTO_ON = APP_ID + '_autodelay', KEY_AUTO_VAL = APP_ID + '_autodelay_val';
 const load = key => { try { return localStorage.getItem(key); } catch (_) { return null; } };
@@ -25,7 +29,8 @@ const drop = key => { try { localStorage.removeItem(key); } catch (_) {} };   //
 let autoOn = load(KEY_AUTO_ON) !== '0';                 // por defecto, activada
 let manualSec = parseNumber(load(KEY_MANUAL)) || 0;     // retraso escrito a mano
 let autoSec = parseNumber(load(KEY_AUTO_VAL)) || 0;     // última detección: vale hasta que llegue la nueva
-let lastOk = 0, retries = 0, retryTimer = null, running = false;
+if (!(Math.abs(autoSec) <= MAX_DIFF_S)) { autoSec = 0; save(KEY_AUTO_VAL, 0); }   // uno ya guardado de una medida mala se olvida
+let lastOk = 0, retries = 0, retryTimer = null, running = false, pending = null;   // pending: cambio medido una vez, a falta de confirmar
 
 const apply = () => { S.clockDelayMs = (autoOn ? autoSec : manualSec) * 1000; };
 apply();
@@ -106,9 +111,18 @@ async function detect() {
     if (t1 - t0 > MAX_RTT_MS) throw new Error('la respuesta tardó ' + ((t1 - t0) / 1000).toFixed(1) + ' s');
     if (!autoOn) return;   // se desactivó mientras tanto
     const diff = (official - (t0 + t1) / 2) / 1000;
-    autoSec = Math.abs(diff) > AUTO_DEAD_S ? Math.round(diff * 1000) / 1000 : 0;
+    if (Math.abs(diff) > MAX_DIFF_S) throw new Error('diferencia de ' + diff.toFixed(0) + ' s, no es creíble');
+    const next = Math.abs(diff) > AUTO_DEAD_S ? Math.round(diff * 1000) / 1000 : 0;
     lastOk = Date.now();
     retries = 0;
+    if (Math.abs(next - autoSec) > AUTO_DEAD_S && (pending === null || Math.abs(next - pending) > CONFIRM_S)) {
+      pending = next;   // cambio grande: se aplica solo si la siguiente medida dice lo mismo
+      log('Reloj local: diferencia con la hora oficial de ' + diff.toFixed(1) + ' s, se confirma antes de aplicarla');
+      retryTimer = setTimeout(detect, RETRY_MS);
+      return;
+    }
+    pending = null;
+    autoSec = next;
     save(KEY_AUTO_VAL, autoSec);
     apply();
     refreshDelayUi();

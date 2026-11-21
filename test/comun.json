@@ -17,7 +17,7 @@
     "test/shell.test.mjs": "7dc8044caedbafb9"
   },
   "paralelos": {
-    "js/clock.js": "ab9cc9a732bd7e05",
+    "js/clock.js": "eba5fed5a9bf3706",
     "js/dom.js": "02d9098821a49571",
     "js/newstab.js": "c8da69a43adaa8f9",
     "js/presentation.js": "8e2acde075e94551",
