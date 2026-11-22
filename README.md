@@ -4,7 +4,7 @@ Reproductor de radio *vibecodeado*, ligero, rápido y sin rastreos: **[radioneo.
 
 Es una versión renovada de [Radio Web Fast](https://github.com/ManuRS/radio_web_fast), con una interfaz más compacta y centrada en el texto y más opciones:
 
-- Buscador de emisoras con su propio catálogo y el de [TDTChannels](https://www.tdtchannels.com)
+- Buscador de emisoras
 - Ecualizador con modos propios y visualizador a pantalla completa con 7 efectos
 - Modo boletines: música y, a su hora, las noticias de una generalista
 - Grabación en MP3 e imagen en imagen
@@ -74,7 +74,3 @@ Para llevar tu configuración a otro dispositivo:
 
 1. En el origen, Ajustes > Datos > "Exportar": se descarga `radio_web_neo.json`, un JSON legible (si lo editas a mano, tus comentarios se conservan al importarlo)
 2. En el destino, Ajustes > Datos > "Importar" y elige ese archivo
-
-## Licencia
-
-[GPL v3](LICENSE)
