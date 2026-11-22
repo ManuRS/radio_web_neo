@@ -1,0 +1,890 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radio Web Neo · Cómo es</title>
+<meta name="description" content="Reproductor de radio ligero, rápido y sin rastreos: buscador de emisoras, ecualizador, visualizadores y modo boletines">
+<link rel="canonical" href="https://radioneo.pages.dev/about/">
+<meta name="theme-color" content="#0c1015">
+<link rel="icon" href="../favicon.ico" sizes="any">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="preload" href="../fonts/barlow-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="../fonts/barlow-condensed-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+
+<!-- Página de presentación de Neo (el README, en bonito). Todo va aquí dentro: no usa los módulos de la app.
+     Cada sección es una "emisora" del dial: el scroll va por páginas (scroll-snap) y la aguja del dial y el RDS de arriba siguen al scroll -->
+<style>
+  @font-face { font-family: Barlow; font-weight: 400; font-display: swap; src: url(../fonts/barlow-latin-400-normal.woff2) format('woff2'); }
+  @font-face { font-family: Barlow; font-weight: 500; font-display: swap; src: url(../fonts/barlow-latin-500-normal.woff2) format('woff2'); }
+  @font-face { font-family: Barlow; font-weight: 600; font-display: swap; src: url(../fonts/barlow-latin-600-normal.woff2) format('woff2'); }
+  @font-face { font-family: Barlow; font-weight: 700; font-display: swap; src: url(../fonts/barlow-latin-700-normal.woff2) format('woff2'); }
+  @font-face { font-family: 'Barlow Condensed'; font-weight: 700; font-display: swap; src: url(../fonts/barlow-condensed-latin-700-normal.woff2) format('woff2'); }
+
+  :root {
+    color-scheme: dark;
+    --accent: #566db9;
+    --acc-hi: color-mix(in srgb, var(--accent) 60%, #fff);
+    --on-accent: color-mix(in srgb, var(--accent) 9%, #000);
+    --bg: #0c1015;
+    --pan: #1a2029;
+    --pan2: #1f2632;
+    --pan3: #283140;
+    --line: #2c3645;
+    --tx: #e8edf5;
+    --mut: #9fabb9;
+    --dim: #6b7787;
+    --rec: #e5484d;
+    --top: 60px;
+    --dial: 66px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-snap-type: y mandatory; background: var(--bg); overscroll-behavior-y: none; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body { margin: 0; font-family: Barlow, system-ui, sans-serif; color: var(--tx); background: transparent; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+
+  /* == FONDO: la Seda de la app, con el tono de cada sección == */
+  #bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; opacity: var(--bgo, .5); transition: opacity .45s ease; }
+  .grain { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(120% 80% at 50% 0%, transparent 40%, rgba(5,7,11,.55) 100%); }
+
+  /* == CABECERA: logo, RDS y botón == */
+  .top { position: fixed; inset: 0 0 auto; z-index: 20; height: var(--top); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 0 clamp(14px, 3vw, 28px); background: linear-gradient(#0c1015ee, #0c101500); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 1.05rem; letter-spacing: .01em; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .rds { display: flex; align-items: baseline; gap: 10px; min-width: 214px; justify-content: center; padding: 7px 16px 6px; border-radius: 12px; background: #0a0d12cc; border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); position: relative; overflow: hidden; }
+  .rds .f { font-weight: 600; font-size: .82rem; color: var(--mut); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+  .rds .f small { font-size: .7rem; margin-left: 2px; color: var(--dim); }
+  .rds .ps { font-family: 'Barlow Condensed', Barlow, sans-serif; font-weight: 700; font-size: 1.42rem; line-height: 1; letter-spacing: .06em; min-width: 8.2ch; text-transform: uppercase; }
+  .rds::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; background: repeating-linear-gradient(90deg, #fff1 0 1px, transparent 1px 3px), linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 35%, transparent), transparent); background-size: auto, 50% 100%; background-repeat: repeat, no-repeat; }
+  .rds.tune::after { animation: tune .55s ease-out; }
+  @keyframes tune { 0% { opacity: 1; background-position: 0 0, -60% 0; } 100% { opacity: 0; background-position: 6px 0, 160% 0; } }
+  .open { justify-self: end; white-space: nowrap; text-decoration: none; font-weight: 600; font-size: .95rem; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--line); background: #0a0d12aa; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .shine { background: linear-gradient(100deg, currentColor 0 38%, var(--acc-hi) 50%, currentColor 62% 100%) 100% 0 / 260% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 4s ease-in-out infinite; }
+  @keyframes shine { 0% { background-position: 100% 0; } 48%, 100% { background-position: 0 0; } }
+  @media (hover: hover) { .open:hover { border-color: color-mix(in srgb, var(--accent) 60%, var(--line)); } }
+
+  /* == DIAL == */
+  .dial { position: fixed; inset: auto 0 0; z-index: 20; height: var(--dial); padding: 0 clamp(14px, 4vw, 40px) env(safe-area-inset-bottom); background: linear-gradient(#0c101500, #0c1015f2 45%); }
+  .scale { position: relative; height: 100%; max-width: 980px; margin: 0 auto; }
+  .tk { position: absolute; bottom: 22px; width: 1px; height: 7px; background: #3a4555; }
+  .tk.mj { height: 13px; background: #566175; }
+  .tk b { position: absolute; bottom: -17px; left: 50%; transform: translateX(-50%); font-size: .66rem; font-weight: 600; color: var(--dim); font-variant-numeric: tabular-nums; }
+  .st { position: absolute; bottom: 38px; transform: translateX(-50%); padding: 6px; border: 0; background: none; cursor: pointer; }
+  .st i { display: block; width: 7px; height: 7px; border-radius: 50%; background: #475266; transition: background .3s, transform .3s; }
+  .st span { position: absolute; bottom: 19px; left: 50%; transform: translate(-50%, 4px); white-space: nowrap; font-size: .68rem; font-weight: 700; letter-spacing: .08em; color: var(--mut); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  .st.on i { background: var(--acc-hi); transform: scale(1.25); }
+  @media (hover: hover) { .st:hover span { opacity: 1; transform: translate(-50%, 0); } .st:hover i { background: var(--mut); } }
+  .needle { position: absolute; bottom: 14px; width: 2px; height: 40px; margin-left: -1px; border-radius: 2px; background: var(--rec); box-shadow: 0 0 10px var(--rec), 0 0 2px #fff8; will-change: left; }
+
+  /* == PÁGINAS == */
+  .pg { position: relative; height: 100vh; height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; display: grid; place-items: center; padding: calc(var(--top) + 16px) clamp(18px, 5vw, 64px) calc(var(--dial) + 14px); overflow: clip; }   /* clip y no hidden: hidden la haría contenedor de scroll y la línea de tiempo view() se quedaría quieta */
+  .in { width: min(1120px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 6vw, 80px); align-items: center; }
+  .in.rev > :first-child { order: 2; }
+  .k { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--acc-hi); }
+  .k::before { content: attr(data-f); padding: 3px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; letter-spacing: .04em; color: var(--tx); background: color-mix(in srgb, var(--accent) 30%, #10151c); }
+  h1, h2 { margin: 0; font-weight: 700; letter-spacing: -.015em; line-height: .95; text-wrap: balance; }
+  h1 { font-size: clamp(3.1rem, 9.5vw, 7.6rem); }
+  h2 { font-size: clamp(2.4rem, 6vw, 4.8rem); }
+  .lead em { font-style: italic; color: var(--tx); }
+  .lead { margin: 18px 0 0; max-width: 31ch; font-size: clamp(1.08rem, 1.9vw, 1.42rem); line-height: 1.35; color: #c3ccd8; text-wrap: pretty; }
+  .pts { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 10px; }
+  .pts li { display: flex; gap: 12px; align-items: baseline; font-size: 1.02rem; color: var(--mut); line-height: 1.35; }
+  .pts li::before { content: ''; flex: none; width: 14px; height: 2px; border-radius: 2px; background: var(--accent); transform: translateY(-4px); }
+  .btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+  .b { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 12px; font-weight: 700; font-size: 1rem; text-decoration: none; border: 1px solid var(--line); background: #10151cbb; cursor: pointer; }
+  .b.p { background: var(--accent); border-color: transparent; color: #fff; box-shadow: 0 10px 30px -10px var(--accent); }
+  @media (hover: hover) { .b:hover { filter: brightness(1.12); } }
+
+  /* entrada de cada elemento al llegar a su página */
+  [data-r] { opacity: 0; transform: translateY(26px); filter: blur(6px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .9s cubic-bezier(.2,.7,.2,1), filter .7s; transition-delay: calc(var(--d, 0) * 85ms + 60ms); }
+  .pg.on [data-r] { opacity: 1; transform: none; filter: none; }
+
+  /* paso de página: la que se va se aleja y la que entra se acerca (navegadores con línea de tiempo de scroll) */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .pg > .in, .pg > .cin { animation: page linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; transform-origin: 50% 50%; }
+      @keyframes page {
+        0% { opacity: 0; transform: perspective(1200px) translateY(14%) scale(.9) rotateX(-9deg); filter: blur(6px); }
+        46%, 54% { opacity: 1; transform: none; filter: none; }
+        100% { opacity: 0; transform: perspective(1200px) translateY(-12%) scale(.88) rotateX(9deg); filter: blur(6px); }
+      }
+    }
+  }
+
+  /* == PIEZAS DE LA APP (réplicas) == */
+  .card { background: #0f1319; border-radius: 16px; box-shadow: 0 30px 60px -30px #000c, inset 0 0 0 1px #ffffff08; }
+  .win { background: var(--pan); border-radius: 22px; padding: 22px; box-shadow: 0 40px 80px -30px #000e, inset 0 0 0 1px #ffffff0d; }
+  .win h3 { margin: 0; font-size: 1.12rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+  .x { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--pan3); font-size: 1.1rem; color: #cfd6e0; }
+  .cap { font-size: .72rem; font-weight: 700; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; }
+  .rdsname { font-family: 'Barlow Condensed', Barlow, sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+
+  /* -- inicio: el reproductor -- */
+  .player { display: grid; gap: 12px; transform: perspective(1400px) rotateY(-14deg) rotateX(5deg); transform-style: preserve-3d; }
+  .player .card { padding: 18px 20px; }
+  .p-rds { display: flex; justify-content: space-between; align-items: center; }
+  .p-rds .rdsname { font-size: clamp(2rem, 4.4vw, 3rem); }
+  .recb { flex: none; width: 46px; height: 46px; border-radius: 50%; background: #1d232d; display: grid; place-items: center; }
+  .recb::before { content: ''; width: 15px; height: 15px; border-radius: 50%; background: var(--rec); }
+  .bars { display: flex; align-items: flex-end; gap: 3px; height: 74px; }
+  .bars i { flex: 1; height: 100%; border-radius: 3px 3px 1px 1px; background: var(--c, #00bfd6); transform-origin: 50% 100%; transform: scaleY(.08); }
+  .p-ico { display: flex; gap: 14px; margin-bottom: 12px; }
+  .p-ico i { width: 13px; height: 11px; border: 2px solid #cfd6e0; border-radius: 2px; opacity: .85; }
+  .p-ico i:first-child { border-style: dashed; }
+  .p-eq { display: flex; align-items: center; gap: 12px; }
+  .p-eq .arr { width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--line); display: grid; place-items: center; color: var(--mut); }
+  .p-eq .nm { flex: 1; text-align: center; font-weight: 700; font-size: 1.15rem; }
+  .p-eq .sep { width: 1px; height: 22px; background: var(--line); }
+  .p-eq .gear { width: 36px; height: 36px; border-radius: 9px; background: var(--pan3); display: grid; place-items: center; }
+  .p-eq .gear::before { content: ''; width: 14px; height: 14px; border-radius: 50%; border: 3px dotted #cfd6e0; }
+  .dots { display: flex; justify-content: center; gap: 6px; }
+  .dots i { width: 6px; height: 6px; border-radius: 3px; background: #3b4556; }
+  .dots i:first-child { width: 18px; background: #8792a4; }
+  .scroll-hint { position: absolute; left: 50%; bottom: calc(var(--dial) + 14px); transform: translateX(-50%); font-size: .75rem; font-weight: 700; letter-spacing: .16em; color: var(--dim); text-transform: uppercase; border: 0; background: none; cursor: pointer; display: grid; justify-items: center; gap: 6px; }
+  .scroll-hint::after { content: ''; width: 2px; height: 26px; border-radius: 2px; background: linear-gradient(var(--acc-hi), transparent); animation: drip 2.2s ease-in-out infinite; transform-origin: top; }
+  @keyframes drip { 0% { transform: scaleY(0); opacity: 1; } 60% { transform: scaleY(1); opacity: 1; } 100% { transform: scaleY(1) translateY(10px); opacity: 0; } }
+
+  /* -- presintonías -- */
+  .grid-win { position: relative; padding: 20px; }
+  .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 10px 0 18px; }
+  .pgrid:last-child { margin-bottom: 0; }
+  .pr { position: relative; height: 58px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 1rem; background: var(--pan2); color: #f1f5f9; overflow: hidden; transition: background .45s, box-shadow .3s, scale .3s; }
+  .pr.act { background: color-mix(in srgb, var(--c) 30%, #1b1f1f); }
+  .pr.plus { background: transparent; border: 1px dashed #303a47; color: var(--acc-hi); font-size: 1.6rem; font-weight: 600; }
+  .pr .hold { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--c); transform: scaleX(0); transform-origin: left; }
+  .pr.press { scale: .95; }
+  .pr.press .hold { transform: scaleX(1); transition: transform .65s linear; }
+  .pr.lift { z-index: 3; scale: 1.08; box-shadow: 0 18px 30px -10px #000c, 0 0 0 2px color-mix(in srgb, var(--c) 70%, transparent); }
+  .menu { position: absolute; z-index: 5; left: 20px; top: 92px; width: min(250px, 78%); padding: 8px; border-radius: 14px; background: #262e3b; box-shadow: 0 24px 50px -12px #000e, inset 0 0 0 1px #ffffff10; transform-origin: 20% 0; opacity: 0; scale: .9; translate: 0 -8px; pointer-events: none; transition: opacity .25s, scale .3s cubic-bezier(.2,.9,.3,1.2), translate .3s; }
+  .menu.open { opacity: 1; scale: 1; translate: 0; }
+  .menu .mt { padding: 8px 10px 6px; font-size: .72rem; font-weight: 700; letter-spacing: .1em; color: var(--dim); text-transform: uppercase; }
+  .menu .mi { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 9px; font-weight: 600; font-size: .95rem; color: #d7dee8; transition: background .25s; }
+  .menu .mi::before { content: ''; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #56617399; }
+  .menu .mi.sel { background: #ffffff0d; }
+  .menu .mi.sel::before { background: #ffa800; border-color: #ffa800; }
+
+  /* -- buscador -- */
+  .search { max-width: 460px; width: 100%; justify-self: center; }
+  .sbox { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; padding: 12px 14px; border-radius: 11px; background: #141920; border: 1px solid var(--line); font-weight: 500; min-height: 46px; }
+  .sbox .q { flex: 1; white-space: pre; }
+  .sbox .q::after { content: ''; display: inline-block; width: 2px; height: 1.1em; margin-left: 1px; vertical-align: -3px; background: var(--acc-hi); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .sbox .cl { opacity: 0; transition: opacity .2s; color: var(--mut); }
+  .sbox.has .cl { opacity: 1; }
+  .cnt { font-size: .78rem; color: var(--dim); height: 1.2em; }
+  .sg { display: flex; align-items: center; gap: 12px; margin: 12px 0 8px; font-size: .78rem; font-weight: 700; letter-spacing: .1em; color: var(--acc-hi); text-transform: uppercase; }
+  .sg::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--accent) 60%, transparent); }
+  .ri { margin-bottom: 8px; padding: 11px 13px; border-radius: 11px; background: var(--pan2); opacity: 0; transform: translateY(10px); transition: opacity .35s, transform .45s cubic-bezier(.2,.8,.2,1); }
+  .ri.show { opacity: 1; transform: none; }
+  .ri b { display: block; font-size: .93rem; }
+  .ri span { display: flex; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px solid #2b3443; font-size: .86rem; font-weight: 600; color: #cdd5df; }
+  .ri span::after { content: '›'; color: var(--dim); }
+  .tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 6px; font-size: .66rem; font-weight: 600; color: var(--mut); border: 1px solid #3a4454; vertical-align: 2px; }
+  .sg, .sres > .ri { transition-delay: calc(var(--i, 0) * 90ms); }
+  .sg.hide { opacity: 0; } .sg { transition: opacity .3s; }
+
+  /* -- ecualizador -- */
+  .eq { max-width: 480px; width: 100%; justify-self: center; }
+  .tabs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 18px 0 14px; }
+  .tabs i { height: 44px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-weight: 700; background: var(--pan3); color: #e2e8f0; transition: background .35s, color .35s; }
+  .tabs i.off { background: none; border: 1px solid #3a4454; color: var(--dim); }
+  .tabs i.on { background: var(--accent); color: #fff; }
+  .nmrow { display: flex; align-items: center; gap: 14px; color: var(--mut); }
+  .nmrow div { flex: 1; padding: 10px 14px; border-radius: 10px; background: #141920; border: 1px solid var(--line); color: var(--tx); font-weight: 500; }
+  .graph { margin: 14px 0; border-radius: 12px; background: #141920; }
+  .graph svg { display: block; width: 100%; height: auto; }
+  .graph text { font: 500 10px Barlow, sans-serif; fill: #6b7787; }
+  .sl { display: grid; grid-template-columns: 72px 1fr 52px; align-items: center; gap: 12px; padding: 7px 0; color: #c3ccd8; }
+  .sl .tr { position: relative; height: 6px; border-radius: 3px; background: var(--pan3); }
+  .sl .fi { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--accent); width: var(--v); }
+  .sl .kn { position: absolute; top: 50%; left: var(--v); width: 20px; height: 20px; margin: -10px 0 0 -10px; border-radius: 50%; background: var(--acc-hi); box-shadow: 0 2px 6px #0008; }
+  .sl .vv { text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* -- efectos (a pantalla completa) -- */
+  .cin { display: grid; justify-items: center; text-align: center; gap: 10px; width: 100%; }
+  .fsname { font-weight: 700; font-size: clamp(3.4rem, 11vw, 8.5rem); letter-spacing: .04em; line-height: 1; text-shadow: 0 0 30px color-mix(in srgb, var(--acc-hi) 45%, transparent), 0 0 2px #fff; }
+  .fsclock { font-weight: 600; font-size: clamp(1rem, 2vw, 1.4rem); letter-spacing: .14em; color: #cdd5df; font-variant-numeric: tabular-nums; }
+  .pill { margin-top: clamp(30px, 10vh, 110px); padding: 14px 26px; border-radius: 16px; font-size: clamp(1.15rem, 2.4vw, 1.7rem); font-weight: 600; background: #0b0f15a8; border: 1px solid #ffffff1c; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+  .pill em { font-style: normal; color: var(--acc-hi); }
+  .modes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 18px; font-weight: 600; font-size: .98rem; color: #7f8a9b; }
+  .modes span { transition: color .4s, text-shadow .4s; }
+  .modes span.on { color: #fff; text-shadow: 0 0 14px var(--acc-hi); }
+  #efectos .k::before { background: #0b0f15a8; }
+
+  /* -- boletines -- */
+  .news { display: grid; gap: 14px; max-width: 480px; width: 100%; justify-self: center; }
+  .nclock { justify-self: start; padding: 6px 14px; border-radius: 999px; background: #ffffff10; font-weight: 600; font-size: 1.05rem; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+  .nrds { position: relative; overflow: hidden; height: 128px; padding: 0 26px; display: flex; align-items: center; transition: box-shadow .6s; }
+  .nrds .rdsname { font-size: clamp(2.8rem, 6vw, 4.2rem); display: flex; align-items: center; gap: 6px; }
+  .nrds.onair { box-shadow: 0 30px 60px -30px #000c, inset 0 0 0 1px #ffa80055, 0 0 50px -18px #ffa800; }
+  .nm-e { font-size: .62em; animation: nblink 1.1s ease-in-out infinite; filter: saturate(.9); }
+  @keyframes nblink { 50% { opacity: .25; } }
+  .curt { position: absolute; inset: 0; z-index: 2; display: grid; place-items: center; font-weight: 700; font-size: 1.5rem; color: #fff; background: var(--cc); clip-path: inset(0 100% 0 0); }
+  .curt.go { animation: curt 1.15s cubic-bezier(.7,0,.3,1) forwards; }
+  @keyframes curt { 0% { clip-path: inset(0 100% 0 0); } 40%, 60% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
+  .tl { position: relative; margin-top: 10px; height: 64px; }
+  .tl .ln { position: absolute; left: 0; right: 0; top: 18px; height: 2px; background: #2b3443; border-radius: 2px; }
+  .tl .dt { position: absolute; top: 12px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #3a3020; transition: background .3s, box-shadow .3s; }
+  .tl .dt.lit { background: #ffb52e; box-shadow: 0 0 12px #ffa800aa; }
+  .tl .ph { position: absolute; top: 4px; width: 2px; height: 30px; margin-left: -1px; background: #fff; border-radius: 2px; box-shadow: 0 0 8px #fff8; }
+  .tl .lb { position: absolute; top: 40px; transform: translateX(-50%); font-weight: 600; font-size: 1rem; color: var(--mut); font-variant-numeric: tabular-nums; }
+
+  /* -- grabar -- */
+  .rec { position: relative; display: grid; gap: 12px; max-width: 500px; width: 100%; justify-self: center; }
+  .rec .card { padding: 18px 20px; }
+  .rec .p-rds .rdsname { font-size: clamp(2.2rem, 5vw, 3.2rem); }
+  .recb.live { box-shadow: 0 0 0 0 #e5484d88; animation: recp 1.6s ease-out infinite; background: #2a1d22; }
+  @keyframes recp { 0% { box-shadow: 0 0 0 0 #e5484d99; } 100% { box-shadow: 0 0 0 16px #e5484d00; } }
+  .rtime { display: flex; align-items: center; gap: 10px; font-weight: 700; color: #ff8a8d; font-variant-numeric: tabular-nums; letter-spacing: .06em; }
+  .rtime::before { content: 'REC'; padding: 2px 7px; border-radius: 6px; background: var(--rec); color: #fff; font-size: .72rem; letter-spacing: .12em; }
+  #wave { display: block; width: 100%; height: 70px; margin-top: 12px; }
+  .pip { position: absolute; right: -18px; bottom: -64px; width: 210px; padding: 12px 14px; border-radius: 12px; background: #0a0d12; box-shadow: 0 26px 50px -16px #000, inset 0 0 0 1px #ffffff14; animation: float 6s ease-in-out infinite; }
+  .pip .rdsname { font-size: 1.3rem; }
+  .pip .bars { height: 34px; gap: 2px; margin-top: 8px; }
+  .pip small { display: block; margin-bottom: 6px; font-size: .66rem; font-weight: 700; letter-spacing: .12em; color: var(--dim); text-transform: uppercase; }
+  @keyframes float { 50% { translate: 0 -8px; } }
+
+  /* -- instalar -- */
+  #instalar .cin { gap: 0; }
+  .ico { position: relative; width: clamp(110px, 16vw, 150px); aspect-ratio: 1; margin-bottom: 28px; }
+  .ico img { position: relative; z-index: 1; width: 100%; height: 100%; border-radius: 26%; box-shadow: 0 30px 60px -20px #000, 0 0 60px -10px color-mix(in srgb, var(--accent) 70%, transparent); }
+  .ico i { position: absolute; inset: 0; border-radius: 50%; border: 2px solid color-mix(in srgb, var(--acc-hi) 70%, transparent); opacity: 0; animation: ring 3.6s cubic-bezier(.2,.6,.3,1) infinite; animation-delay: calc(var(--n) * 1.2s); }
+  @keyframes ring { 0% { transform: scale(.8); opacity: .8; } 100% { transform: scale(2.6); opacity: 0; } }
+  #instalar .lead { max-width: 36ch; margin-inline: auto; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 22px; }
+  .chips span { padding: 8px 14px; border-radius: 999px; font-weight: 600; font-size: .95rem; background: #ffffff0c; border: 1px solid #ffffff14; color: #d3dae4; }
+  #instalar .btns { justify-content: center; }
+  .foot { margin-top: clamp(24px, 6vh, 56px); font-size: .9rem; color: #7d899a; line-height: 1.6; }
+  .foot .love { display: block; min-height: 1.6em; font-size: 1.02rem; font-weight: 700; color: #aeb9c8; transition: opacity .5s, transform .5s; }
+  .foot .love.out { opacity: 0; transform: translateY(-6px); }
+  .foot a { text-decoration: none; }
+  @media (hover: hover) { .foot a:hover { text-decoration: underline; text-underline-offset: 3px; } }
+
+  /* == MÓVIL Y PANTALLAS BAJAS == */
+  @media (max-width: 860px) {
+    :root { --top: 56px; --dial: 58px; }
+    .in, .in.rev { grid-template-columns: 1fr; gap: 22px; align-content: center; }
+    .in.rev > :first-child { order: 0; }
+    .lead { margin-top: 10px; font-size: 1.05rem; }
+    .pts { margin-top: 12px; gap: 6px; }
+    .pts li { font-size: .95rem; }
+    .k { margin-bottom: 10px; }
+    .brand span { display: none; }
+    .rds { min-width: 0; padding: 6px 12px 5px; }
+    .rds .ps { font-size: 1.25rem; }
+    .open { padding: 8px 12px; font-size: .9rem; }
+    .player { transform: none; }
+    .tk b { font-size: .6rem; }
+    .tk.odd b { display: none; }
+    .win { padding: 16px; border-radius: 18px; }
+    .pr { height: 46px; font-size: .92rem; }
+    .pgrid { gap: 7px; margin: 8px 0 12px; }
+    .tabs { margin: 12px 0 10px; } .tabs i { height: 36px; }
+    .graph { margin: 10px 0; }
+    .sl { padding: 4px 0; }
+    .pip { right: 0; bottom: -54px; width: 170px; }
+    .nrds { height: 104px; }
+    .player .card { padding: 14px 16px; }
+    .bars { height: 54px; }
+    .scroll-hint { display: none; }
+  }
+  @media (max-width: 860px) and (max-height: 760px) {
+    .player .eqc, .player .dots { display: none; }
+    #cadenas .pgrid.mus { display: none; }
+    #cadenas .pts, #buscar .pts, #grabar .pts { display: none; }
+    .eq .nmrow { display: none; }
+    .sres .ri:nth-of-type(n+3), .sg.t2 ~ * { display: none; }
+  }
+  @media (max-width: 860px) and (max-height: 640px) {
+    .eq .sl:nth-of-type(n+3) { display: none; }
+    #sonido .lead, #boletines .lead { display: none; }
+  }
+  @media (min-width: 861px) and (max-height: 760px) {
+    h2 { font-size: clamp(2.2rem, 5vw, 3.8rem); }
+    .eq .nmrow { display: none; }
+    .tabs i { height: 38px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-r] { transition: none; opacity: 1; transform: none; filter: none; }
+    .shine, .scroll-hint::after, .ico i, .pip, .nm-e, .recb.live { animation: none; }
+  }
+</style>
+
+<script>
+// El mismo color de énfasis que la aplicación, si hay ajustes guardados
+try {
+  var c = JSON.parse(localStorage.getItem('rn_datos') || '{}');
+  if (/^#[0-9a-f]{6}$/i.test(c.accent)) document.documentElement.style.setProperty('--accent', c.accent);
+} catch (e) {}
+</script>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="top">
+  <a class="brand" href="../"><img src="../icon.svg" alt=""><span>Radio Web Neo</span></a>
+  <div class="rds" id="rds" aria-hidden="true"><span class="f" id="rdsF">88.0<small>MHz</small></span><span class="ps" id="rdsPs">NEO</span></div>
+  <a class="open" href="../"><span class="shine">Abrir la app</span></a>
+</header>
+
+<main>
+  <!-- 1. Inicio -->
+  <section class="pg" id="inicio" data-f="88.0" data-ps="NEO" data-hue="232" data-bgo=".95">
+    <div class="in">
+      <div>
+        <p class="k" data-f="88.0" data-r>Reproductor de radio</p>
+        <h1 data-r style="--d:1">Radio Web Neo</h1>
+        <p class="lead" data-r style="--d:2"><em>Vibecodeado</em>, ligero, rápido y sin rastreos</p>
+        <div class="btns" data-r style="--d:3">
+          <a class="b p" href="../">Escuchar ahora</a>
+          <a class="b" href="#cadenas">Cómo es</a>
+        </div>
+      </div>
+      <div class="player" aria-hidden="true">
+        <div class="card p-rds" data-r style="--d:2"><span class="rdsname">LOS40 Classic</span><span class="recb"></span></div>
+        <div class="card" data-r style="--d:3">
+          <div class="p-ico"><i></i><i></i><i></i></div>
+          <div class="bars" id="heroBars" style="--c:#00bfd6"></div>
+        </div>
+        <div class="card p-eq eqc" data-r style="--d:4"><span class="arr">‹</span><span class="nm">EQ Dinámico</span><span class="arr">›</span><span class="sep"></span><span class="gear"></span></div>
+        <div class="dots" data-r style="--d:5"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <a class="scroll-hint" href="#cadenas">Sintoniza</a>
+  </section>
+
+  <!-- 2. Presintonías -->
+  <section class="pg" id="cadenas" data-f="91.2" data-ps="CADENAS" data-hue="262" data-bgo=".45">
+    <div class="in">
+      <div>
+        <p class="k" data-f="91.2" data-r>Presintonías</p>
+        <h2 data-r style="--d:1">Cada botón, una cadena</h2>
+        <p class="lead" data-r style="--d:2">Con una emisora o con muchas: la SER con todas sus locales, LOS40, o lo que tú quieras juntar</p>
+        <ul class="pts" data-r style="--d:3">
+          <li>Pulsación larga o clic derecho: sus emisoras</li>
+          <li>Arrastra para ordenarlas a tu gusto</li>
+        </ul>
+      </div>
+      <div class="win grid-win" data-r style="--d:2" aria-hidden="true">
+        <div class="cap">Generalistas</div>
+        <div class="pgrid gen" id="gGen"></div>
+        <div class="cap mus">Musicales</div>
+        <div class="pgrid mus" id="gMus"></div>
+        <div class="menu" id="menu">
+          <div class="mt">Cadena SER</div>
+          <div class="mi">SER Web</div><div class="mi">Radio Madrid</div><div class="mi">SER+ Madrid</div><div class="mi">Radio Zamora</div><div class="mi">Radio Córdoba</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Buscador -->
+  <section class="pg" id="buscar" data-f="94.6" data-ps="BUSCAR" data-hue="200" data-bgo=".45">
+    <div class="in rev">
+      <div>
+        <p class="k" data-f="94.6" data-r>Buscador</p>
+        <h2 data-r style="--d:1">Encuentra tu radio</h2>
+        <p class="lead" data-r style="--d:2">Escribe parte del nombre: catálogo propio y el de TDTChannels</p>
+        <ul class="pts" data-r style="--d:3">
+          <li>Añádela a una cadena o crea una presintonía</li>
+          <li>¿Tienes el enlace del stream? También vale</li>
+        </ul>
+      </div>
+      <div class="win search" data-r style="--d:2" aria-hidden="true">
+        <h3>Buscar emisoras <span class="x">✕</span></h3>
+        <div class="sbox" id="sbox"><span class="q" id="sq"></span><span class="cl">✕</span></div>
+        <div class="cnt" id="scnt"></div>
+        <div class="sres" id="sres">
+          <div class="sg hide">Catálogo Radio Web Neo</div>
+          <div class="ri" style="--i:1"><b>SER Castilla y León</b><span>Radio Salamanca</span></div>
+          <div class="ri" style="--i:2"><b>LOS40 Castilla y León</b><span>LOS40 Salamanca</span></div>
+          <div class="sg t2 hide" style="--i:3">Catálogo TDTChannels</div>
+          <div class="ri" style="--i:4"><b>COPE Salamanca <i class="tag">MP3</i><i class="tag">Radio</i></b></div>
+          <div class="ri" style="--i:5"><b>Onda Cero Salamanca <i class="tag">HLS</i><i class="tag">Radio</i></b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Sonido -->
+  <section class="pg" id="sonido" data-f="97.8" data-ps="SONIDO" data-hue="188" data-bgo=".5">
+    <div class="in">
+      <div>
+        <p class="k" data-f="97.8" data-r>Sonido</p>
+        <h2 data-r style="--d:1">Tu sonido</h2>
+        <p class="lead" data-r style="--d:2">Seis modos de ecualizador con graves, medios, agudos y volumen. Se cambia con ‹ y › sin salir de la radio</p>
+      </div>
+      <div class="win eq" data-r style="--d:2" aria-hidden="true">
+        <h3>Ecualizador <span class="x">✕</span></h3>
+        <div class="tabs" id="eqTabs"><i>1</i><i>2</i><i>3</i><i class="off">4</i><i class="off">5</i><i class="off">6</i></div>
+        <div class="nmrow">Nombre <div id="eqName">EQ Graves</div></div>
+        <div class="graph"><svg viewBox="0 0 400 170" id="eqSvg"></svg></div>
+        <div id="eqSl"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Pantalla completa -->
+  <section class="pg" id="efectos" data-f="100.4" data-ps="EFECTOS" data-hue="fx" data-bgo="1">
+    <div class="cin">
+      <p class="k" data-f="100.4" data-r>Pantalla completa</p>
+      <div class="fsname" data-r style="--d:1">MegaStar</div>
+      <div class="fsclock" id="fsClock" data-r style="--d:2">00:00:00</div>
+      <div class="pill" data-r style="--d:3">Con <em>7</em> visualizadores al ritmo de la música</div>
+      <div class="modes" id="modes" data-r style="--d:4"><span>Espectro</span><span>Radial</span><span>Océano</span><span>Vórtice</span><span>Seda</span><span>Onda</span><span>Onda de seda</span></div>
+    </div>
+  </section>
+
+  <!-- 6. Boletines -->
+  <section class="pg" id="boletines" data-f="102.9" data-ps="NOTICIAS" data-hue="36" data-bgo=".5">
+    <div class="in rev">
+      <div>
+        <p class="k" data-f="102.9" data-r>Modo boletines</p>
+        <h2 data-r style="--d:1">Música y noticias</h2>
+        <p class="lead" data-r style="--d:2">Suena tu emisora y, a la hora de las noticias, conecta sola con una generalista. De serie, la SER de 8 a 20 h</p>
+      </div>
+      <div class="news" data-r style="--d:2" aria-hidden="true">
+        <span class="nclock" id="nClock">7:40</span>
+        <div class="card nrds" id="nRds"><span class="rdsname" id="nName">LOS40</span><div class="curt" id="nCurt"></div></div>
+        <div class="tl" id="tl"><div class="ln"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. Grabar -->
+  <section class="pg" id="grabar" data-f="105.1" data-ps="GRABAR" data-hue="352" data-bgo=".42">
+    <div class="in">
+      <div>
+        <p class="k" data-f="105.1" data-r>Grabación</p>
+        <h2 data-r style="--d:1">Graba en MP3</h2>
+        <p class="lead" data-r style="--d:2">Con el botón rojo junto al nombre de la emisora</p>
+        <ul class="pts" data-r style="--d:3">
+          <li>Imagen en imagen: la radio, siempre a la vista</li>
+        </ul>
+      </div>
+      <div class="rec" data-r style="--d:2" aria-hidden="true">
+        <div class="card">
+          <div class="p-rds"><span class="rdsname">MegaStar</span><span class="recb" id="recB"></span></div>
+          <canvas id="wave"></canvas>
+          <div class="rtime" id="rTime">00:00</div>
+        </div>
+        <div class="pip"><small>Imagen en imagen</small><span class="rdsname">MegaStar</span><div class="bars" id="pipBars" style="--c:#ffbf1f"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Instalar -->
+  <section class="pg" id="instalar" data-f="107.5" data-ps="INSTALAR" data-hue="245" data-bgo=".7">
+    <div class="cin">
+      <div class="ico" data-r><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><img src="../icon.svg" alt=""></div>
+      <h2 data-r style="--d:1">Instálala como una app</h2>
+      <p class="lead" data-r style="--d:2">Desde el menú del navegador, en el móvil o en el PC</p>
+      <div class="chips" data-r style="--d:3"><span>Sin cookies</span><span>Sin rastreos</span><span>Tu configuración, a otro dispositivo</span></div>
+      <div class="btns" data-r style="--d:4"><a class="b p" href="../">Escuchar ahora</a></div>
+      <footer class="foot" data-r style="--d:5">
+        <span class="love" id="love">Con ❤️ por la 📻</span>
+        <a href="https://www.linkedin.com/in/manuelrs" target="_blank" rel="noopener">Manuel Reyes, 2026</a> • <a href="https://github.com/ManuRS/radio_web_neo" target="_blank" rel="noopener">Proyecto en GitHub</a>
+      </footer>
+    </div>
+  </section>
+</main>
+
+<nav class="dial" aria-label="Secciones"><div class="scale" id="scale"><div class="needle" id="needle"></div></div></nav>
+
+<script>
+(() => {
+'use strict';
+const $ = s => document.querySelector(s);
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const pages = [...document.querySelectorAll('.pg')];
+const FMIN = 87.5, FMAX = 108;
+const pct = f => (f - FMIN) / (FMAX - FMIN) * 100;
+let cur = 0;
+
+// == SEÑAL DE MENTIRA ==
+// 36 bandas como el analizador de la app: un bombo a 118 ppm, platillos en los contratiempos y un fondo que respira
+const N = 36, lv = new Float32Array(N);
+const ph = Array.from({ length: N }, () => Math.random() * 6.28);
+function signal(t, dt) {
+  const beat = 60 / 118, b = (t % beat) / beat, kick = Math.exp(-b * 6.5), hat = Math.exp(-(((t + beat / 2) % beat) / beat) * 9);
+  const phrase = 0.82 + 0.18 * Math.sin(t * 0.35);
+  for (let i = 0; i < N; i++) {
+    const x = i / (N - 1);
+    const base = 0.62 * Math.pow(1 - x, 0.7) + 0.16;
+    const mod = 0.5 + 0.5 * Math.sin(t * (1.1 + i * 0.29) + ph[i]) * Math.sin(t * 0.63 + i * 0.4);
+    let v = (base * (0.5 + 0.5 * mod) + kick * 0.55 * Math.max(0, 1 - x * 3.2) + hat * 0.42 * Math.max(0, x - 0.55) * 2.2) * phrase;
+    v = Math.min(1, v);
+    const k = v > lv[i] ? 18 : 4.5;   // sube rápido y baja despacio
+    lv[i] += (v - lv[i]) * Math.min(1, dt * k);
+  }
+  return kick;
+}
+
+// == FONDO: Seda y Espectro (las vistas de la pantalla completa, simplificadas) ==
+const cv = $('#bg'), cx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+function size() {
+  DPR = Math.min(2, devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  cx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+size();
+addEventListener('resize', size);
+
+const SILK = 9, sk = new Float32Array(SILK);
+let skT = 0, hue = 232, hueTo = 232, fx = false, fxMode = 'Seda', fxAt = 0, kickS = 0;
+const stars = Array.from({ length: 44 }, () => ({ x: Math.random(), y: Math.random() * 0.55, r: 0.6 + Math.random() * 1.2, p: Math.random() * 6.28 }));
+
+function drawSilk(dt, kick) {
+  const per = N / SILK;
+  let mean = 0;
+  for (let j = 0; j < SILK; j++) {
+    let v = 0; for (let i = 0; i < per; i++) v += lv[Math.floor(j * per) + i];
+    v /= per; sk[j] += (v - sk[j]) * Math.min(1, dt * (v > sk[j] ? 9 : 2.6)); mean += sk[j];
+  }
+  mean /= SILK;
+  skT += dt * (0.22 + mean * 0.9);
+  const cy = H * 0.6, amp = Math.min(H * 0.18, W * 0.32);
+  const g = cx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#070a12'); g.addColorStop(1, 'hsl(' + hue.toFixed(0) + ',40%,7%)');
+  cx.fillStyle = g; cx.fillRect(0, 0, W, H);
+  const gl = cx.createRadialGradient(W / 2, cy, 0, W / 2, cy, Math.max(W, H) * 0.6);
+  gl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ',70%,55%,' + (0.04 + 0.1 * kickS).toFixed(3) + ')');
+  gl.addColorStop(1, 'hsla(' + hue.toFixed(0) + ',70%,55%,0)');
+  cx.fillStyle = gl; cx.fillRect(0, 0, W, H);
+  cx.fillStyle = '#dbe6ff';
+  for (const s of stars) { cx.globalAlpha = 0.08 + 0.17 * (0.5 + 0.5 * Math.sin(skT * 0.7 + s.p)); cx.beginPath(); cx.arc(s.x * W, s.y * H, s.r, 0, 6.283); cx.fill(); }
+  cx.globalAlpha = 1;
+  cx.globalCompositeOperation = 'lighter';
+  cx.lineJoin = cx.lineCap = 'round';
+  const steps = Math.max(24, Math.round(W / 12));
+  for (let j = 0; j < SILK; j++) {
+    const f = j / (SILK - 1), a = Math.min(1, Math.pow(sk[j], 0.8) * 1.5), off = (0.5 - f) * amp * 1.3, k1 = 3 + f * 5, k2 = 8 + f * 9;
+    cx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps, t = Math.pow(Math.sin(u * Math.PI), 1.2);
+      const y = cy + t * (off + amp * (1 + 0.3 * kickS) * (0.1 + 0.9 * a) * (0.75 * Math.sin(u * k1 + skT * 0.8 + j * 0.7) + 0.25 * Math.sin(u * k2 - skT * 1.1 + j * 1.1)));
+      if (i) cx.lineTo(u * W, y); else cx.moveTo(0, y);
+    }
+    const hh = (hue + j * 5).toFixed(0);
+    cx.strokeStyle = 'hsla(' + hh + ',70%,65%,' + (0.03 + 0.07 * a).toFixed(3) + ')'; cx.lineWidth = 8; cx.stroke();
+    cx.strokeStyle = 'hsla(' + hh + ',75%,78%,' + (0.175 + 0.55 * a).toFixed(3) + ')'; cx.lineWidth = 1.3; cx.stroke();
+  }
+  cx.globalCompositeOperation = 'source-over';
+}
+
+const pk = new Float32Array(N);
+function rr(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); cx.moveTo(x + r, y); cx.arcTo(x + w, y, x + w, y + h, r); cx.arcTo(x + w, y + h, x, y + h, r); cx.arcTo(x, y + h, x, y, r); cx.arcTo(x, y, x + w, y, r); cx.closePath(); }
+function drawSpectrum(dt) {
+  const narrow = W < 700, n = narrow ? 12 : N, c = 'hsl(' + hue.toFixed(0) + ',62%,66%)';
+  const v = i => { if (!narrow) return lv[i]; return (lv[i * 3] + lv[i * 3 + 1] + lv[i * 3 + 2]) / 3; };
+  const g0 = cx.createLinearGradient(0, 0, 0, H);
+  g0.addColorStop(0, '#070a12'); g0.addColorStop(1, 'hsl(' + hue.toFixed(0) + ',35%,8%)');
+  cx.fillStyle = g0; cx.fillRect(0, 0, W, H);
+  const base = H * 0.8, maxH = H * (narrow ? 0.38 : 0.48), m = W * 0.06, us = W - m * 2, gap = us / n * 0.28, bw = (us - gap * (n - 1)) / n;
+  const hl = cx.createRadialGradient(W / 2, base, 0, W / 2, base, Math.max(W, H) * 0.5);
+  hl.addColorStop(0, 'hsla(' + hue.toFixed(0) + ',70%,60%,' + (0.08 + 0.12 * kickS).toFixed(3) + ')'); hl.addColorStop(1, 'hsla(0,0%,0%,0)');
+  cx.fillStyle = hl; cx.fillRect(0, 0, W, H);
+  const g = cx.createLinearGradient(0, base, 0, base - maxH);
+  g.addColorStop(0, 'hsl(' + hue.toFixed(0) + ',55%,32%)'); g.addColorStop(0.55, c); g.addColorStop(1, 'hsl(' + hue.toFixed(0) + ',70%,88%)');
+  cx.fillStyle = g; cx.beginPath();
+  for (let i = 0; i < n; i++) { const e = v(i), bh = Math.max(4, e * e * (3 - 2 * e) * maxH); rr(m + i * (bw + gap), base - bh, bw, bh, Math.min(6, bw / 2)); pk[i] = Math.max(pk[i] - dt * 0.35, e); }
+  cx.fill();
+  const r = cx.createLinearGradient(0, base, 0, base + maxH * 0.42);
+  r.addColorStop(0, 'hsla(' + hue.toFixed(0) + ',62%,66%,.3)'); r.addColorStop(1, 'hsla(' + hue.toFixed(0) + ',62%,66%,0)');
+  cx.fillStyle = r; cx.beginPath();
+  for (let i = 0; i < n; i++) { const e = v(i), bh = Math.max(4, e * e * (3 - 2 * e) * maxH) * 0.42; rr(m + i * (bw + gap), base + 4, bw, bh, Math.min(6, bw / 2)); }
+  cx.fill();
+  cx.fillStyle = 'hsl(' + hue.toFixed(0) + ',70%,92%)'; cx.beginPath();
+  for (let i = 0; i < n; i++) { const e = pk[i]; if (e > 0.03) rr(m + i * (bw + gap), base - Math.max(4, e * e * (3 - 2 * e) * maxH) - 9, bw, 3, 1.5); }
+  cx.fill();
+}
+
+// == BARRAS DE LAS RÉPLICAS ==
+function mkBars(el, n) { for (let i = 0; i < n; i++) el.appendChild(document.createElement('i')); return [...el.children]; }
+const heroBars = mkBars($('#heroBars'), N), pipBars = mkBars($('#pipBars'), 18);
+function paintBars(bars) { const s = N / bars.length; bars.forEach((b, i) => { b.style.transform = 'scaleY(' + Math.max(0.06, lv[Math.floor(i * s)]).toFixed(3) + ')'; }); }
+
+// onda de la grabación: lo que se va grabando, de izquierda a derecha
+const wv = $('#wave'), wx = wv.getContext('2d'), wcol = [];
+let wAcc = 0;
+function drawWave(dt) {
+  const w = wv.clientWidth, h = wv.clientHeight;
+  if (!w) return;
+  if (wv.width !== Math.round(w * DPR)) { wv.width = Math.round(w * DPR); wv.height = Math.round(h * DPR); }
+  wAcc += dt;
+  if (wAcc > 0.06) { wAcc = 0; let s = 0; for (let i = 0; i < 12; i++) s += lv[i]; wcol.push(Math.min(1, s / 12 * (0.7 + Math.random() * 0.5))); }
+  const step = 5, max = Math.floor(w / step);
+  while (wcol.length > max) wcol.shift();
+  wx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  wx.clearRect(0, 0, w, h);
+  wcol.forEach((v, i) => {
+    const bh = Math.max(2, v * h * 0.9);
+    wx.fillStyle = i > wcol.length - 4 ? '#ff8a8d' : 'rgba(229,72,77,' + (0.35 + 0.5 * i / wcol.length).toFixed(2) + ')';
+    wx.fillRect(i * step, (h - bh) / 2, 3, bh);
+  });
+}
+
+// == BUCLE ==
+let last = performance.now(), T = 0;
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now; T += dt;
+  const kick = signal(T, dt);
+  kickS += (kick - kickS) * Math.min(1, dt * 10);
+  if (fx) hue = (hue + dt * 22) % 360;
+  else { let d = ((hueTo - hue + 540) % 360) - 180; hue = (hue + d * Math.min(1, dt * 1.6) + 360) % 360; }
+  if (fx && fxMode === 'Espectro') drawSpectrum(dt); else drawSilk(dt, kick);
+  if (cur === 0) paintBars(heroBars);
+  if (cur === 6) { paintBars(pipBars); drawWave(dt); }
+  if (!reduce) raf = requestAnimationFrame(frame);
+}
+let raf = requestAnimationFrame(frame);
+document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAnimationFrame(raf); else if (!reduce) { last = performance.now(); raf = requestAnimationFrame(frame); } });
+
+// == DIAL Y RDS ==
+const scale = $('#scale'), needle = $('#needle');
+for (let f = 88; f <= 108; f += 0.5) {
+  const t = document.createElement('div');
+  t.className = 'tk' + (f % 2 === 0 ? ' mj' : '') + (f % 4 === 2 ? ' odd' : '');
+  t.style.left = pct(f) + '%';
+  if (f % 2 === 0) { const b = document.createElement('b'); b.textContent = f; t.appendChild(b); }
+  scale.appendChild(t);
+}
+const stBtns = pages.map((p, i) => {
+  const b = document.createElement('button');
+  b.className = 'st'; b.style.left = pct(+p.dataset.f) + '%';
+  b.setAttribute('aria-label', p.dataset.ps + ', ' + p.dataset.f + ' MHz');
+  b.innerHTML = '<span>' + p.dataset.f + ' ' + p.dataset.ps + '</span><i></i>';
+  b.addEventListener('click', () => p.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }));
+  scale.appendChild(b);
+  return b;
+});
+const freqs = pages.map(p => +p.dataset.f);
+function onScroll() {
+  const x = Math.max(0, Math.min(pages.length - 1, scrollY / innerHeight)), i = Math.floor(x), fr = x - i;
+  const f = i >= pages.length - 1 ? freqs[i] : freqs[i] + (freqs[i + 1] - freqs[i]) * fr;
+  needle.style.left = pct(f) + '%';
+  $('#rdsF').firstChild.nodeValue = f.toFixed(1);
+}
+addEventListener('scroll', onScroll, { passive: true });
+onScroll();
+
+// el PS se "sintoniza": letras al azar que se van fijando
+const psEl = $('#rdsPs'), rdsBox = $('#rds'), CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+let psTimer = 0;
+function tunePs(text) {
+  clearInterval(psTimer);
+  rdsBox.classList.remove('tune'); void rdsBox.offsetWidth; rdsBox.classList.add('tune');
+  if (reduce) { psEl.textContent = text; return; }
+  let k = 0;
+  psTimer = setInterval(() => {
+    k++;
+    psEl.textContent = [...text].map((c, i) => (i < k / 2 || c === ' ' ? c : CH[Math.random() * CH.length | 0])).join('');
+    if (k / 2 >= text.length) { clearInterval(psTimer); psEl.textContent = text; }
+  }, 34);
+}
+
+// == PÁGINA ACTIVA ==
+const demos = {};
+let stopDemo;
+function activate(i) {
+  if (i === cur && stopDemo !== undefined) return;
+  cur = i;
+  const p = pages[i];
+  p.classList.add('on');
+  stBtns.forEach((b, k) => b.classList.toggle('on', k === i));
+  tunePs(p.dataset.ps);
+  fx = p.dataset.hue === 'fx';
+  if (!fx) hueTo = +p.dataset.hue; else fxAt = 0;
+  cv.style.setProperty('--bgo', p.dataset.bgo);
+  cv.style.opacity = '';
+  if (stopDemo) stopDemo();
+  stopDemo = demos[p.id] ? run(demos[p.id]) : null;
+  if (reduce) requestAnimationFrame(frame);
+}
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) activate(pages.indexOf(e.target)); }), { threshold: 0.55 });
+pages.forEach(p => io.observe(p));
+// la entrada de los elementos empieza antes, en mitad del paso de página, y se rearma cuando la página sale del todo
+const ioIn = new IntersectionObserver(es => es.forEach(e => { if (e.intersectionRatio >= 0.2) e.target.classList.add('on'); else if (!e.isIntersecting) e.target.classList.remove('on'); }), { threshold: [0, 0.2] });
+pages.forEach(p => ioIn.observe(p));
+
+// Cada demo corre mientras su página está a la vista; al salir se corta en el siguiente paso
+function run(fn) {
+  let alive = true;
+  const sleep = ms => new Promise((ok, no) => setTimeout(() => (alive ? ok() : no()), reduce ? 0 : ms));
+  fn(sleep).catch(() => {});
+  return () => { alive = false; };
+}
+const loop = async (sleep, body) => { for (;;) { await body(); await sleep(0); } };
+
+// -- presintonías --
+const GEN = [['SER', '#ffa800'], ['Cope', '#1e90ff'], ['Onda Cero', '#1fb45a'], ['RNE', '#e31b2d'], ['RAC1', '#f01e2c'], ['esRadio', '#cc3352']];
+const MUS = [['LOS40', '#e63d32'], ['Classic', '#00bfd6'], ['MegaStar', '#ffbf1f'], ['HitFM', '#fe5000'], ['RockFM', '#3f6bff'], ['+', '']];
+function tiles(el, list) {
+  return list.map(([n, c], i) => {
+    const d = document.createElement('div');
+    d.className = 'pr' + (n === '+' ? ' plus' : '');
+    d.style.setProperty('--c', c); d.style.order = i;
+    d.innerHTML = n + '<span class="hold"></span>';
+    el.appendChild(d);
+    return d;
+  });
+}
+const tg = tiles($('#gGen'), GEN), tm = tiles($('#gMus'), MUS), menu = $('#menu'), mis = [...menu.querySelectorAll('.mi')];
+const setAct = t => [...tg, ...tm].forEach(x => x.classList.toggle('act', x === t));
+async function flipSwap(a, b, sleep) {
+  const all = [...a.parentNode.children], first = new Map(all.map(x => [x, x.getBoundingClientRect()]));
+  const oa = a.style.order; a.style.order = b.style.order; b.style.order = oa;
+  all.forEach(x => { const r0 = first.get(x), r1 = x.getBoundingClientRect(); x.style.transition = 'none'; x.style.transform = `translate(${r0.left - r1.left}px,${r0.top - r1.top}px)`; });
+  void a.offsetWidth;
+  all.forEach(x => { x.style.transition = 'transform .7s cubic-bezier(.3,.8,.2,1), background .45s, box-shadow .3s, scale .3s'; x.style.transform = ''; });
+  await sleep(750);
+}
+demos.cadenas = async sleep => {
+  const [ser] = tg, [l40, classic, mega, hit, rock] = tm;
+  await loop(sleep, async () => {
+    setAct(classic); await sleep(1400);
+    setAct(ser); await sleep(700);
+    ser.classList.add('press'); await sleep(750); ser.classList.remove('press');
+    menu.classList.add('open'); await sleep(450);
+    for (const k of [0, 1, 3]) { mis.forEach((m, j) => m.classList.toggle('sel', j === k)); await sleep(650); }
+    await sleep(500); menu.classList.remove('open'); await sleep(700);
+    mega.classList.add('lift'); await sleep(450);   // MegaStar cambia de sitio con LOS40 (y a la vuelta, otra vez)
+    await flipSwap(mega, l40, sleep);
+    mega.classList.remove('lift');
+    setAct(mega); await sleep(1600);
+  });
+};
+
+// -- buscador --
+const sq = $('#sq'), sbox = $('#sbox'), scnt = $('#scnt'), sres = [...$('#sres').children];
+demos.buscar = async sleep => {
+  await loop(sleep, async () => {
+    sres.forEach(r => r.classList.remove('show')); sres.filter(r => r.classList.contains('sg')).forEach(r => r.classList.add('hide'));
+    sq.textContent = ''; scnt.textContent = ''; sbox.classList.remove('has');
+    await sleep(700);
+    for (const ch of 'Salamanca') { sq.textContent += ch; sbox.classList.add('has'); await sleep(95 + Math.random() * 70); }
+    await sleep(250);
+    scnt.textContent = '4 coincidencias';
+    sres.forEach(r => { r.classList.add('show'); r.classList.remove('hide'); });
+    await sleep(4200);
+    for (let n = sq.textContent.length; n > 0; n--) { sq.textContent = sq.textContent.slice(0, -1); await sleep(35); }
+  });
+};
+
+// -- ecualizador: los tres modos activos de serie, con sus valores reales --
+const MODES = [{ n: 'EQ Graves', v: [10, 0, 2, 0] }, { n: 'EQ Dinámico', v: [5, -1, 4, 0] }, { n: 'Amplitud Modulada', v: [-18, 8, -18, 0] }];
+const eqTabs = [...$('#eqTabs').children], eqName = $('#eqName'), svg = $('#eqSvg'), slBox = $('#eqSl');
+const SLN = ['Graves', 'Medios', 'Agudos', 'Volumen'];
+const sls = SLN.map(n => { const d = document.createElement('div'); d.className = 'sl'; d.innerHTML = n + '<div class="tr"><div class="fi"></div><div class="kn"></div></div><span class="vv"></span>'; slBox.appendChild(d); return d; });
+const GX = f => 30 + (Math.log10(f) - Math.log10(20)) / (Math.log10(20000) - Math.log10(20)) * 360, GY = db => 80 - db / 18 * 62;
+let grid = '';
+for (const f of [50, 100, 500, 1000, 5000, 10000]) grid += `<line x1="${GX(f)}" x2="${GX(f)}" y1="12" y2="148" stroke="#262f3c"/><text x="${GX(f)}" y="164" text-anchor="middle">${f >= 1000 ? f / 1000 + 'k' : f}</text>`;
+for (const d of [12, 0, -12]) grid += `<line x1="30" x2="392" y1="${GY(d)}" y2="${GY(d)}" stroke="#262f3c"/><text x="24" y="${GY(d) + 3}" text-anchor="end">${d > 0 ? '+' + d : d < 0 ? '−' + -d : 0}</text>`;
+svg.innerHTML = grid + '<path id="eqA" fill="color-mix(in srgb, var(--accent) 22%, transparent)"/><path id="eqP" fill="none" stroke="var(--acc-hi)" stroke-width="2.5" stroke-linejoin="round"/>';
+const eqA = svg.querySelector('#eqA'), eqP = svg.querySelector('#eqP');
+let eqv = MODES[0].v.slice();
+function eqDraw() {
+  const [lo, mi, hi, pre] = eqv, l2 = Math.log2;
+  let d = '';
+  for (let x = 0; x <= 90; x++) {
+    const f = 20 * Math.pow(1000, x / 90);
+    const g = lo / (1 + Math.exp((l2(f) - l2(160)) * 2)) + mi * Math.exp(-((l2(f) - l2(1000)) ** 2) / 2.4) + hi / (1 + Math.exp(-(l2(f) - l2(5000)) * 2)) + pre;
+    d += (x ? 'L' : 'M') + GX(f).toFixed(1) + ' ' + GY(Math.max(-20, Math.min(20, g))).toFixed(1);
+  }
+  eqP.setAttribute('d', d);
+  eqA.setAttribute('d', d + `L${GX(20000)} ${GY(0)}L${GX(20)} ${GY(0)}Z`);
+  sls.forEach((s, i) => {
+    const v = eqv[i], r = Math.round(v);
+    s.style.setProperty('--v', ((v + 18) / 36 * 100).toFixed(1) + '%');
+    s.querySelector('.vv').textContent = (r > 0 ? '+' + r : r < 0 ? '−' + -r : '0') + ' dB';
+  });
+}
+eqDraw();
+demos.sonido = async sleep => {
+  let m = 0;
+  await loop(sleep, async () => {
+    eqTabs.forEach((t, i) => t.classList.toggle('on', i === m));
+    eqName.textContent = MODES[m].n;
+    const from = eqv.slice(), to = MODES[m].v;
+    for (let k = 1; k <= 24; k++) { const e = 1 - Math.pow(1 - k / 24, 3); eqv = from.map((v, i) => v + (to[i] - v) * e); eqDraw(); await sleep(22); }
+    await sleep(2600);
+    m = (m + 1) % MODES.length;
+  });
+};
+
+// -- pantalla completa: Espectro y Seda, con el reloj de la presentación --
+const modeEls = [...$('#modes').children], fsClock = $('#fsClock');
+const pad = n => String(n).padStart(2, '0');
+function tickClock() { const d = new Date(); fsClock.textContent = pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()); }
+demos.efectos = async sleep => {
+  const show = m => { fxMode = m; modeEls.forEach(e => e.classList.toggle('on', e.textContent === m)); };
+  let k = 0;
+  await loop(sleep, async () => {
+    show(k % 2 ? 'Seda' : 'Espectro');
+    for (let s = 0; s < 6; s++) { tickClock(); await sleep(1000); }
+    cv.style.opacity = '0'; await sleep(450);   // fundido entre vistas
+    k++; show(k % 2 ? 'Seda' : 'Espectro'); cv.style.opacity = '';
+  });
+};
+
+// -- boletines: un día entero en medio minuto --
+const nClock = $('#nClock'), nName = $('#nName'), nRds = $('#nRds'), nCurt = $('#nCurt'), tl = $('#tl');
+const H0 = 7.5, H1 = 20.5, tx = h => ((h - H0) / (H1 - H0) * 100) + '%';
+const dots = [];
+for (let h = 8; h <= 20; h++) { const d = document.createElement('i'); d.className = 'dt'; d.style.left = tx(h); tl.appendChild(d); dots.push(d); }
+for (const h of [8, 14, 20]) { const b = document.createElement('span'); b.className = 'lb'; b.style.left = tx(h); b.textContent = h + ':00'; tl.appendChild(b); }
+const phd = document.createElement('i'); phd.className = 'ph'; tl.appendChild(phd);
+function setTime(h) { const hh = Math.floor(h), mm = Math.floor((h - hh) * 60); nClock.textContent = hh + ':' + pad(mm); phd.style.left = tx(Math.max(H0, Math.min(H1, h))); }
+async function curtain(text, color, sleep) {
+  nCurt.textContent = text; nCurt.style.setProperty('--cc', color);
+  nCurt.classList.remove('go'); void nCurt.offsetWidth; nCurt.classList.add('go');
+  await sleep(560);
+}
+demos.boletines = async sleep => {
+  await loop(sleep, async () => {
+    dots.forEach(d => d.classList.remove('lit'));
+    nName.textContent = 'LOS40'; nRds.classList.remove('onair');
+    let h = H0 + 0.2;
+    setTime(h); await sleep(600);
+    while (h < H1) {
+      const next = Math.floor(h) + 1;
+      while (h < next && h < H1) { h = Math.min(next, h + 0.05); setTime(h); await sleep(52); }
+      if (next >= 8 && next <= 20 && h === next) {
+        await curtain('Cadena SER', '#ffa800', sleep);
+        nName.innerHTML = '<span class="nm-e">📰</span>SER'; nRds.classList.add('onair'); dots[next - 8].classList.add('lit');
+        for (let s = 0; s < 6; s++) { h = next + s / 60; setTime(h); await sleep(260); }
+        await curtain('LOS40', '#e63d32', sleep);
+        nName.textContent = 'LOS40'; nRds.classList.remove('onair');
+        await sleep(300);
+      }
+    }
+    await sleep(1800);
+  });
+};
+
+// -- grabar --
+const rTime = $('#rTime'), recB = $('#recB');
+demos.grabar = async sleep => {
+  recB.classList.add('live');
+  let s = 0;
+  await loop(sleep, async () => { rTime.textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60); s++; await sleep(1000); });
+};
+
+// -- pie: las dos frases de la app, cada 30 s --
+const love = $('#love'), PH = ['Con ❤️ por la 📻', '¡Viva la radio siempre!'];
+let li = 0;
+setInterval(() => {
+  if (cur !== pages.length - 1 || document.hidden) return;
+  love.classList.add('out');
+  setTimeout(() => { li = (li + 1) % PH.length; love.textContent = PH[li]; love.classList.remove('out'); }, 500);
+}, 30000);
+})();
+</script>
+</body>
+</html>
