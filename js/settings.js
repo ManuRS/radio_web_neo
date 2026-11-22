@@ -96,7 +96,7 @@ export const DEFAULT_EQ = {
   modes: [
     { label: 'EQ Graves', low: 10, mid: 0, high: 2, pre: 0 },
     { label: 'EQ Dinámico', low: 5, mid: -1, high: 4, pre: 0 },
-    { label: 'Frecuencia Modulada', low: -18, mid: 8, high: -18, pre: 0 },
+    { label: 'Amplitud Modulada', low: -18, mid: 8, high: -18, pre: 0 },
     { label: 'EQ Voz', low: -4, mid: 3, high: 2, pre: 0, active: false },             // tertulias y boletines: menos graves, más presencia
     { label: 'EQ Especial Móvil', low: -3, mid: 2, high: 3, pre: 0, active: false },  // altavoz del móvil: no gasta en graves que no puede dar
     { label: 'EQ Extra', low: 0, mid: 0, high: 0, pre: 0, active: false },            // libre para el gusto de cada uno
@@ -182,7 +182,7 @@ export function validateConfig(text) {
         highHz: num(e.highHz, 2000, 16000, 'highHz', true),
         defaultMode,
         modes: modes.slice(0, EQ_MAX_MODES).map((m, i) => ({
-          label: m && m.label !== undefined ? String(m.label).slice(0, 24) : 'EQ ' + (i + 1),
+          label: m && m.label !== undefined ? (m.label === 'Frecuencia Modulada' ? 'Amplitud Modulada' : String(m.label).slice(0, 24)) : 'EQ ' + (i + 1),   // el nombre de antes de ese modo, corregido
           low: num(m && m.low, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].low'),
           mid: num(m && m.mid, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].mid'),
           high: num(m && m.high, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].high'),
