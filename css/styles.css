@@ -54,7 +54,8 @@ main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 
   html { overflow: hidden; }
   main { display: flex; flex-direction: column; height: 100vh; height: 100dvh; padding-top: 0; padding-bottom: 0; }
   main > :not(.scroller) { flex: none; }
-  .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -6px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 6px 28px; }
+  .scroller { flex: 1 1 auto; min-height: 0; margin: 0 -20px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; padding: var(--hf) 20px 28px; }   /* hasta el borde de la pantalla (el margen de main): los paneles agrupados salen por ahí al deslizar */
+
   .scroller::-webkit-scrollbar { display: none; }
   /* lo que sube por debajo de la cabecera se va desvaneciendo en vez de cortarse: --hh es la altura de la cabecera ahora y --fade lo pone ui.js según el scroll */
   .scroller { --hh: calc(var(--hf) - (var(--hf) - 74px) * var(--p)); -webkit-mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); mask-image: linear-gradient(to bottom, transparent var(--hh), #000 calc(var(--hh) + var(--fade, 0px))); }
@@ -202,8 +203,8 @@ input[type="range"]:disabled { opacity: .4; }
 .eqarr svg, .eqopen svg { display: block; }
 .eqmid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .eqnow, .eqqual { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.eqnow { font-size: .86rem; font-weight: 700; color: #edf2f7; }
-.eqqual { font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: #8c98a8; }   /* calidad del audio: segunda línea, apagada */
+.eqnow { font-size: 1.12rem; line-height: 1.3; font-weight: 700; color: #edf2f7; }
+.eqqual { font-size: .8rem; line-height: 1.3; font-weight: 700; letter-spacing: .05em; color: #8c98a8; }   /* calidad del audio: segunda línea, apagada */
 .eqqual:empty { display: none; }
 .panel.eqsel.off .eqnow { color: #8c98a8; }
 .eqsep { flex: 0 0 1px; height: 28px; margin: 0 4px; background: var(--line); }   /* el "|" de la barra de controles */
@@ -216,8 +217,10 @@ input[type="range"]:disabled { opacity: .4; }
 .sgrp { display: contents; }
 .sdots { display: none; }
 @media not all and (min-width: 1024px) and (min-height: 600px) {
-  /* Uno a la vista; deslizando, los otros (con imán, sin saltarse ninguno). El relleno de abajo deja ver la sombra de los paneles; contain: inline-size, para que su ancho no ensanche la página */
-  html.group .sgrp { display: flex; contain: inline-size; min-width: 0; gap: 12px; margin: 10px 0 -6px; padding-bottom: 6px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+  /* Uno a la vista; deslizando, los otros (con imán, sin saltarse ninguno). Llega hasta el borde de la pantalla (el margen de main, 20 px) para que
+     los paneles salgan por ahí en vez de cortarse; grupo.js los apaga y encoge al irse. El relleno de abajo deja ver la sombra; contain: inline-size,
+     para que su ancho no ensanche la página */
+  html.group .sgrp { display: flex; contain: inline-size; min-width: 0; gap: 20px; margin: 10px -20px -6px; padding: 0 20px 6px; scroll-padding-inline: 20px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
   html.group .sgrp::-webkit-scrollbar { display: none; }
   html.group .sgrp > * { flex: 0 0 100%; margin-top: 0; scroll-snap-align: start; scroll-snap-stop: always; }
   html.group .sdots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
@@ -620,6 +623,14 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 .eqmodes button.off.active { color: #edf2f7; background: #3a4554; box-shadow: none; }
 #eqEdit.off .eqcurve, #eqEdit.off .eqrow { opacity: .55; }
 #eqEdit[hidden] { display: none; }
+/* Ventana del ecualizador: más aire entre los elementos; cada fila como lista (texto a la izquierda, control a la derecha) */
+#tabEq { gap: 20px; padding-top: 12px; padding-bottom: 6px; }
+#eqEdit { gap: 18px; }
+#eqDlg .clockrow { min-height: 40px; }
+#eqDlg .clockrow > :first-child { margin-right: auto; }
+#eqDlg .clockrow.eqname > label { margin-right: 8px; }
+#eqEdit .cfgacts { margin-top: 6px; }
+
 .clockrow.eqname input[type="text"] { flex: 1 1 160px; width: auto; min-width: 0; padding: 7px 10px; text-align: left; }
 .eqcurve { display: block; width: 100%; height: 150px; border-radius: 10px; background: #11161d; }
 .eqrow { display: grid; grid-template-columns: 64px minmax(0, 1fr) 54px; align-items: center; gap: 12px; font-size: .88rem; color: #cbd5e1; }
@@ -688,6 +699,10 @@ html.material .preset:not(.recoff):not(.active) .pf, html.material .eqqual { col
 html.material .preset.active { background: var(--t-act, color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr))); color: var(--tx1, #fff); }
 html.material .preset.active .pn { color: var(--tx1, #fff); }
 html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80%, transparent); }
+/* Interruptores en dos tonos del color: apagado, pista apagada y bola en el tono de los paneles (no blanca); encendido, el énfasis, más marcado */
+html.material .switch input:not(:checked):not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 24%, #1a2029); }
+html.material .switch input:not(:checked):not(:disabled) + .track::after { background: var(--t-pan, var(--accent)); }
+
 
 /* Texto sobre un fondo de énfasis (botón principal de las ventanas, modos activos del EQ y de boletines): claro si el énfasis es oscuro, oscuro si es claro */
 @supports (color: oklch(from red l c h)) {
