@@ -649,7 +649,7 @@ html.material body, html.material dialog.settings { color: var(--tx2, #edf2f7); 
 html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
 html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: var(--tx1, #fff); }
 html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span,
-html.material .panel.search input, html.material .panel.search .badge { color: var(--t-pan, var(--accent)); }
+html.material .panel.search input, html.material .panel.search .badge, html.material .panel.news .nedit { color: var(--t-pan, var(--accent)); }
 html.material .ptitle, html.material .panel .info b, html.material .panel.search input::placeholder, html.material .mbar,
 html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }
 html.material .preset:not(.recoff):not(.active) .pf { color: var(--t-frq, var(--accent)); }
@@ -746,3 +746,14 @@ dialog button:focus-visible, .ctxmenu button:focus-visible { outline: none; }   
 #psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .14em; animation: news-blink 1.2s ease-in-out infinite; }
 @keyframes news-blink { 50% { opacity: .2; } }
 @media (prefers-reduced-motion: reduce) { #psValue.newsmark #psText::before { animation: none; } }
+
+/* Al tocar en el móvil, sin el destello azul y cuadrado del navegador */
+html { -webkit-tap-highlight-color: transparent; }
+/* Ventana de los boletines: "Restablecer" no queda pegado al final */
+#tabNews { padding-bottom: 14px; }
+#tabNews .nadd { margin-top: 6px; }
+/* Material: el pie también en los tonos del color (los emojis, como silueta del mismo tono: color transparente y sombra sin desenfoque) */
+html.material .foot { color: var(--t-frq, #7d899a); }
+html.material .foot .love { color: var(--t-sub, #aeb9c8); }
+html.material .fp .fe { color: transparent; text-shadow: 0 0 0 var(--t-sub, #aeb9c8); }
+html.material .fp-text.play { background-image: linear-gradient(100deg, var(--t-sub, #aeb9c8) 0 38%, var(--accent) 50%, var(--t-sub, #aeb9c8) 62% 100%); }
