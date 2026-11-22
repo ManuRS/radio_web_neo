@@ -17,7 +17,7 @@
 
 html.material.playing { --tint: 32%; --hk: 100%; }
 /* --hf: alto de la cabecera desplegada (la cabecera va fija encima y el contenido deja ese hueco arriba); --p: cuánto está encogida (0-1, lo pone ui.js) */
-:root { --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
+:root { --pnl: 86px; --hdr: #323c4a; --line: rgba(255, 255, 255, .13); --hf: 182px; --p: 0; --lift: 0 2px 4px rgba(0, 0, 0, .22); }   /* sombra sutil de los paneles negros (RDS, ecualizador y volúmenes) */
 
 /* --accent: color de énfasis (verde por defecto; se cambia con "accent" en los ajustes). Los demás derivan de él. */
 :root {
@@ -133,10 +133,10 @@ button { border: 0; border-radius: 10px; padding: 11px 17px; font: inherit; font
 button:disabled { opacity: .45; cursor: default; }
 .volume { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
 .volume + .volume { margin-top: 10px; }
-.panel.vols { display: grid; grid-template-columns: auto minmax(0, 1fr) 2.12rem; align-items: center; gap: 12px; margin-top: 10px; padding: 17px 15px; box-shadow: var(--lift); }   /* 3 columnas compartidas: el hueco texto-barra y barra-porcentaje es siempre de 12 px */
+.panel.vols { display: grid; grid-template-columns: auto minmax(0, 1fr) 2.12rem; align-content: center; align-items: center; gap: var(--vgap, 12px) 12px; height: var(--pnl); box-sizing: border-box; margin-top: 10px; padding: 0 15px; box-shadow: var(--lift); }   /* 3 columnas compartidas: el hueco texto-barra y barra-porcentaje es siempre de 12 px */
 .panel.vols .volume { display: contents; }
 .vols .volume { margin-top: 0; }
-.vols .volume + .volume { margin-top: 12px; }
+.vols .volume + .volume { margin-top: 0; }
 .volume label { flex: 0 0 4.6em; white-space: nowrap; position: relative; top: -2px; height: 24px; line-height: 24px; font-size: .86rem; font-weight: 700; color: #aeb9c8; }
 .volume label[for="newsVolume"] { letter-spacing: .285px; }   /* "Noticias" mide 2,3 px menos que "Volumen" (Barlow): así los dos ocupan lo mismo y el hueco hasta la barra es igual */
 .volume span { flex: 0 0 3.4ch; white-space: nowrap; height: 24px; line-height: 24px; text-align: left; font-size: .86rem; font-weight: 700; color: #edf2f7; font-variant-numeric: tabular-nums; }
@@ -156,12 +156,9 @@ input[type="range"]:disabled { opacity: .4; }
    == EMISORA ACTUAL Y VISUALIZADOR ==
    =================================== */
 .now { position: relative; display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 22px; padding: 21px 18px 16px; min-height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; box-shadow: var(--lift); }
-.viz { position: relative; user-select: none; -webkit-tap-highlight-color: transparent; margin-top: 10px; padding: 28px 18px 14px; height: 86px; box-sizing: border-box; border-radius: 12px; background: #11161d; box-shadow: var(--lift); }
+.viz { position: relative; user-select: none; -webkit-tap-highlight-color: transparent; margin-top: 10px; padding: 28px 18px 14px; height: var(--pnl); box-sizing: border-box; border-radius: 12px; background: #11161d; box-shadow: var(--lift); }
 .viz canvas { display: block; width: 100%; height: 100%; }
-.viz.eq-on { cursor: pointer; }
-.viz.off canvas, .viz.off .eq-label { opacity: .45; filter: grayscale(1); }
-.viz:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.eq-label { position: absolute; top: 10px; right: 18px; max-width: calc(100% - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: #aeb9c8; pointer-events: none; }   /* solo el formato: gris, sin destacar (el modo va en su panel) */
+.viz.off canvas { opacity: .45; filter: grayscale(1); }
 .now .ps.idle { color: #8c98a8; }
 .now .ps { flex: 1 1 0; width: 0; min-width: 0; margin: 0 -8px 0 -12px; padding: 0 22px 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 2.5rem; font-weight: 700; letter-spacing: .02em; color: #edf2f7; }
 /* Cambio de emisora pedido y aún sin confirmar: el nombre actual parpadea suave hasta que suena la nueva */
@@ -187,7 +184,7 @@ input[type="range"]:disabled { opacity: .4; }
 @media (prefers-reduced-motion: reduce) { .ps.pending, .pres-ps.pending { animation: none; opacity: .6; } }
 
 /* Botón del modo presentación, en la esquina de las barras */
-/* Alineado con el margen de las barras (a su izquierda; la etiqueta del ecualizador va a su derecha), en la franja de arriba; el área de toque se extiende con ::after */
+/* Alineado con el margen de las barras, en la franja de arriba; el área de toque se extiende con ::after */
 .pres-open { position: absolute; top: 10px; left: 18px; flex: none; display: grid; place-items: center; width: 14px; height: 14px; padding: 0; border-radius: 3px; background: none; color: #fff; opacity: 1; }
 .pres-expand { left: 48px; }
 .pres-pip { left: 78px; }
@@ -199,13 +196,17 @@ input[type="range"]:disabled { opacity: .4; }
    == PANEL DEL ECUALIZADOR ==
    ============================== */
 /* Como los otros paneles negros: ‹ modo › | botón de la ventana de los modos */
-.panel.eqsel { gap: 0; padding: 15px; box-shadow: var(--lift); }
-.eqarr { flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 10px; background: none; color: #cbd5e1; }
-.eqarr:where(:enabled):hover, .panel.eqsel .eqopen:hover { color: var(--accent); }   /* con Material no cambian, como el lápiz de boletines */
+.panel.eqsel { gap: 12px; height: var(--pnl); box-sizing: border-box; padding: 0 15px; box-shadow: var(--lift); }   /* el mismo alto que el visualizador y los volúmenes (se agruparán en el móvil) */
+.panel.eqsel .eqarr { width: 38px; padding: 0; color: #cbd5e1; }   /* recuadro como el del botón de la ventana (.panel .badge) */
+.panel.eqsel .eqarr:enabled:hover, .panel.eqsel .eqopen:hover { color: var(--accent); }
 .eqarr svg, .eqopen svg { display: block; }
-.eqnow { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: .86rem; font-weight: 700; color: #edf2f7; }
+.eqmid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.eqnow, .eqqual { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eqnow { font-size: .86rem; font-weight: 700; color: #edf2f7; }
+.eqqual { font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: #8c98a8; }   /* calidad del audio: segunda línea, apagada */
+.eqqual:empty { display: none; }
 .panel.eqsel.off .eqnow { color: #8c98a8; }
-.eqsep { flex: 0 0 1px; align-self: stretch; margin: 6px 12px; background: var(--line); }   /* el "|" de la barra de controles */
+.eqsep { flex: 0 0 1px; height: 28px; margin: 0 4px; background: var(--line); }   /* el "|" de la barra de controles */
 .panel.eqsel .eqopen { width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; }
 
 /* ===============================
@@ -660,12 +661,12 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 html.material body, html.material dialog.settings { color: var(--tx2, #edf2f7); }
 html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
 html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: var(--tx1, #fff); }
-html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span,
-html.material .eqarr, html.material .eqnow, html.material .panel.eqsel .eqopen,
+html.material .now .ps, html.material .pres-open, html.material .vols label, html.material .vols span,
+html.material .panel.eqsel .eqarr, html.material .eqnow, html.material .panel.eqsel .eqopen,
 html.material .panel.search input, html.material .panel.search .badge, html.material .panel.news .nedit { color: var(--t-pan, var(--accent)); }
 html.material .ptitle, html.material .panel .info b, html.material .panel.search input::placeholder, html.material .mbar,
 html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }
-html.material .preset:not(.recoff):not(.active) .pf { color: var(--t-frq, var(--accent)); }
+html.material .preset:not(.recoff):not(.active) .pf, html.material .eqqual { color: var(--t-frq, var(--accent)); }
 html.material .preset.active { background: var(--t-act, color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr))); color: var(--tx1, #fff); }
 html.material .preset.active .pn { color: var(--tx1, #fff); }
 html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80%, transparent); }

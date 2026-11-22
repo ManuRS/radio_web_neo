@@ -245,8 +245,8 @@ export function setFade(d, v) {
 // ======================================================
 // == ECUALIZADOR (PANEL DEBAJO DEL VISUALIZADOR) ==
 // ======================================================
-// normal -> modos de los ajustes (EQ Graves, EQ Dinámico...) -> normal... Se cambia con ‹ y › del panel (o pulsando el visualizador); el panel enseña el modo
-// y su botón abre la ventana de los modos (eqtab.js). Arriba a la derecha del visualizador queda solo el formato de la emisora.
+// normal -> modos de los ajustes (EQ Graves, EQ Dinámico...) -> normal... Se cambia con ‹ y › del panel, que enseña el modo y, debajo, el formato de la emisora;
+// su botón abre la ventana de los modos (eqtab.js).
 // El modo elegido se guarda en el navegador; se olvida si los ajustes del ecualizador cambian o se borran (ver resetEq).
 // Con una emisora en modo degradado (sin Web Audio) no hay ecualizador: el visualizador lo avisa
 
@@ -264,10 +264,10 @@ document.getElementById('eqClose').addEventListener('click', () => closeDialog(e
 eqDlg.addEventListener('click', e => { if (e.target === eqDlg) closeDialog(eqDlg); });
 
 const eqModes = () => [{ label: '', low: 0, mid: 0, high: 0, pre: 0, active: true }, ...S.eq.modes];
-const eqActive = (modes, i) => i === 0 || (!!modes[i] && modes[i].active !== false);   // los desactivados no salen al pulsar el visualizador
+const eqActive = (modes, i) => i === 0 || (!!modes[i] && modes[i].active !== false);   // los desactivados no salen con ‹ ›
 let audition = false;   // la pestaña Ecualizador está haciendo sonar un modo desactivado para editarlo
 
-// -1: aún no se ha elegido ninguno en este navegador (se usa el "defaultMode" de los ajustes; no se guarda hasta que se pulse el visualizador)
+// -1: aún no se ha elegido ninguno en este navegador (se usa el "defaultMode" de los ajustes; no se guarda hasta que se cambie con ‹ ›)
 let eqMode = -1;
 let eqShown = 0;   // modo que se aplica ahora (el elegido o, si no hay, el de por defecto)
 try { const n = parseInt(localStorage.getItem('rn_eq'), 10); if (n >= 0) eqMode = n; } catch (_) {}
@@ -281,7 +281,7 @@ export function resetEq() {
   refreshEq();
 }
 
-// Aplica el modo actual (y las frecuencias y la Q de los ajustes) al texto del visualizador y a los filtros
+// Aplica el modo actual (y las frecuencias y la Q de los ajustes) al panel y a los filtros
 export function refreshEq(immediate = false) {
   const modes = eqModes();
   // hasta que se cargan los ajustes no se sabe cuántos modos hay: mientras tanto se conserva el modo guardado
@@ -294,17 +294,13 @@ export function refreshEq(immediate = false) {
   const m = modes[eqShown] || modes[0];
   const native = outMode === 'nativa';   // salida nativa: sin barras ni ecualizador, el área queda apagada
   const noEq = !native && S.degraded;   // emisora sin Web Audio: se muestran barras sintéticas y sin ecualizador
-  // formato (o calidad) de la emisora que suena, en el visualizador; el modo, en el panel
+  // el modo y, debajo, el formato (o calidad) de la emisora que suena
   eqLabel.textContent = native || !S.current ? '' : S.quality;
-  const interactive = !native && modes.some((x, i) => i > 0 && eqActive(modes, i));   // sin modos activos, el visualizador no hace nada al pulsarlo
+  const interactive = !native && modes.some((x, i) => i > 0 && eqActive(modes, i));   // sin modos activos, ‹ › no hacen nada
   eqNow.textContent = native || noEq ? 'Sin EQ' : (m.label || 'Normal');
   eqPrev.disabled = eqNext.disabled = !interactive || noEq;
   eqPanel.classList.toggle('off', native || noEq);
-  vizBox.classList.toggle('eq-on', interactive);
   vizBox.classList.toggle('off', native);
-  vizBox.classList.toggle('noeq', noEq);
-  if (interactive) { vizBox.setAttribute('role', 'button'); vizBox.setAttribute('tabindex', '0'); vizBox.setAttribute('aria-label', 'Ecualizador: ' + (m.label || 'normal')); }
-  else { vizBox.removeAttribute('role'); vizBox.removeAttribute('tabindex'); vizBox.removeAttribute('aria-label'); }
   if (!eqLow || !S.audioCtx) return;
   try {
     const t = S.audioCtx.currentTime, tc = immediate ? 0.001 : 0.05;   // cambio suave para que no haya chasquidos
@@ -326,7 +322,7 @@ export function refreshEq(immediate = false) {
 // Modo que suena ahora (0 = normal; 1.. = los de los ajustes)
 export const currentEqMode = () => eqShown;
 
-// Elige un modo (0 = normal; 1.. = los de los ajustes) y lo recuerda, como si se hubiera pulsado el visualizador (lo usa la pestaña Ecualizador para oír lo que se edita)
+// Elige un modo (0 = normal; 1.. = los de los ajustes) y lo recuerda, como si se hubiera cambiado con ‹ › (lo usa la pestaña Ecualizador para oír lo que se edita)
 export function setEqMode(n) {
   eqMode = Math.max(0, n | 0);
   audition = !eqActive(eqModes(), eqMode);   // uno desactivado suena mientras se edita, pero no se recuerda
@@ -345,8 +341,6 @@ function cycleEq(dir = 1) {
   saveEqMode();
   refreshEq();
 }
-vizBox.addEventListener('click', () => cycleEq(1));
-vizBox.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleEq(); } });
 refreshEq();   // pinta el nombre del modo guardado (los filtros se ajustan al crear el grafo de audio)
 
 // Sin ajustes cargados los volúmenes quedan bloqueados y sin valor ("-")

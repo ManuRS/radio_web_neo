@@ -112,7 +112,7 @@ function okHex(L, C, h) {
   return '#888888';
 }
 // Con "Material Design", todo lo de los tres paneles negros (barras del EQ, deslizadores, textos e iconos) lleva un mismo tono: más claro que el de la cabecera, de su misma familia
-// (L .68 y croma ×1,6, como en styles.css: html.material .vols input, .eq-label, .now .ps...)
+// (L .68 y croma ×1,6, como en styles.css: html.material .vols input, .eqnow, .now .ps...)
 const panelTone = hex => { const [C, h] = okCH(tinted(hex)); return okHex(.68, C * 1.6, h); };
 let accentHex;
 export function applyAccent(hex) {

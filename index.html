@@ -128,17 +128,17 @@
     <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
   </div>
 
-  <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas><span id="eqLabel" class="eq-label" aria-hidden="true"></span>
+  <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas>
     <button id="presOpen" class="pres-open" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
     <button id="presExpand" class="pres-open pres-expand" type="button" aria-label="Ampliar" title="Ampliar"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/></svg></button>
     <button id="pipBtn" class="pres-open pres-pip" type="button" aria-label="Imagen en imagen" title="Imagen en imagen" hidden><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/><rect x="11" y="10.5" width="7.5" height="6" fill="currentColor"/></svg></button>
   </div>
 
-  <!-- Ecualizador: ‹ y › cambian de modo (igual que pulsar el visualizador) y el botón abre la ventana de los modos -->
+  <!-- Ecualizador: ‹ y › cambian de modo, debajo del modo la calidad del audio; el botón abre la ventana de los modos -->
   <section class="panel eqsel" id="eqPanel">
-    <button id="eqPrev" class="eqarr" type="button" aria-label="Ecualizador anterior" title="Anterior"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-    <span id="eqNow" class="eqnow">Normal</span>
-    <button id="eqNext" class="eqarr" type="button" aria-label="Ecualizador siguiente" title="Siguiente"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button id="eqPrev" class="badge eqarr" type="button" aria-label="Ecualizador anterior" title="Anterior"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <span class="eqmid"><span id="eqNow" class="eqnow">Normal</span><span id="eqLabel" class="eqqual"></span></span>
+    <button id="eqNext" class="badge eqarr" type="button" aria-label="Ecualizador siguiente" title="Siguiente"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <span class="eqsep" aria-hidden="true"></span>
     <button id="eqOpen" class="badge eqopen" type="button" aria-label="Ajustes del ecualizador" title="Ajustes del ecualizador"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg></button>
   </section>
@@ -500,7 +500,7 @@
         <b id="eqDlgTitle">Ecualizador</b>
         <button id="eqClose" class="x" type="button" aria-label="Cerrar">✕</button>
       </div>
-        <!-- Los modos que se eligen con ‹ › o pulsando el visualizador (detrás del "normal", que no se toca); se activan o desactivan, no se borran. Bloque "eq" de los ajustes -->
+        <!-- Los modos que se eligen con ‹ › (detrás del "normal", que no se toca); se activan o desactivan, no se borran. Bloque "eq" de los ajustes -->
         <div class="tab" id="tabEq">
           <div class="eqmodes" id="eqModes" role="group" aria-label="Modos del ecualizador"></div>
           <div class="group" id="eqEdit">
