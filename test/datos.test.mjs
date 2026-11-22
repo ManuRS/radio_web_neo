@@ -27,7 +27,7 @@ test('cada cambio se guarda solo y vuelve igual', () => {
   const p = roundTrip(cur);
   assert.deepEqual(p.set, { n: 10 });
   assert.deepEqual(p.list.items.add, [{ id: 'd', name: 'D' }]);
-  assert.equal(p.list.items.order, undefined, 'añadir al final no necesita orden');
+  assert.equal(p.list.items.move, undefined, 'añadir al final no mueve nada');
   assert.ok(!JSON.stringify(p).includes('urls'), 'no lleva lo que no ha cambiado');
 });
 
@@ -37,8 +37,20 @@ test('eliminar, reordenar y quitar claves', () => {
   delete cur.news;
   const p = roundTrip(cur);
   assert.deepEqual(p.list.items.del, ['b']);
-  assert.deepEqual(p.list.items.order, ['c', 'a']);
+  assert.equal(p.list.items.move.length, 1);
   assert.deepEqual(p.del, ['news']);
+});
+
+test('mover un elemento apunta solo ese', () => {
+  const def = { items: Array.from({ length: 30 }, (_, i) => ({ id: 'c' + i })) };
+  const cur = copy(def);
+  cur.items.splice(2, 0, cur.items.splice(20, 1)[0]);   // la 20 pasa detrás de la 1
+  const p = diff(def, cur, LISTS);
+  assert.deepEqual(p.list.items.move, [['c20', 'c1']]);
+  assert.deepEqual(merge(def, p, LISTS), cur);
+  const many = copy(def);
+  many.items.reverse();
+  assert.deepEqual(merge(def, diff(def, many, LISTS), LISTS), many);
 });
 
 test('lo que cambia por defecto llega a quien no lo ha tocado', () => {

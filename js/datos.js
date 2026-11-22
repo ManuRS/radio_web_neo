@@ -4,8 +4,8 @@
 // Lo de por defecto (default/ y, en Proxy, bbdd/) va en la app. En el navegador y en el archivo exportado solo van los cambios del usuario:
 // diff() los saca y merge() los vuelve a poner encima de lo de por defecto. Así, lo que cambie por defecto llega a quien no lo ha tocado.
 //   - Listas con identificador (lists: clave -> función que da el id de cada elemento): elemento a elemento, con añadidos (add),
-//     eliminados (del), campos cambiados (mod) y orden (order, solo si no es el que sale solo). Un elemento nuevo por defecto que no
-//     estaba al guardar el orden va detrás del que lo precede en la lista por defecto.
+//     eliminados (del), campos cambiados (mod) y movidos (move: [[id, id del que va delante o null], …], solo los que se han movido:
+//     los que conservan su orden de serie no se apuntan). Un elemento nuevo por defecto va donde le toca en la lista por defecto.
 //   - Objetos de primer nivel: clave a clave (obj). Lo demás, entero (set). Claves quitadas: del.
 // Los archivos (exportar e importar; en Proxy, también la licencia) van cifrados con AES-256-GCM y una clave de la propia app: no se leen
 // a simple vista y un carácter cambiado basta para que no se abran. La clave va en el código: frena a quien edita a mano, nada más.
@@ -32,23 +32,44 @@ function applyFields(a, d) {
   return r;
 }
 
-function mergeList(def, p, idOf) {
+// Sin mover nada: lo de por defecto sin los eliminados, con los cambios y, al final, los añadidos
+function baseList(def, p, idOf) {
   const id = x => String(idOf(x));
   const del = new Set(p.del || []), mod = p.mod || {};
   const items = def.filter(x => !del.has(id(x))).map(x => (has(mod, id(x)) ? applyFields(x, mod[id(x)]) : clone(x)));
   const seen = new Set(items.map(id));
   for (const x of p.add || []) if (!seen.has(id(x))) { items.push(clone(x)); seen.add(id(x)); }
-  if (!Array.isArray(p.order)) return items;
-  const byId = new Map(items.map(x => [id(x), x])), out = [], placed = new Set();
-  for (const k of p.order) if (byId.has(k) && !placed.has(k)) { out.push(byId.get(k)); placed.add(k); }
-  items.forEach((x, i) => {
-    if (placed.has(id(x))) return;
-    let at = 0;
-    for (let j = i - 1; j >= 0; j--) { const q = out.indexOf(items[j]); if (q >= 0) { at = q + 1; break; } }
-    out.splice(at, 0, x);
-    placed.add(id(x));
-  });
+  return items;
+}
+
+// Movidos: cada uno se saca y se pone detrás del que indica (null = el primero), en el orden en que se apuntaron. Si el de delante ya no
+// existe, se queda donde le toca
+function mergeList(def, p, idOf) {
+  const id = x => String(idOf(x));
+  const out = baseList(def, p, idOf);
+  const moves = (Array.isArray(p.move) ? p.move : []).filter(m => Array.isArray(m) && out.some(x => id(x) === m[0]) && (m[1] === null || out.some(x => id(x) === m[1])));
+  for (const [k, after] of moves) {
+    const item = out.splice(out.findIndex(x => id(x) === k), 1)[0];
+    out.splice(after === null ? 0 : out.findIndex(x => id(x) === after) + 1, 0, item);
+  }
   return out;
+}
+
+// Los que hay que apuntar como movidos para pasar de base a cur (mismos ids): los que no están en la secuencia más larga que conserva el
+// orden de base. Se apuntan en el orden de cur, así cada uno se coloca detrás de alguien que ya está en su sitio
+function movesFor(base, cur) {
+  const pos = new Map(base.map((k, i) => [k, i]));
+  const seq = cur.map(k => pos.get(k));
+  const tails = [], prev = new Array(seq.length);   // secuencia creciente más larga (con su rastro)
+  seq.forEach((v, i) => {
+    let lo = 0, hi = tails.length;
+    while (lo < hi) { const m = (lo + hi) >> 1; if (seq[tails[m]] < v) lo = m + 1; else hi = m; }
+    prev[i] = lo ? tails[lo - 1] : -1;
+    tails[lo] = i;
+  });
+  const keep = new Set();
+  for (let i = tails.length ? tails[tails.length - 1] : -1; i >= 0; i = prev[i]) keep.add(cur[i]);
+  return cur.map((k, i) => [k, i ? cur[i - 1] : null]).filter(([k]) => !keep.has(k));
 }
 
 function diffList(def, cur, idOf) {
@@ -62,8 +83,8 @@ function diffList(def, cur, idOf) {
   if (del.length) out.del = del;
   if (add.length) out.add = clone(add);
   if (Object.keys(mod).length) out.mod = mod;
-  const ids = cur.map(id);
-  if (!same(mergeList(def, out, idOf).map(id), ids)) out.order = ids;
+  const moves = movesFor(baseList(def, out, idOf).map(id), cur.map(id));
+  if (moves.length) out.move = moves;
   return Object.keys(out).length ? out : null;
 }
 

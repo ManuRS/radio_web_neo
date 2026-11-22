@@ -3,7 +3,7 @@
     "js/anchor.js": "af6f0908e24385a8",
     "js/backguard.js": "21b8608e40123bc8",
     "js/custom.js": "fcc2e1d963a28a07",
-    "js/datos.js": "18f514ba269fded4",
+    "js/datos.js": "d2152dbe235b7a65",
     "js/eqtab.js": "3965c29efadc3a01",
     "js/foot.js": "4e0206d435adbfd6",
     "js/glow.js": "8504c0a3b30d8bd8",
@@ -14,7 +14,7 @@
     "js/utils.js": "5a5c5f8a792f95ce",
     "test/comun.mjs": "b0054e488e756b06",
     "test/comun.test.mjs": "c1ce6a1f2e75f077",
-    "test/datos.test.mjs": "5a09ce5462bdbfdc",
+    "test/datos.test.mjs": "3662f2839dec4de6",
     "test/jsonc.test.mjs": "3c3ee73991338b77",
     "test/shell.test.mjs": "69ffa9fc79a58b54",
     "test/utils.test.mjs": "cad13c3633ebb35b"
