@@ -1,65 +1,80 @@
-# radio_web_neo
+# Radio Web Neo
 
-Reproductor de radio *vibecodeado*. Es una versión renovada de [Radio Web Fast](https://github.com/ManuRS/radio_web_fast)
+Reproductor de radio *vibecodeado*, ligero, rápido y sin rastreos: **[radioneo.pages.dev](https://radioneo.pages.dev/)**
 
-- Tiene una interfaz distinta: Más compacta y centrada en el texto
+Es una versión renovada de [Radio Web Fast](https://github.com/ManuRS/radio_web_fast), con una interfaz más compacta y centrada en el texto y más opciones:
 
-- Menor sencillez, más opciones: Soporta ecualizaciones y buscar emisoras
-
-- Incluye un visualizador del sonido en tiempo real con 7 efectos diferentes
+- Buscador de emisoras con su propio catálogo y el de [TDTChannels](https://www.tdtchannels.com)
+- Ecualizador con modos propios y visualizador a pantalla completa con 7 efectos
+- Modo boletines: música y, a su hora, las noticias de una generalista
+- Grabación en MP3 e imagen en imagen
+- Se instala como una app más desde el navegador; sin cookies ni ningún otro tipo de rastreo
 
 ![Interfaz](img/cap1-wide.webp)
 
+## Presintonías
+
+Cada presintonía es una **cadena**, que puede reunir varias **emisoras** (varios streams de audio). Al abrir la aplicación por primera vez vienen cargadas unas de ejemplo:
+
+- Cadenas con varias emisoras, como la SER o LOS40. Con un clic derecho o una pulsación larga sobre la presintonía aparece la lista
+- Cadenas que reúnen emisoras con otro criterio, como Italia (radios italianas) o Televisión
+- Cadenas con una sola emisora, como Onda Cero o MegaStar. Se les pueden añadir más
+
+No hace falta reunir todas las emisoras de una cadena en una presintonía: si prefieres, crea una presintonía por emisora. Las presintonías se reordenan arrastrándolas
+
+## Buscar y añadir emisoras
+
 ![Buscador de emisoras](img/cap2-wide.webp)
 
-## Guía de uso
+Pulsa la barra de búsqueda, escribe parte del nombre y elige una opción del catálogo. Después:
 
-Las presintonias de Neo funciona como CADENAS/GRUPOS, es decir, pueden almacenar varias EMISORAS (varios streams de audio). Por defecto, cuando se abre la aplicación por primera vez hay cargados ejemplos de presintonías:
+- Añádela a una cadena que ya tengas, eligiendo la cadena y el nombre de la emisora (vienen rellenos, pero se pueden cambiar)
+- O crea una presintonía nueva: nombre, nombre corto, tipo (generalista o musical), color y nombre de la emisora
 
-- Ejemplo de CADENA: Es una presintonía que agrupa a varias de las emisoras de la cadena en cuestión. Al hacer click derecho o dejar apretada la celda con el dedo aparecerá la lista. La SER y Los 40 vienen configuradas de esta manera con unas cuantas emisoras de ejemplo.
+Si tienes el enlace del stream:
 
-- Ejemplo de GRUPO: La lógica interna del programa es la misma, pero conceptualmente se puede hacer un uso de las agrupaciones distinto al de crear cadenas. Se pueden agrupar streams con otro criterio. Por defecto, hay una presintonía con radios italianas y otra con televisiones.
+- Para una cadena que ya existe: clic derecho o pulsación larga sobre ella, "Añadir emisora…" y la pestaña "Tengo un enlace"
+- Para una presintonía nueva: el botón + al final de Generalistas o de Musicales (el tipo ya viene elegido) y la pestaña "Tengo un enlace"
 
-- También hay presintonías que contienen una sola señal (emisora): Onda Cero o MegaStar vienen así por defecto. Se pueden añadir más emisoras a una presintonía.
+En esas dos ventanas, la pestaña "Consultar catálogo" es el buscador: lo que elijas va directamente a esa cadena o a la presintonía nueva
 
-- No es necesario añadir las emisoras de una cadena en su presintonía. ¿Que significa esto? Que si no te gusta el botón unificado de la SER, puedes crear tantas presintonías como quieras, con una sola emisora cada una.
+## Sonido
 
-- Además es posible reordenar las presintonías arrastrándolas a la posición deseada.
+![Ecualizador y visualizador](img/cap6-wide.webp)
 
-## Añadir cadenas y emisoras: búsqueda
+- Ecualizador: en su panel se cambia de modo con ‹ y ›, y debajo se ve la calidad del audio. El botón de la derecha abre su ventana: en cada modo (1 a 6) se cambian el nombre, los graves, los medios, los agudos y el volumen, y la gráfica muestra cómo queda. Los modos se activan o desactivan (de serie, el 4, el 5 y el 6 vienen desactivados), uno puede ser la opción por defecto y cada uno se puede restablecer
+- Visualizador: los botones del panel de las barras abren la pantalla completa, con 7 efectos, y la imagen en imagen
+- Grabación: el botón rojo junto al nombre de la emisora graba en MP3
 
-La manera más facil de añadir una emisora es pulsando en la barra de búsqueda y escribiendo parte de su nombre. Aparecerá un menú en el que seleccionar una opción de catálogo disponible. Tras hacer elegir una opción:
+## Boletines
 
-- Puedes añadir el stream a una cadena ya existente (esto es, incluirla en uno de los paneles que ya tienes): Elige a que cadena se añade y su nombre (el sistema rellena los datos por defecto, pero puedes personalizarlos)
+![Modo boletines](img/cap4-wide.webp)
 
-- Puedes crear una nueva presintonia (un nuevo panel): En este caso debes elegir el nombre de la presintonía, su nombre corto, su tipo (generalista o musical), su color de énfasis y el nombre de la emisora con la que nacerá (por defecto es el nombre del stream que has seleccionado)
+Con el modo boletines activado suena tu emisora y, a la hora de las noticias, conecta sola con una generalista. Por defecto, con las de la SER de 8 a 20 horas
 
-## Añadir cadenas y emisoras: url
+El lápiz del panel abre su ventana. Ahí se elige quién da las noticias:
 
-Si cuentas con un enlace, puedes añadir directamente el stream a tu aplicación:
+- Con la Cadena SER guiada aparece su horario y se enciende o apaga cada boletín (en algunos se elige además la duración). "Restablecer" vuelve a la selección de siempre
+- Con la SER en lista manual o con otra cadena, escribe las franjas de inicio a fin y añade las que quieras con "+ Añadir franja"
 
-- Para añadirlo a una presintonía existente: 1. Sobre el panel deseado, hacer clic derecho en PC o mantener pulsado en el movil / 2. Seleccionar "Añadir emisora…" / 3. En la pestaña "Tengo un enlace", indicar la URL y el nombre deseado
+Lo de cada opción se guarda al cambiar de una a otra
 
-- Para añadirlo creando una nueva presintonía: 1. Pulsar el botón + que hay al final de las presintonías (en Generalistas o en Musicales; el tipo ya viene elegido) / 2. En la pestaña "Tengo un enlace" de la ventana "Crear nueva presintonía", rellenar los datos solicitados
+## Instalar y ajustes
 
-En esas dos mismas ventanas, la pestaña "Consultar catálogo" es el buscador: lo que elijas va directamente a la presintonía nueva o a la cadena desde la que la abriste
+![Instalar la app](img/cap5-wide.webp)
 
-## Ecualizador y boletines
+Desde el menú del navegador puedes instalar la web como una aplicación más del móvil o del PC
 
 En los ajustes (engranaje de la cabecera):
 
-- Ecualizador: elige un modo (1 a 6) para cambiar su nombre, los graves, medios, agudos y el volumen; la gráfica enseña cómo queda el sonido y lo que tocas suena al momento. Los modos se activan o desactivan (los desactivados no salen al pulsar el visualizador; de serie, el 4, el 5 y el 6), uno puede ser la opción por defecto y cada uno se puede restablecer
-- Boletines: elige quién da las noticias, entre las generalistas que lo permiten. Con la Cadena SER guiada aparece su horario y se enciende o apaga cada boletín (en algunos se elige además la duración), con "Restablecer" para volver a la selección de siempre; con la SER en lista manual o con otra cadena, escribe las franjas de Inicio a Fin y añade las que quieras con "+ Añadir franja". Lo de cada opción se guarda al cambiar de una a otra
+- Preferencias: retrasos del reloj y de la señal, salida de audio, normalizar volumen, color por defecto, color de cada cadena, Material Design (desactivado, estándar o extremo) y, en el móvil, agrupar las opciones de sonido
+- Datos: exportar e importar la configuración, script de personalización, caché de sonidos, restablecer la aplicación y registro
 
-## Exportar configuración
+Para llevar tu configuración a otro dispositivo:
 
-En el origen:
+1. En el origen, Ajustes > Datos > "Exportar": se descarga `radio_web_neo.json`, un JSON legible (si lo editas a mano, tus comentarios se conservan al importarlo)
+2. En el destino, Ajustes > Datos > "Importar" y elige ese archivo
 
-1. Pulsa el engranaje de la cabecera para mostrar los ajustes
-2. Pulsa en la pestaña de Configuración
-3. Pulsa "Exportar configuración": se descarga el archivo radio_web_neo.json (es un JSON legible; si lo editas a mano, tus comentarios se conservan al importarlo)
+## Licencia
 
-En el destino:
-
-1. Abre los ajustes y la pestaña de Configuración
-2. Pulsa "Importar configuración" y elige ese archivo
+[GPL v3](LICENSE)
