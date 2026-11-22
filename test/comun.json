@@ -15,7 +15,7 @@
     "test/comun.test.mjs": "c1ce6a1f2e75f077",
     "test/jsonc.test.mjs": "3c3ee73991338b77",
     "test/utils.test.mjs": "cad13c3633ebb35b",
-    "test/shell.test.mjs": "7dc8044caedbafb9"
+    "test/shell.test.mjs": "69ffa9fc79a58b54"
   },
   "paralelos": {
     "js/clock.js": "eba5fed5a9bf3706",

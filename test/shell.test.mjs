@@ -17,7 +17,7 @@ test('todos los módulos de js/ están en SHELL', () => {
 });
 
 test('todo lo que lista SHELL existe, sin repetidos', () => {
-  assert.deepEqual(shell.filter(f => !existsSync(path.join(ROOT, f))), []);
+  assert.deepEqual(shell.filter(f => !existsSync(path.join(ROOT, f.split('?')[0]))), []);   // ?v= para saltarse la caché inmutable de /img/
   assert.equal(new Set(shell).size, shell.length);
 });
 

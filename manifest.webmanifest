@@ -50,46 +50,46 @@
 
   "screenshots": [
     {
-      "src": "img/cap1.webp",
+      "src": "img/cap1.webp?v=320",
       "sizes": "530x900",
       "type": "image/webp",
       "form_factor": "narrow",
       "label": "Reproductor con presintonías, volúmenes y ecualizador"
     },
     {
-      "src": "img/cap2.webp",
+      "src": "img/cap2.webp?v=320",
       "sizes": "530x900",
       "type": "image/webp",
       "form_factor": "narrow",
       "label": "Buscador de emisoras"
     },
     {
-      "src": "img/cap3.webp",
+      "src": "img/cap6.webp?v=320",
       "sizes": "530x900",
       "type": "image/webp",
       "form_factor": "narrow",
-      "label": "Siete visualizadores a pantalla completa"
+      "label": "Ecualizador y visualizadores a pantalla completa"
     },
     {
-      "src": "img/cap1-wide.webp",
+      "src": "img/cap1-wide.webp?v=320",
       "sizes": "1600x900",
       "type": "image/webp",
       "form_factor": "wide",
       "label": "Reproductor con presintonías, volúmenes y ecualizador"
     },
     {
-      "src": "img/cap2-wide.webp",
+      "src": "img/cap2-wide.webp?v=320",
       "sizes": "1600x900",
       "type": "image/webp",
       "form_factor": "wide",
       "label": "Buscador de emisoras"
     },
     {
-      "src": "img/cap3-wide.webp",
+      "src": "img/cap6-wide.webp?v=320",
       "sizes": "1600x900",
       "type": "image/webp",
       "form_factor": "wide",
-      "label": "Siete visualizadores a pantalla completa"
+      "label": "Ecualizador y visualizadores a pantalla completa"
     }
   ]
 }
