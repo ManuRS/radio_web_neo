@@ -1,12 +1,13 @@
 // ===========================
 // == PESTAÑA ECUALIZADOR ==
 // ===========================
-// Edita los modos del ecualizador (los que se eligen pulsando el visualizador, detrás del "normal"): nombre, graves, medios, agudos y volumen,
+// Edita los modos del ecualizador (los que se eligen pulsando el visualizador, detrás del "normal"): nombre, graves, medios, factor Q de los medios
+// (lo ancha o estrecha que es la campana), agudos y volumen,
 // con una gráfica de cómo queda el sonido de graves a agudos. Los modos no se borran: se activan o desactivan (los desactivados no salen al pulsar
 // el visualizador) y cada uno se puede restablecer a como venía. Lo que se edita suena al momento; se guarda en el bloque "eq" de los ajustes al soltar.
 
 import { S } from './state.js';
-import { DEFAULT_EQ, EQ_GAIN_MAX, EQ_GAIN_MIN, editSettings } from './settings.js';
+import { DEFAULT_EQ, EQ_GAIN_MAX, EQ_GAIN_MIN, EQ_Q_MAX, EQ_Q_MIN, editSettings } from './settings.js';
 import { currentEqMode, refreshEq, setEqMode } from './audio.js';
 import { paintRange } from './ui.js';
 
@@ -19,7 +20,7 @@ const defSw = document.getElementById('eqDefault');
 const actBtn = document.getElementById('eqAct');
 const resetBtn = document.getElementById('eqReset');
 const msg = document.getElementById('eqMsg');
-const SLIDERS = { low: 'eqLow', mid: 'eqMid', high: 'eqHigh', pre: 'eqPre' };
+const SLIDERS = { low: 'eqLow', mid: 'eqMid', q: 'eqQ', high: 'eqHigh', pre: 'eqPre' };
 const sliders = Object.fromEntries(Object.entries(SLIDERS).map(([k, id]) => [k, document.getElementById(id)]));
 const values = Object.fromEntries(Object.entries(SLIDERS).map(([k, id]) => [k, document.getElementById(id + 'V')]));
 
@@ -32,6 +33,12 @@ function report(lines, isError) {
 const clearMsg = () => { msg.className = 'cfgmsg'; msg.textContent = ''; };
 const modes = () => (S.eq && Array.isArray(S.eq.modes) ? S.eq.modes : []);
 const fmtDb = v => (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + ' dB';
+const eqFreqs = () => (typeof S.eq.lowHz === 'number' ? S.eq : DEFAULT_EQ);   // frecuencias y Q de siempre si los ajustes no las traen
+const qOf = m => (typeof m.q === 'number' ? m.q : eqFreqs().midQ);   // sin "q" propio, el del bloque
+const clampQ = q => Math.min(EQ_Q_MAX, Math.max(EQ_Q_MIN, Math.round(q * 10) / 10));
+// Lo que enseña y guarda cada deslizador (el Q va sin unidad y con coma decimal)
+const getV = (m, k) => (k === 'q' ? clampQ(qOf(m)) : m[k] || 0);
+const fmtV = (k, v) => (k === 'q' ? v.toFixed(1).replace('.', ',') : fmtDb(v));
 
 // El bloque "eq" tal como se escribe en los ajustes (frecuencias de siempre si aún no las había)
 function rawEq() {
@@ -39,7 +46,9 @@ function rawEq() {
   const f = typeof eq.lowHz === 'number' ? eq : DEFAULT_EQ;
   const o = { lowHz: f.lowHz, midHz: f.midHz, midQ: f.midQ, highHz: f.highHz };
   if (eq.defaultMode >= 0 && eq.defaultMode < modes().length) o.defaultMode = eq.defaultMode;
-  o.modes = modes().map(m => Object.assign({ label: m.label, low: m.low, mid: m.mid, high: m.high, pre: m.pre }, m.active === false ? { active: false } : {}));
+  o.modes = modes().map(m => Object.assign({ label: m.label, low: m.low, mid: m.mid, high: m.high, pre: m.pre },
+    typeof m.q === 'number' && m.q !== o.midQ ? { q: m.q } : {},   // solo si cambia el del bloque
+    m.active === false ? { active: false } : {}));
   return o;
 }
 const busy = () => {
@@ -72,7 +81,7 @@ function response(m, f) {
   }
   if (!oac) return null;
   fl.frequency.value = f.lowHz; fl.gain.value = m.low;
-  fm.frequency.value = f.midHz; fm.Q.value = f.midQ; fm.gain.value = m.mid;
+  fm.frequency.value = f.midHz; fm.Q.value = qOf(m); fm.gain.value = m.mid;
   fh.frequency.value = f.highHz; fh.gain.value = m.high;
   const out = new Float32Array(N).fill(m.pre || 0);
   const mag = new Float32Array(N), ph = new Float32Array(N);
@@ -114,8 +123,7 @@ function draw() {
     g.fillText(t, x(f), h - 4);
   }
   if (!m) return;
-  const f = typeof S.eq.lowHz === 'number' ? S.eq : DEFAULT_EQ;
-  const r = response(m, f);
+  const r = response(m, eqFreqs());
   if (!r) return;
   const accent = getComputedStyle(document.body).getPropertyValue('--accent').trim() || '#566db9';
   g.beginPath();
@@ -154,11 +162,11 @@ function render() {
   const on = m.active !== false;
   if (document.activeElement !== nameIn) nameIn.value = m.label;
   for (const k of Object.keys(SLIDERS)) {
-    sliders[k].min = String(EQ_GAIN_MIN);
-    sliders[k].max = String(EQ_GAIN_MAX);
-    sliders[k].value = String(m[k] || 0);
+    sliders[k].min = String(k === 'q' ? EQ_Q_MIN : EQ_GAIN_MIN);
+    sliders[k].max = String(k === 'q' ? EQ_Q_MAX : EQ_GAIN_MAX);
+    sliders[k].value = String(getV(m, k));
     paintRange(sliders[k]);
-    values[k].textContent = fmtDb(m[k] || 0);
+    values[k].textContent = fmtV(k, getV(m, k));
   }
   defSw.checked = on && S.eq.defaultMode === sel;
   defSw.disabled = !on;
@@ -173,8 +181,8 @@ for (const k of Object.keys(SLIDERS)) {
   sliders[k].addEventListener('input', () => {   // suena y se dibuja al momento
     const m = modes()[sel];
     if (!m) return;
-    m[k] = Number(sliders[k].value);
-    values[k].textContent = fmtDb(m[k]);
+    m[k] = k === 'q' ? clampQ(Number(sliders[k].value)) : Number(sliders[k].value);
+    values[k].textContent = fmtV(k, m[k]);
     if (currentEqMode() !== sel + 1) setEqMode(sel + 1); else refreshEq();
     draw();
   });

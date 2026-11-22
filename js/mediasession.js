@@ -15,8 +15,8 @@ import { emisoraName } from './utils.js';
 let artworkUrl = '', artworkType = ''; // imagen de la notificación ya cargada (data URL)
 let mediaTimer = null, mediaTitle = null; // título pendiente / aplicado en la notificación
 
-// Título: nombre de la emisora que suena. Segunda línea: el nombre de la aplicación. Fondo: ARTWORK_URL (img/fondo1.jpg),
-// guardada en la misma caché que los sonidos.
+// Título: nombre de la emisora que suena. Segunda línea: el nombre de la aplicación. Fondo: el elegido en Preferencias (ARTWORKS),
+// guardado en la misma caché que los sonidos.
 const mediaSessionOk = () => 'mediaSession' in navigator && typeof MediaMetadata !== 'undefined';
 
 function arrayBufferToDataUrl(ab, type) {
@@ -25,6 +25,27 @@ function arrayBufferToDataUrl(ab, type) {
   for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
   return 'data:' + type + ';base64,' + btoa(bin);
 }
+
+// Fondo de la notificación ("Fondo de notificación" en Preferencias, guardado en el navegador). Si se cambia un archivo, subir ARTWORK_VERSION
+export const ARTWORKS = { piruli: 'img/piruli.jpg', diana: 'img/diana.jpg', transistor: 'img/transistor.webp' };
+const ARTWORK_KEY = 'rn_fondo';
+const ARTWORK_DEFAULT = 'piruli';
+const ARTWORK_VERSION = 1;
+function getArtwork() {
+  try { const v = localStorage.getItem(ARTWORK_KEY); if (Object.hasOwn(ARTWORKS, v)) return v; } catch (_) {}
+  return ARTWORK_DEFAULT;
+}
+export const artworkSrc = (id = getArtwork()) => new URL(ARTWORKS[id], document.baseURI).href + '?v=' + ARTWORK_VERSION;
+const artSelect = document.getElementById('artSelect');
+artSelect.value = getArtwork();
+artSelect.addEventListener('change', () => {
+  const id = artSelect.value;
+  if (!Object.hasOwn(ARTWORKS, id)) return;
+  try { localStorage.setItem(ARTWORK_KEY, id); } catch (_) {}
+  log('Fondo de notificación: ' + artSelect.options[artSelect.selectedIndex].text);
+  S.artwork = artworkSrc(id);
+  loadArtwork();   // si suena, la notificación cambia al momento
+});
 
 export async function loadArtwork() {
   artworkUrl = '';

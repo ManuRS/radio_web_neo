@@ -15,9 +15,6 @@ import { log } from './ui.js';
 export const SOUNDS_BASE = 'sounds/';
 export const SOUNDS_VERSION = 2;
 
-// Imagen de fondo de la notificación del reproductor (también en el código; si se cambia el archivo, subir SOUNDS_VERSION)
-export const ARTWORK_URL = new URL('img/fondo1.jpg', document.baseURI).href + '?v=' + SOUNDS_VERSION;
-
 const TO_NEWS = [   // de música a noticias: se sortea uno por cada emisión
   { file: 'desco_ini_gen', weight: 6, hit: 'auto' },
   { file: 'radio_madrid', weight: 3, hit: 'auto' },

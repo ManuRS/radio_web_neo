@@ -65,6 +65,9 @@ export const emptyConfigFn = emptyConfig;
 // Ecualizador: límites de las ganancias en dB (bandas y preamplificación)
 export const EQ_GAIN_MIN = -24;
 export const EQ_GAIN_MAX = 18;
+// Factor Q de los medios en cada modo: 0,3 (ancho, casi cuatro octavas en total) a 4 (estrecho, un tercio de octava en total); sin "q", el "midQ" del bloque
+export const EQ_Q_MIN = 0.3;
+export const EQ_Q_MAX = 4;
 export const EQ_MAX_MODES = 6;   // modos del ecualizador (además del "normal")
 
 // Color de énfasis: luminosidad relativa (0 negro – 1 blanco) de un "#rrggbb"
@@ -189,6 +192,7 @@ export function validateConfig(text) {
           mid: num(m && m.mid, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].mid'),
           high: num(m && m.high, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].high'),
           pre: num(m && m.pre, EQ_GAIN_MIN, EQ_GAIN_MAX, 'modes[' + i + '].pre'),
+          ...(m && m.q !== undefined ? { q: num(m.q, EQ_Q_MIN, EQ_Q_MAX, 'modes[' + i + '].q') } : {}),
           active: !(m && m.active === false),   // "active": false = desactivado (no sale al pulsar el visualizador)
         })),
       };

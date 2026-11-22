@@ -62,7 +62,7 @@ export function applyVolume() {
 // el audio parado, porque los decks viejos dejarían de sonar
 export function initAudioGraph(fresh = false) {
   if (S.audioCtx && !fresh) {
-    if (S.audioCtx.state === 'suspended') S.audioCtx.resume().catch(() => {});
+    if (S.audioCtx.state !== 'running') S.audioCtx.resume().catch(() => {});   // suspendido o interrumpido (p. ej. tras una pausa del sistema)
     return;
   }
   if (S.audioCtx) {
@@ -307,11 +307,11 @@ export function refreshEq(immediate = false) {
     if (typeof S.eq.lowHz === 'number') {   // frecuencias y Q solo si los ajustes las traen
       eqLow.frequency.setTargetAtTime(S.eq.lowHz, t, tc);
       eqMid.frequency.setTargetAtTime(S.eq.midHz, t, tc);
-      eqMid.Q.setTargetAtTime(S.eq.midQ, t, tc);
       eqHigh.frequency.setTargetAtTime(S.eq.highHz, t, tc);
     }
     eqLow.gain.setTargetAtTime(m.low, t, tc);
     eqMid.gain.setTargetAtTime(m.mid, t, tc);
+    if (typeof S.eq.midQ === 'number') eqMid.Q.setTargetAtTime(typeof m.q === 'number' ? m.q : S.eq.midQ, t, tc);   // cada modo puede llevar su Q
     eqHigh.gain.setTargetAtTime(m.high, t, tc);
     eqPre.gain.setTargetAtTime(Math.pow(10, m.pre / 20), t, tc);
   } catch (err) {

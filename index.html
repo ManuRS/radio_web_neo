@@ -361,12 +361,22 @@
               <option value="ext">Extremo</option>
             </select>
           </div>
+        </div>
+        <div class="group">
           <div class="clockrow mob-only">
             <label for="groupSwitch">Agrupar opciones de sonido</label>
             <label class="switch">
               <input type="checkbox" id="groupSwitch">
               <span class="track"></span>
             </label>
+          </div>
+          <div class="clockrow">
+            <label for="artSelect">Fondo de notificación</label>
+            <select id="artSelect">
+              <option value="piruli">El Pirulí</option>
+              <option value="diana">Diana y Endimión</option>
+              <option value="transistor">Transistor</option>
+            </select>
           </div>
         </div>
       </div>
@@ -533,6 +543,7 @@
             <canvas id="eqCurve" class="eqcurve" aria-label="Cómo cambia el sonido con este modo, de graves a agudos"></canvas>
             <div class="eqrow"><label for="eqLow">Graves</label><input id="eqLow" type="range" step="1"><span id="eqLowV"></span></div>
             <div class="eqrow"><label for="eqMid">Medios</label><input id="eqMid" type="range" step="1"><span id="eqMidV"></span></div>
+            <div class="eqrow"><label for="eqQ">Factor Q</label><input id="eqQ" type="range" step="0.1"><span id="eqQV"></span></div>
             <div class="eqrow"><label for="eqHigh">Agudos</label><input id="eqHigh" type="range" step="1"><span id="eqHighV"></span></div>
             <div class="eqrow"><label for="eqPre">Volumen</label><input id="eqPre" type="range" step="1"><span id="eqPreV"></span></div>
             <div class="clockrow">

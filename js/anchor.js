@@ -6,6 +6,7 @@
 // de servidor): en esos huecos no suena nada y Chrome retira la notificación (y, sin ella, volver a sonar en segundo plano no es fiable). El ancla
 // es un <audio> en silencio y en bucle que dura toda la sesión de escucha: suena de Reproducir a Detener, se pausa con la pausa de la notificación
 // y solo se vacía al detener. Cuándo se enciende lo decide cada app (Neo: player.js; Proxy: connection.js). Solo en Android; en el resto no hace nada.
+// Si otra app o el sistema la pausan (una llamada, se desconecta el Bluetooth del coche), la app lo trata como la pausa de la notificación (onAnchor).
 
 import { log } from './ui.js';
 
@@ -17,6 +18,10 @@ const RATE = 8000;
 let el = null, url = '';
 let state = 'off';     // 'on' (sonando), 'paused' (pausa nuestra: la notificación se queda) u 'off' (sin sesión: sin notificación)
 let blocked = false;   // el navegador no dejó arrancarla (faltaba un gesto): se reintenta al tocar la página
+let hooks = {};        // lo que hace la app con una pausa o un play que no son suyos (onAnchor)
+
+// pause(): la pausó otra app o el sistema. play(): el sistema la ha vuelto a poner en marcha estando en pausa; devuelve si la app reanuda (si no, se vuelve a pausar)
+export function onAnchor(h) { hooks = h || {}; }
 
 // WAV en silencio (8 bits, mono), hecho aquí para no descargar nada
 function silentWav() {
@@ -36,7 +41,15 @@ function start() {
     el.loop = true;
     el.setAttribute('playsinline', '');
     document.body.appendChild(el);
-    el.addEventListener('pause', () => { if (state === 'on') log('La sesión de audio se ha pausado desde fuera (otra app o el sistema)'); });
+    el.addEventListener('pause', () => {
+      if (state !== 'on') return;
+      log('La sesión de audio se ha pausado desde fuera (otra app o el sistema)');
+      if (hooks.pause) hooks.pause();
+    });
+    el.addEventListener('play', () => {
+      if (state !== 'paused') return;   // nuestro play solo llega con 'on'
+      if (!(hooks.play && hooks.play()) && state === 'paused') { try { el.pause(); } catch (_) {} }
+    });
     el.addEventListener('error', () => { if (el.error) log('Ancla de audio: error ' + el.error.code); });
   }
   if (!el.getAttribute('src')) el.src = url || (url = silentWav());

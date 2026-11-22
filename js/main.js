@@ -9,10 +9,10 @@ import { stop, toggle } from './dom.js';
 import { layoutCheck, log } from './ui.js';
 import { runCustom } from './custom.js';
 import { refreshEq, refreshVolumeUi, resetEq } from './audio.js';
-import { ensureSounds, ARTWORK_URL } from './sounds.js';
+import { ensureSounds } from './sounds.js';
 import { buildStations, refreshStations, restoreLast } from './stations.js';
 import { rebuildSlots, slotPlan, tick } from './boletines.js';
-import { loadArtwork } from './mediasession.js';
+import { artworkSrc, loadArtwork } from './mediasession.js';
 import { play, resumePlayback, syncUi } from './player.js';
 import { initClock, setCfgStreamDelay } from './clock.js';
 import { checkUnfinished, requestStop } from './recorder.js';
@@ -41,7 +41,7 @@ function applyConfig(cfg) {
   if (started && JSON.stringify(eq) !== JSON.stringify(S.eq)) resetEq();   // ajustes distintos o borrados: se olvida el modo guardado
   S.eq = eq;
   refreshEq();
-  S.artwork = ARTWORK_URL;   // fija, en el código
+  S.artwork = artworkSrc();   // la elegida en Preferencias
   loadArtwork();
   S.stations = cfg.stations;
   setCfgStreamDelay(cfg.defaultDelayS);   // salvo que se haya cambiado en General (clock.js)

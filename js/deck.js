@@ -90,7 +90,7 @@ export class Deck {
     this.triedDirect = false;
     this.playedDirect = false;   // la última vez sonó sin CORS tras fallar con él
     this.quality = '';
-    this.on = {};                     // gestores: playing(deck), failed(deck), retry(deck), quality(deck)
+    this.on = {};                     // gestores: playing, failed, retry, quality, blocked, interrupted, outsidePlay (todos reciben el deck)
     this.el = null;
     this.hls = null;
     this.retryTimer = null;
@@ -137,10 +137,15 @@ export class Deck {
     el.addEventListener('error', () => this.onError(el));
     el.addEventListener('ended', () => { if (el === this.el && this.state !== 'closed') this.retrySoon('el stream terminó'); });
     el.addEventListener('pause', () => {
-      // una pausa que no hemos pedido nosotros (otra app, el sistema): se anota y se reanuda al volver o con el play
-      if (el !== this.el || this.state !== 'playing' || this.held || this.closing) return;
+      // una pausa que no hemos pedido nosotros (otra app, el sistema, se desconecta el Bluetooth): se anota y se avisa (player.js la convierte en pausa)
+      if (el !== this.el || this.state !== 'playing' || this.held || this.closing || el.ended) return;   // al acabar el stream también llega 'pause' (lo trata 'ended')
       this.interrupted = true;
       log('El audio de ' + this.station.name + ' se ha pausado desde fuera (otra app o el sistema)');
+      if (this.on.interrupted) this.on.interrupted(this);
+    });
+    el.addEventListener('play', () => {
+      // en pausa retenida solo lo puede poner en marcha el sistema (al devolver el audio tras una llamada): quien abrió el deck decide
+      if (el === this.el && this.held && this.state !== 'closed' && this.on.outsidePlay) this.on.outsidePlay(this);
     });
   }
 

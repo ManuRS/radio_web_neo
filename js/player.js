@@ -12,13 +12,14 @@ import { cancelTransition } from './transitions.js';
 import { clearMediaSession, scheduleMediaTitle, setPlaybackState } from './mediasession.js';
 import { refreshStations } from './stations.js';
 import { refreshRecBtn } from './recorder.js';
-import { anchorOk, setAnchor, wakeAnchor } from './anchor.js';
+import { anchorOk, onAnchor, setAnchor, wakeAnchor } from './anchor.js';
 
 let main = null;       // deck que suena (o al que se está entrando)
 let newsDeck = null;   // deck de la emisora de noticias, conectado en silencio a la espera de la hora
 let waitPaused = false;   // esperando las noticias sin música, se ha pulsado la pausa de la notificación
 let keepAnchor = false;   // se detiene para volver a entrar enseguida: el ancla no se toca
 let wasWaiting = false;
+let outsideHold = false;  // la pausa la puso otra app o el sistema (no el usuario): si el sistema devuelve el audio, se reanuda
 
 export const getMain = () => main;
 export const getNewsDeck = () => newsDeck;
@@ -34,6 +35,8 @@ export function openDeck(station, variant = 0, opts = {}) {
   d.on.quality = () => { if (d === main) syncUi(); };
   d.on.retry = () => { if (d === main) syncUi(); };
   d.on.failed = () => { if (d === main) syncUi(); };
+  d.on.interrupted = () => { if (d === main) outsidePause(); };
+  d.on.outsidePlay = () => { if (!outsidePlay()) d.hold(); };   // en una pausa del usuario no se deja sonar
   // el navegador no dejó iniciar el audio (falta un gesto): se para todo para que se pueda volver a pulsar Reproducir, en vez de quedarse en "Conectando…"
   d.on.blocked = () => {
     if (d !== main) return;
@@ -116,8 +119,8 @@ function syncAnchor() {
 }
 
 // Pausa y play de la notificación mientras se esperan las noticias: solo cambian la notificación (en pausa se puede descartar)
-export function pauseWaiting() { if (!isWaiting()) return; waitPaused = true; syncUi(); }
-export function resumeWaiting() { waitPaused = false; syncUi(); }
+export function pauseWaiting() { if (!isWaiting()) return; waitPaused = true; outsideHold = false; syncUi(); }
+export function resumeWaiting() { waitPaused = false; outsideHold = false; syncUi(); }
 
 // Detener para volver a entrar enseguida (otra emisora estando en pausa, cambio de la salida de audio): la notificación no se suelta
 export function stopForRestart(keepSlot = false) {
@@ -139,6 +142,7 @@ export function play(station = null, variant = 0) {
   S.lastVariant = vi;
   S.held = false;
   waitPaused = false;
+  outsideHold = false;
   setAnchor('on');   // lo primero, dentro del gesto: la notificación ya tiene quien la sostenga mientras conecta la emisora
   // sin nada sonando se recrea el audio (tras cambiar de salida, p. ej. unos cascos, el anterior puede quedarse mudo); grabando no, se cortaría la
   // grabación; con la página oculta (botones de la notificación) tampoco: un audio nuevo creado en segundo plano puede nacer parado
@@ -186,6 +190,7 @@ export function stopAll(keepMedia = false, keepSlot = false) {
   S.session = 'off';
   S.held = false;
   waitPaused = false;
+  outsideHold = false;
   S.pending = false;
   S.volMode = 'music';
   S.current = null;
@@ -202,6 +207,7 @@ export function stopAll(keepMedia = false, keepSlot = false) {
 // Pausa desde la notificación: la emisora se queda retenida (la notificación sigue viva) y el play vuelve a conectar en directo
 export function holdPlayback() {
   if (S.session === 'off' || !main || S.held) return;
+  outsideHold = false;
   cancelTransition();
   S.pending = false;
   for (const d of [...decks]) if (d !== main) closeDeck(d);
@@ -230,6 +236,7 @@ export function endNewsWhileHeld(back, vi) {
 export function resumePlayback() {
   if (!S.held || !main) return;
   S.held = false;
+  outsideHold = false;
   setAnchor('on');   // antes de soltar el <audio> en pausa: la notificación no se queda sin nadie
   log('Se reanuda ' + main.station.name + ' en directo');
   setFade(main, 0);
@@ -252,6 +259,34 @@ export function restartAudio() {
   stopForRestart(true);
   if (st) play(st, vi); else stopAll(false, true);
 }
+
+// ======================
+// == PAUSA AJENA ==
+// ======================
+// Otra app o el sistema pausan el audio (una llamada, se desconecta el Bluetooth del coche, se quitan unos cascos). Antes la sesión seguía como si
+// sonara: la notificación decía "sonando" y su pausa no hacía nada (para Chrome ya estaba en pausa). Ahora es la pausa de la notificación: la app y
+// la notificación se ven en pausa y su play vuelve a entrar en directo. Si el sistema devuelve el audio (acaba la llamada), se reanuda solo
+export function outsidePause() {
+  if (S.session !== 'off' && !S.held) {
+    if (main) holdPlayback(); else stopAll(true);
+    outsideHold = S.held;
+    if (S.held) log('Pausa ajena: queda en pausa hasta pulsar Reproducir');
+  } else if (isWaiting() && !waitPaused) {
+    pauseWaiting();
+    outsideHold = true;
+  }
+}
+
+// El sistema vuelve a poner en marcha el audio en pausa: solo se reanuda si la pausa fue suya. Devuelve si se reanuda
+export function outsidePlay() {
+  if (!outsideHold) return false;
+  outsideHold = false;
+  log('El sistema devuelve el audio: se reanuda');
+  if (S.held) resumePlayback();
+  else if (isWaitPaused()) resumeWaiting();
+  return true;
+}
+onAnchor({ pause: outsidePause, play: outsidePlay });
 
 // Si la emisora que suena está parada por algo ajeno, al elegir otra se quiere oír
 export function wake() {

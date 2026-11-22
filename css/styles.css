@@ -333,7 +333,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 #settings .tab::-webkit-scrollbar-thumb { background: #3a4554; border-radius: 3px; }
 #settings .clockrow { min-height: 36px; }
 #settings .clockrow > :first-child { margin-right: auto; }
-#settings .clockrow select { min-width: 132px; }
+#settings .clockrow select { min-width: 150px; }   /* lo que ocupa "Diana y Endimión" (Fondo de notificación): todos igual de anchos */
 .clockrow select { padding: 6px 8px; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"] { width: 56px; padding: 6px 4px; box-sizing: border-box; text-align: center; border-radius: 8px; border: 1px solid #303a47; background: #11161d; color: #edf2f7; font: inherit; }
 .clockrow input[type="text"]:disabled { opacity: .6; }
@@ -816,8 +816,8 @@ html.material:not(.mat-std) .foot { color: var(--t-frq, #7d899a); }
 html.material:not(.mat-std) .foot .love { color: var(--t-sub, #aeb9c8); }
 html.material:not(.mat-std) .fp .fe { color: transparent; text-shadow: 0 0 0 var(--t-sub, #aeb9c8); }
 html.material:not(.mat-std) .fp-text.play { background-image: linear-gradient(100deg, var(--t-sub, #aeb9c8) 0 38%, var(--accent) 50%, var(--t-sub, #aeb9c8) 62% 100%); }
-/* Preferencias: el campo de segundos empieza donde los desplegables (132 px de campo + hueco + "segundos" en total) */
+/* Preferencias: el campo de segundos empieza donde los desplegables (150 px de campo + hueco + "segundos" en total) */
 #settings .clockrow input[type="text"] + span { width: 4.3em; }
-#settings .clockrow input[type="text"]:has(+ span) { width: calc(132px - 8px - 4.3em); }
+#settings .clockrow input[type="text"]:has(+ span) { width: calc(150px - 8px - 4.3em); }
 /* Datos: todos los botones tan anchos como "Eliminar todo" */
 #tabConfig .clockrow button { min-width: 104px; }
