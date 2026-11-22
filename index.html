@@ -219,7 +219,7 @@
   </div>
 
   <!-- ==================================================== -->
-  <!-- == INFORMACIÓN: TUTORIAL DE TRES PASOS (SE ABRE SOLO LA PRIMERA VEZ) == -->
+  <!-- == INFORMACIÓN: TUTORIAL DE CINCO PASOS (SE ABRE SOLO LA PRIMERA VEZ) == -->
   <!-- ==================================================== -->
   <dialog id="intro" class="intro" aria-labelledby="introTitle">
     <div class="dlg">
@@ -227,24 +227,34 @@
         <b id="introTitle">Radio Web Neo</b>
         <button id="introClose" class="x" type="button" aria-label="Cerrar">✕</button>
       </div>
-      <div class="intro-steps">   <!-- los tres pasos ocupan la misma celda: la ventana mide siempre lo del más alto -->
+      <div class="intro-steps">   <!-- los cinco pasos ocupan la misma celda: la ventana mide siempre lo del más alto -->
         <section class="intro-step" data-step="0">
           <img class="intro-img" src="img/cap1-wide.webp" alt="La aplicación en el móvil: reproductor con presintonías" width="1600" height="900">
           <h2>Bienvenido</h2>
-          <p>Un reproductor de radio ligero, rápido y sin rastreos. Pulsa una cadena desde las presintonías para escucharla. Con un clic derecho o una pulsación larga puedes ver sus emisoras. Se pueden reordenar presintonías arrastrándolas.</p>
+          <p>Un reproductor de radio ligero, rápido y sin rastreos. Pulsa una presintonía para escucharla. Con un clic derecho o una pulsación larga puedes ver sus emisoras. Se pueden ordenar presintonías arrastrándolas.</p>
         </section>
         <section class="intro-step" data-step="1" hidden>
           <img class="intro-img" src="img/cap2-wide.webp" alt="El buscador de emisoras con resultados de Salamanca" width="1600" height="900" loading="lazy">
-          <h2>Buscar emisoras</h2>
+          <h2>Busca emisoras</h2>
           <p>Escribe el nombre de una emisora en el buscador y elige una opción del catálogo. Puedes añadir tu elección a una cadena ya existente o crear una nueva. Si tienes el enlace de sonido, también puedes añadirlo.</p>
         </section>
         <section class="intro-step" data-step="2" hidden>
           <img class="intro-img" src="img/cap3-wide.webp" alt="Visualizadores de sonido en pantalla completa" width="1600" height="900" loading="lazy">
-          <h2>Modo boletines</h2>
-          <p>El modo boletines conecta por defecto con las noticias de la SER de 8 a 20 horas. La aplicación también permite ecualizar y visualizar el sonido. Puedes exportar e importar tu lista de cadenas y emisoras a otros dispositivos.</p>
+          <h2>Disfruta del sonido</h2>
+          <p>Puedes ecualizar el sonido con los modos que incluye la aplicación o crear tus propias curvas de sonido. Además se incluye un visualizador de ondas a pantalla completa con múltiples modos.</p>
+        </section>
+        <section class="intro-step" data-step="3" hidden>
+          <img class="intro-img" src="img/cap4-wide.webp" alt="La ventana de boletines con la cadena SER guiada" width="1600" height="900" loading="lazy">
+          <h2>Escucha las noticias</h2>
+          <p>Puedes escuchar música y conectar automáticamente con una emisora generalista cuando quieras. El modo conecta por defecto con las noticias de la SER de 8 a 20 horas, pero se puede personalizar.</p>
+        </section>
+        <section class="intro-step" data-step="4" hidden>
+          <img class="intro-img" src="img/cap5-wide.webp" alt="Ajustes, pestaña Datos: exportar e importar la configuración" width="1600" height="900" loading="lazy">
+          <h2>Instala la app</h2>
+          <p>Desde el menú de tu navegador, puedes instalar esta web como una aplicación más de tu móvil. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
         </section>
       </div>
-      <div class="intro-dots" aria-hidden="true"><i class="on"></i><i></i><i></i></div>
+      <div class="intro-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
       <div class="dlg-actions">
         <button id="introBack" type="button">Saltar</button>
         <button id="introNext" type="button" class="primary" autofocus>Siguiente</button>

@@ -556,7 +556,7 @@ dialog.ask { box-sizing: border-box; width: min(400px, calc(100vw - 40px)); marg
 dialog.ask::backdrop { background: rgba(0, 0, 0, .65); }
 
 /* ==========================================
-   == INFORMACIÓN: TUTORIAL DE TRES PASOS ==
+   == INFORMACIÓN: TUTORIAL DE CINCO PASOS ==
    ========================================== */
 dialog.intro { width: min(430px, 94vw); max-height: 94dvh; overflow-y: auto; margin: auto; padding: 0; border: 1px solid transparent; outline: none; border-radius: 16px; background: #1a2029; color: #edf2f7; box-shadow: 0 18px 55px #000a; }
 dialog.intro::backdrop { background: rgba(0, 0, 0, .65); }

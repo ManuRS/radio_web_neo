@@ -1,7 +1,7 @@
 // ================================
 // == INFORMACIÓN: TUTORIAL ==
 // ================================
-// Ventana de tres pasos (bienvenida, buscar emisoras y lo demás) que se abre con el botón de información de la cabecera y, sola, la primera vez que se abre la aplicación recién instalada.
+// Ventana de cinco pasos (bienvenida, buscar emisoras, sonido, noticias e instalación) que se abre con el botón de información de la cabecera y, sola, la primera vez que se abre la aplicación recién instalada.
 // "rn_intro" recuerda que ya se ha visto. Quien ya usaba la aplicación (tiene ajustes o última emisora guardados) no la ve sola: se marca como vista sin abrirla.
 
 import { infoBtn, introDlg } from './dom.js';
