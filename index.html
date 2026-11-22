@@ -585,7 +585,7 @@
 <script>
 // Pinta enseguida el color de énfasis guardado (evita ver el verde un instante antes de que cargue la aplicación)
 try {
-  var raw = localStorage.getItem('rn_cfg');
+  var raw = localStorage.getItem('rn_datos');
   if (raw) document.body.classList.remove('no-config');   // hay ajustes guardados: los paneles se muestran sin parpadeo
   var c = JSON.parse(raw || '{}');
   if (/^#[0-9a-f]{6}$/i.test(c.accent)) document.documentElement.style.setProperty('--accent', c.accent);

@@ -7,7 +7,7 @@
 // Formato de origen: { countries: [{ name, ambits: [{ name, channels: [{ name, options: [{ format, url, ... }], extra_info? }] }] }] }
 // Radio: se aceptan aac, mp3, m3u8 y stream (enlace directo de audio). Televisión: solo m3u8 (HLS: se escucha solo el audio, como La 1);
 // youtube, twitch y los enlaces que son una página no son audio y se descartan.
-// Además del origen externo, el proyecto lleva su propia base de datos (los archivos de bbdd/, independientes de los ajustes por defecto stations.json): así las cadenas
+// Además del origen externo, el proyecto lleva su propia base de datos (los archivos de bbdd/, independientes de los ajustes por defecto de default/): así las cadenas
 // y emisoras conocidas siguen disponibles en la búsqueda aunque no estén en los ajustes. Sus canales llevan k: 'neo', las URL con el nombre (l) de cada emisora y, de la cadena, short, tipo (t) y color (c).
 // Lo que se guarda por canal: { n: nombre, a: ámbito, k: 'radio' | 'tv', g: 1 si es solo para España (GEO), o: [{ f: formato, u: url }] }
 

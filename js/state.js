@@ -52,7 +52,7 @@ export const clockNow = () => Date.now() + S.clockDelayMs;
 // ================================================
 // Lo que cambia y usan varios módulos vive aquí (S.current, S.newsOn...). Lo que solo usa un módulo es una variable de ese módulo.
 export const S = {
-  // ---- ajustes (por defecto vienen de stations.json; lo guardado en el navegador los sustituye) ----
+  // ---- ajustes (lo de por defecto, de default/, con los cambios guardados en el navegador) ----
   eq: { modes: [] }, // ecualizador de los ajustes (sin bloque "eq": sin modos y todo plano)
   artwork: '', // imagen de fondo de la notificación del reproductor (URL)
   accent: '', // color de énfasis general ("#rrggbb"; vacío = el verde por defecto)

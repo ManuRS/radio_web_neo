@@ -34,7 +34,7 @@
 <script>
 // El mismo color de énfasis que la aplicación, si hay ajustes guardados
 try {
-  var c = JSON.parse(localStorage.getItem('rn_cfg') || '{}');
+  var c = JSON.parse(localStorage.getItem('rn_datos') || '{}');
   if (/^#[0-9a-f]{6}$/i.test(c.accent)) document.documentElement.style.setProperty('--accent', c.accent);
 } catch (e) {}
 </script>

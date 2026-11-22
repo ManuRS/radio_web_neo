@@ -43,7 +43,7 @@ infoBtn.addEventListener('click', open);
 
 // Primera vez: sin nada guardado de antes (ni este aviso ni ajustes ni última emisora)
 if (!get(KEY)) {
-  const used = get('rn_cfg') || get('rn_cfg_base') || get('rn_last');
+  const used = get('rn_datos') || get('rn_last');
   if (used) set(KEY, '1');
   else setTimeout(open, 500);
 }

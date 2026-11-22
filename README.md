@@ -72,5 +72,5 @@ En los ajustes (engranaje de la cabecera):
 
 Para llevar tu configuración a otro dispositivo:
 
-1. En el origen, Ajustes > Datos > "Exportar": se descarga `radio_web_neo.json`, un JSON legible (si lo editas a mano, tus comentarios se conservan al importarlo)
+1. En el origen, Ajustes > Datos > "Exportar": se descarga `radio_web_neo.json`, con solo tus cambios sobre la configuración de serie
 2. En el destino, Ajustes > Datos > "Importar" y elige ese archivo

@@ -1,9 +1,8 @@
 // ============================================================
 // == AJUSTES: ALMACENAMIENTO, VALIDACIÓN Y VENTANA ==
 // ============================================================
-// Los ajustes (emisoras, noticias, ecualizador y color) vienen por defecto en stations.json (dentro del proyecto) y se pueden cambiar pegando otros
-// o cargándolos desde un archivo en la ventana de ajustes; lo que se guarda va al navegador (localStorage: no viaja a ningún servidor) y sustituye
-// al de por defecto hasta que se borra. La pestaña General reúne los ajustes propios de cada navegador: retraso del reloj, salida de audio,
+// Los ajustes (emisoras y noticias) vienen por defecto en default/ (dentro del proyecto). En el navegador (localStorage: no viaja a ningún
+// servidor) solo se guardan los cambios del usuario sobre ellos, y eso es también lo que se exporta e importa, en un archivo cifrado (datos.js). La pestaña General reúne los ajustes propios de cada navegador: retraso del reloj, salida de audio,
 // normalización, color personalizado por cadena y script de personalización (custom.js).
 
 import { pad, parseNumber } from './utils.js';
@@ -19,37 +18,39 @@ import { ask, stopRecording } from './recorder.js';
 import { editHooks, expandGroup, refreshAccent } from './stations.js';
 import { loadCustom, saveCustom } from './custom.js';
 import { refreshDelayUi, setAutoDelay, setManualDelay } from './clock.js';
-import { parseJsonc, patchTop, stripJsonComments } from './jsonc.js';
+import { parseJsonc, stripJsonComments } from './jsonc.js';
+import { diff, isEmpty, merge, openFile, sealFile } from './datos.js';
 
 // ====================================
 // == ALMACENAMIENTO EN EL NAVEGADOR ==
 // ====================================
-const CFG_KEY = 'rn_cfg';
-export const loadConfigText = () => { try { return localStorage.getItem(CFG_KEY) || ''; } catch (_) { return ''; } };
-function saveConfigText(text) {
-  try { localStorage.setItem(CFG_KEY, text); return true; } catch (_) { return false; }
+// Lo de por defecto: default/cadenas.json (las cadenas) y default/general.json (lo demás). En el navegador (rn_datos), solo los cambios del usuario
+const DATA_KEY = 'rn_datos';
+const LISTS = { stations: s => s.id };   // las cadenas se comparan una a una por su id
+const DEFAULT_FILES = ['default/cadenas.json', 'default/general.json'];
+let defaults = null;   // lo de por defecto, ya leído (null si no se pudo)
+const loadChanges = () => { try { return JSON.parse(localStorage.getItem(DATA_KEY)) || {}; } catch (_) { return {}; } };
+function saveChanges(p) {
+  try { if (isEmpty(p)) localStorage.removeItem(DATA_KEY); else localStorage.setItem(DATA_KEY, JSON.stringify(p)); return true; } catch (_) { return false; }
 }
-// Las cadenas por defecto (stations.json) de las que partió lo guardado: sirven para saber qué ha tocado el usuario y qué no (ver syncDefaults)
-const BASE_KEY = 'rn_cfg_base';
-function loadBase() {
-  try { const b = JSON.parse(localStorage.getItem(BASE_KEY)); return Array.isArray(b) ? b : null; } catch (_) { return null; }
-}
-function saveBase(list) { try { localStorage.setItem(BASE_KEY, JSON.stringify(list)); } catch (_) {} }
-let lastDefaultStations = null;   // las cadenas del último stations.json leído
 
-// Ajustes por defecto: stations.json, dentro del proyecto. Devuelve el texto (null si no se pudo descargar)
-export async function fetchDefaultConfigText() {
+// Lee lo de por defecto (default/). Devuelve null si no se pudo descargar
+export async function loadDefaults() {
   try {
-    const res = await fetch('stations.json', { cache: 'no-cache' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const text = await res.text();
-    try { const d = JSON.parse(stripJsonComments(text)); if (d && Array.isArray(d.stations) && d.stations.length) lastDefaultStations = d.stations; } catch (_) {}
-    return text;
+    const [stations, general] = await Promise.all(DEFAULT_FILES.map(async f => {
+      const res = await fetch(f, { cache: 'no-cache' });
+      if (!res.ok) throw new Error(f + ': HTTP ' + res.status);
+      return res.json();
+    }));
+    defaults = { ...general, stations };
   } catch (err) {
-    log('No se pudieron cargar los ajustes por defecto (stations.json): ' + ((err && err.message) || err));
-    return null;
+    log('No se pudieron cargar los ajustes por defecto: ' + ((err && err.message) || err));
+    defaults = null;
   }
+  return defaults;
 }
+// Ajustes en uso (texto JSON): lo de por defecto con los cambios encima; sin changes, los guardados
+export const configTextWith = (changes = loadChanges()) => (defaults ? JSON.stringify(merge(defaults, changes, LISTS)) : '');
 
 // ===============================
 // == VALIDACIÓN DE LOS AJUSTES ==
@@ -272,7 +273,7 @@ function closeSettings() {
   closeDialog(settingsDlg);
 }
 
-// Valida, aplica y guarda (en el navegador) unos ajustes importados desde archivo (o cambiados por la propia app). Se guarda el texto tal cual, con sus comentarios.
+// Valida, aplica y guarda (en el navegador) unos ajustes importados desde archivo (o cambiados por la propia app). Se guardan solo los cambios sobre lo de por defecto.
 // "live": cambio ya comprobado como seguro (ver editConfig), que se puede hacer con la reproducción en marcha; el resto exige pararla.
 // opts.force: se aplica con applyLive aunque no suene nada (cambios de las pestañas Ecualizador y Boletines: no reinician el modo de ecualizador elegido);
 // opts.report: dónde se cuentan los errores (por defecto, el aviso de Configuración); opts.quiet: sin aviso si todo va bien
@@ -287,97 +288,16 @@ function saveSettingsFrom(text, live = false, opts = {}) {
   }
   if (busy || opts.force) applyLiveFn(r.cfg); else applyConfigFn(r.cfg);
   S.configText = text;
-  const stored = saveConfigText(text);
+  const stored = !!defaults && saveChanges(diff(defaults, r.parsed, LISTS));
   const info = r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas';
   if (!stored) {
     report(['Aplicado, pero NO se pudo guardar en este navegador (almacenamiento bloqueado): valdrá solo hasta cerrar la página'], true);
     log('Ajustes aplicados sin guardar: el navegador bloquea el almacenamiento');
     return false;
   }
-  if (!loadBase() && lastDefaultStations) saveBase(lastDefaultStations);   // primera vez que se guarda: se anota de qué cadenas por defecto se partió
   if (!opts.quiet) report(['Configuración importada: ' + info], false);
   log('Ajustes guardados: ' + info);
   return true;
-}
-
-// ==========================================================
-// == LO GUARDADO Y LAS CADENAS POR DEFECTO (stations.json) ==
-// ==========================================================
-// Lo guardado en el navegador manda, pero solo en lo que el usuario ha tocado. Al arrancar con ajustes guardados se compara, cadena por cadena y dato por dato
-// (nombre, nombre corto, tipo, color, CORS, noticias y emisoras), el stations.json de ahora con el que había cuando se guardó (rn_cfg_base):
-//  - lo que ha cambiado por defecto y el usuario no había tocado se actualiza (por ejemplo, la URL nueva de un stream);
-//  - lo que el usuario cambió se queda como lo dejó, y una cadena que eliminó no vuelve;
-//  - una cadena nueva por defecto aparece, detrás de la que la precede en stations.json;
-//  - el orden del usuario se respeta, y las cadenas que desaparecen de stations.json no se le quitan.
-// Solo las cadenas: franjas, ecualizador, retraso, color general y cadena de noticias guardados no se tocan.
-const SYNC_FIELDS = ['name', 'short', 'group', 'color', 'cors', 'news', 'newsSource', 'urls'];
-const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
-const copyJson = v => JSON.parse(JSON.stringify(v));
-// Cadenas ya validadas (con los valores por omisión puestos), por id: así se comparan sin que importe cómo estén escritas
-function normById(list) {
-  const r = validateConfig(JSON.stringify({ stations: list }));
-  return new Map(((r.cfg && r.cfg.stations) || []).map(s => [s.id, s]));
-}
-// Aplica a raw (los ajustes guardados) los cambios entre base y def (cadenas por defecto de antes y de ahora). Devuelve qué ha cambiado (textos para el registro)
-function mergeDefaults(raw, base, def) {
-  ensureIds(raw.stations);
-  const U = normById(raw.stations), B = normById(base), D = normById(def);
-  const rawU = new Map(raw.stations.filter(x => x && x.id).map(x => [x.id, x]));
-  const notes = [];
-  def.forEach((d, i) => {
-    const nd = d && D.get(d.id);
-    if (!nd) return;
-    const nb = B.get(d.id);
-    if (!nb) {   // cadena nueva por defecto
-      if (rawU.has(d.id)) return;
-      let at = 0;
-      for (let j = i - 1; j >= 0; j--) { const p = raw.stations.indexOf(rawU.get(def[j] && def[j].id)); if (p >= 0) { at = p + 1; break; } }
-      const item = copyJson(d);
-      raw.stations.splice(at, 0, item);
-      rawU.set(d.id, item);
-      notes.push(nd.name + ' (nueva)');
-      return;
-    }
-    const nu = U.get(d.id), ru = rawU.get(d.id);
-    if (!nu || !ru) return;   // el usuario la eliminó
-    let changed = false;
-    for (const f of SYNC_FIELDS) {
-      if (sameJson(nd[f], nb[f]) || !sameJson(nu[f], nb[f])) continue;   // no ha cambiado por defecto, o el usuario lo tocó
-      if (f === 'urls') { ru.urls = copyJson(d.urls !== undefined ? d.urls : [d.url]); delete ru.url; }
-      else if (d[f] === undefined) delete ru[f];
-      else ru[f] = copyJson(d[f]);
-      changed = true;
-    }
-    if (changed) notes.push(nu.name);
-  });
-  return notes;
-}
-
-// Al arrancar con ajustes guardados (main.js): lee stations.json por detrás y pone al día lo que el usuario no ha tocado. Si algo suena o la ventana de ajustes
-// está abierta, no hace nada y lo deja para el siguiente arranque
-export async function syncDefaults() {
-  const text = await fetchDefaultConfigText();
-  const def = text ? lastDefaultStations : null;
-  if (!def) return;
-  const base = loadBase();
-  if (!base) { saveBase(def); return; }   // guardado antes de existir esto: no se sabe de qué partió; se anota lo de ahora y vale de aquí en adelante
-  if (sameJson(base, def)) return;
-  if (S.session !== 'off' || S.trans || S.newsOn || S.newsMode || settingsDlg.open) return;
-  let raw;
-  try { raw = parseJsonc(S.configText || ''); } catch (_) { return; }
-  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.stations)) return;
-  const before = JSON.parse(JSON.stringify(raw));
-  const notes = mergeDefaults(raw, base, def);
-  if (notes.length) {
-    const text = patchTop(S.configText, before, raw);
-    const r = validateConfig(text);
-    if (r.errors.length) { log('No se pudieron poner al día las cadenas por defecto: ' + r.errors[0]); return; }
-    if (!saveConfigText(text)) return;
-    applyConfigFn(r.cfg);
-    S.configText = text;
-    log('Cadenas por defecto puestas al día: ' + notes.join(', '));
-  }
-  saveBase(def);
 }
 
 settingsBtn.addEventListener('click', openSettings);
@@ -470,13 +390,15 @@ settingsClose.addEventListener('click', closeSettings);
 
 settingsDlg.addEventListener('click', e => { if (e.target === settingsDlg) closeSettings(); });
 
-// Exportar: descarga los ajustes actuales tal como están guardados (con los comentarios del archivo importado, salvo en lo que haya cambiado la app)
+// Exportar: solo los cambios sobre lo de por defecto, en un archivo cifrado (datos.js); Importar: un archivo exportado
 const EXPORT_NAME = 'radio_web_neo.json';
+const FILE_KEY = 'OaN9Lj3846y5XezbRvOjl0oQeq9ACg34mJiukgH_qeo', FILE_KIND = 'rn-datos';
 function refreshExportBtn() { cfgExport.disabled = !S.configText; }
-cfgExport.addEventListener('click', () => {
-  if (!S.configText) return;
+cfgExport.addEventListener('click', async () => {
+  const changes = loadChanges();
+  if (isEmpty(changes)) { showCfgMsg(['Sin cambios que exportar'], false); return; }
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([/\n$/.test(S.configText) ? S.configText : S.configText + '\n'], { type: 'application/json' }));
+  a.href = URL.createObjectURL(new Blob([await sealFile('config', changes, FILE_KEY, FILE_KIND)], { type: 'application/json' }));
   a.download = EXPORT_NAME;
   document.body.appendChild(a);
   a.click();
@@ -491,7 +413,9 @@ cfgFileInput.addEventListener('change', async () => {
   const file = cfgFileInput.files && cfgFileInput.files[0];
   if (!file) return;
   try {
-    saveSettingsFrom(await file.text());
+    const f = await openFile(await file.text(), 'config', FILE_KEY, FILE_KIND);
+    if (!f.ok) showCfgMsg(['Archivo no válido'], true);
+    else saveSettingsFrom(configTextWith(f.value));
     refreshExportBtn();
   } catch (err) { showCfgMsg(['No se pudo leer el archivo: ' + err.message], true); }
   cfgFileInput.value = '';
@@ -528,7 +452,6 @@ cfgClearSounds.addEventListener('click', async () => {
   catch (_) { showGenMsg('Este navegador no tiene caché de sonidos (solo funciona en páginas https)', true); }
 });
 
-// Borrar los ajustes guardados: se vuelve a los de por defecto (stations.json)
 // Restablecer aplicación: se borra todo lo que la app guarda en este navegador (ajustes, preferencias, ecualizador, sonidos, grabaciones sin
 // recuperar, script de personalización...) y se recarga como recién instalada, con la bienvenida. Solo se queda la propia web (caché rn-shell-)
 async function wipeApp() {
@@ -549,7 +472,7 @@ cfgClear.addEventListener('click', async () => {
 // ==============================================================
 // == EMISORAS: AÑADIR, AÑADIR VARIANTE, REORDENAR Y ELIMINAR (ESCRIBE EL JSON) ==
 // ==============================================================
-// Todas las operaciones modifican el JSON de los ajustes (el que se exporta e importa en la pestaña Configuración), lo validan y lo guardan como si se hubiera escrito a mano.
+// Todas las operaciones modifican los ajustes en uso, los validan y guardan los cambios sobre lo de por defecto.
 const NOOP = Symbol('noop');
 const slugOf = n => n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cadena';
 const kindOfUrl = url => (/\.m3u8(\?|#|$)/i.test(url) ? 'hls' : /\.(aac|acc)(\?|#|$)/i.test(url) ? 'aac' : 'mp3');
@@ -568,8 +491,7 @@ function ensureIds(list) {
   });
 }
 
-// Parte del JSON actual, aplica el cambio y lo guarda (mutate devuelve un texto de error, NOOP si no hay nada que hacer, o nada si todo va bien).
-// Solo se reescriben en el texto las claves de primer nivel que cambian (patchTop): los comentarios del resto se conservan
+// Parte del JSON actual, aplica el cambio y lo guarda (mutate devuelve un texto de error, NOOP si no hay nada que hacer, o nada si todo va bien)
 function editConfig(mutate, opts = {}) {
   const report = opts.report || showCfgMsg;
   let raw;
@@ -580,13 +502,12 @@ function editConfig(mutate, opts = {}) {
     catch (e) { report(['Los ajustes actuales no son un JSON válido; importa una configuración correcta (' + e.message + ')'], true); return false; }
   }
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) { report(['Los ajustes actuales deben ser un objeto { ... }'], true); return false; }
-  const before = JSON.parse(JSON.stringify(raw));
   if (!Array.isArray(raw.stations)) raw.stations = [];
   ensureIds(raw.stations);
   const err = mutate(raw);
   if (err === NOOP) return false;
   if (err) { report([err], true); return false; }
-  return saveSettingsFrom(patchTop(S.configText || '', before, raw), true, { quiet: true, ...opts });
+  return saveSettingsFrom(JSON.stringify(raw), true, { quiet: true, ...opts });
 }
 // Para las pestañas Ecualizador y Boletines: cambia los ajustes y los aplica sin reiniciar nada (report: su propio aviso)
 export const editSettings = (mutate, report) => editConfig(mutate, { force: true, report });

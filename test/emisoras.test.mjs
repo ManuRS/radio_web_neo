@@ -1,17 +1,17 @@
-// Los ajustes por defecto (stations.json) y la base de datos del buscador (bbdd/) tienen la forma que espera la app
+// Los ajustes por defecto (default/) y la base de datos del buscador (bbdd/) tienen la forma que espera la app
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { parseJsonc } from '../js/jsonc.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const KINDS = ['mp3', 'aac', 'hls'];
 const okUrl = u => u && typeof u.url === 'string' && /^https:\/\/\S+$/.test(u.url) && KINDS.includes(u.kind);
 
-test('stations.json: cadenas con id único, tipo, y emisoras con enlace https y formato', () => {
-  const cfg = parseJsonc(readFileSync(path.join(ROOT, 'stations.json'), 'utf8'));
+test('default/: cadenas con id único, tipo, y emisoras con enlace https y formato', () => {
+  const json = f => JSON.parse(readFileSync(path.join(ROOT, 'default', f), 'utf8'));
+  const cfg = { ...json('general.json'), stations: json('cadenas.json') };
   assert.ok(Array.isArray(cfg.stations) && cfg.stations.length > 0);
   const ids = cfg.stations.map(s => s.id);
   assert.equal(new Set(ids).size, ids.length, 'ids repetidos');

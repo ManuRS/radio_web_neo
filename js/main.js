@@ -3,7 +3,7 @@
 // ===============
 // Punto de entrada: aplica los ajustes y arranca la aplicación.
 
-import { emptyConfigFn, fetchDefaultConfigText, initSettingsDialog, loadConfigText, syncDefaults, validateConfig } from './settings.js';
+import { configTextWith, emptyConfigFn, initSettingsDialog, loadDefaults, validateConfig } from './settings.js';
 import { S } from './state.js';
 import { stop, toggle } from './dom.js';
 import { layoutCheck, log } from './ui.js';
@@ -94,31 +94,26 @@ refreshVolumeUi();
 toggle.addEventListener('click', () => (S.held ? resumePlayback() : play()));   // en pausa desde la notificación, Reproducir la reanuda en directo
 stop.addEventListener('click', () => requestStop());   // grabando, se pregunta antes (ver recorder.js)
 
-// Los ajustes guardados en el navegador mandan; si no hay (o no son válidos), los de por defecto (stations.json)
+// Ajustes: lo de por defecto (default/) con los cambios guardados en el navegador; si esos cambios ya no valen, lo de por defecto
 async function loadSettings() {
-  const stored = loadConfigText();
-  let r = stored ? validateConfig(stored) : null;
-  if (r && r.errors.length) { log('Los ajustes guardados no son válidos: ' + r.errors[0]); r = null; }
-  let source = 'guardados', text = stored;
-  if (!r) {
-    const def = await fetchDefaultConfigText();
-    text = def || '';
-    r = def ? validateConfig(def) : null;
-    if (r && r.errors.length) { log('Los ajustes por defecto no son válidos: ' + r.errors[0]); r = null; }
-    source = 'por defecto';
+  if (!(await loadDefaults())) { applyConfig(emptyConfigFn()); log('Sin ajustes'); return; }
+  let text = configTextWith(), r = validateConfig(text);
+  if (r.errors.length) {
+    log('Los cambios guardados no son válidos: ' + r.errors[0]);
+    text = configTextWith({});
+    r = validateConfig(text);
   }
-  if (!r) { applyConfig(emptyConfigFn()); log('Sin ajustes'); return ''; }
+  if (r.errors.length) { applyConfig(emptyConfigFn()); log('Los ajustes por defecto no son válidos: ' + r.errors[0]); return; }
   applyConfig(r.cfg);
-  S.configText = text;   // tal cual, con sus comentarios (ver jsonc.js)
-  log('Ajustes ' + source + ': ' + r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas');
-  return source;
+  S.configText = text;
+  log('Ajustes: ' + r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas');
 }
 
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   navigator.serviceWorker.register('sw.js').catch(() => {});   // permite instalarla como app (PWA)
 }
 
-loadSettings().then(source => {
+loadSettings().then(() => {
   started = true;
   syncUi();
   layoutCheck();
@@ -126,5 +121,4 @@ loadSettings().then(source => {
   setInterval(tick, 1000);
   runCustom();   // personalizar.js (si el usuario lo ha subido): lo último de todo
   checkUnfinished();   // si quedó una grabación a medias (se cerró la página grabando), se ofrece descargarla
-  if (source === 'guardados') syncDefaults();   // por detrás: las cadenas por defecto que no se han tocado se ponen al día con stations.json
 });

@@ -46,7 +46,7 @@ const SER_ROWS = [
   ['Portadas de Hora 25', ['', [F('20:59:38', '21:04:00'), F('21:59:55', '22:04:00'), F('22:59:55', '23:04:00')]]],
 ].map(([label, ...opts]) => ({ label, opts: opts.map(([name, slots]) => ({ name, slots })) }));
 const RENAMED = [[F('06:59:38', '07:30:00'), F('06:59:38', '07:20:00')]];   // franjas guardadas de antes que han cambiado: el tramo de las 7 acaba a las 7:20
-// Selección de siempre (la de stations.json): la de partida y la de "Restablecer"
+// Selección de siempre (la de default/general.json): la de partida y la de "Restablecer"
 const SER_DEFAULT = [['07:59:55', '08:20:10'], ['08:59:55', '09:04:00'], ['09:59:55', '10:05:50'], ['10:59:38', '11:05:50'], ['11:59:38', '12:05:50'],
   ['12:59:38', '13:06:40'], ['13:59:38', '14:06:10'], ['15:59:38', '16:05:20'], ['16:59:38', '17:05:20'], ['17:59:38', '18:05:20'], ['18:59:38', '19:05:00'],
   ['19:59:38', '20:25:10'], ['20:59:38', '21:04:00'], ['21:59:55', '22:04:00'], ['22:59:55', '23:04:00']].map(([start, end]) => ({ start, end }));
