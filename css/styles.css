@@ -308,6 +308,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .tabs button.active { color: #edf2f7; border-bottom-color: var(--accent); }
 .tab { flex: 1 0 auto; display: flex; flex-direction: column; gap: 12px; padding-top: 8px; }
 .tab[hidden] { display: none; }
+.tab > * { flex-shrink: 0; }   /* con poco alto, la pestaña se desplaza en vez de aplastar su contenido (el cuadro de mensajes se cortaba) */
 /* Apartados de los ajustes generales, separados por una línea suave */
 .group { display: flex; flex-direction: column; gap: 12px; }
 .clockrow button { flex: none; padding: 6px 12px; font-size: .85rem; color: #e8edf5; background: #394454; }
@@ -327,7 +328,7 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 .group + .group { padding-top: 14px; border-top: 1px solid #252e3a; }
 /* Hueco reservado para los mensajes de la configuración (guardado, errores...), con su propio fondo */
 .cfgmsg { min-height: calc(2.8em + 18px); box-sizing: border-box; padding: 8px 10px; border: 1px solid #252e3a; border-radius: 10px; background: #11161d; white-space: pre-wrap; font-size: .8rem; line-height: 1.4; }
-.cfgmsg.ok { color: #58dfa3; }
+.cfgmsg.ok { color: color-mix(in srgb, var(--accent) 45%, #e2e8f0); }   /* con el color del tema, no un verde fijo */
 .cfgmsg.err { color: #ff8a8a; }
 .dlg-actions { display: flex; gap: 10px; }
 .dlg-actions .primary { color: var(--on-accent); background: var(--accent); }
@@ -441,8 +442,8 @@ dialog.settings.sheet { min-height: 0; }
 .ctxmenu button.danger:hover { background: #c4525e; }
 .ctxmenu button:disabled { color: #8c98a8; }
 .ctxmenu .ctxtitle { padding: 6px 12px 7px; margin-bottom: 3px; border-bottom: 1px solid #303a47; font-size: .8rem; color: #8c98a8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
-.toast { position: fixed; z-index: 70; left: 50%; bottom: max(18px, env(safe-area-inset-bottom)); transform: translateX(-50%); max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 12px; border: 1px solid #303a47; background: #1a2029; color: #edf2f7; font-size: .88rem; box-shadow: 0 10px 30px #000a; pointer-events: none; }
-.toast[hidden] { display: none; }
+.toast { position: fixed; z-index: 70; inset: auto auto max(18px, env(safe-area-inset-bottom)) 50%; margin: 0; transform: translateX(-50%); max-width: min(92vw, 460px); padding: 10px 16px; border-radius: 12px; border: 0; background: #1a2029; color: #edf2f7; font-size: .88rem; box-shadow: 0 10px 30px #000a; pointer-events: none; }
+.toast[hidden] { display: none; }   /* va como popover (capa superior): así sale por encima de las ventanas abiertas */
 
 /* Con muchas emisoras en una cadena: el nombre arriba y "Añadir emisora…" / "Cambiar nombre…" (o "Guardar") abajo no se mueven; entre medias, la lista se desplaza */
 .ctxmenu > * { flex: none; }
@@ -599,6 +600,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* Boletines: la cadena arriba; con la SER, una tarjeta por boletín (interruptor y, si hay dos duraciones, Portada o Tramo completo); con otra, filas Inicio-Fin */
 #newsSel { flex: 1 1 160px; min-width: 0; }
 .nlist { display: flex; flex-direction: column; gap: 8px; }
+.nlist.ser { display: grid; grid-auto-rows: 1fr; }   /* SER guiada: todas las tarjetas del mismo alto */
 .nrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 12px; padding: 10px 12px; border-radius: 10px; background: #1f2632; }
 .ntext { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ntext b { font-size: .9rem; font-weight: 650; color: #edf2f7; }
@@ -737,3 +739,9 @@ dialog button:focus-visible, .ctxmenu button:focus-visible { outline: none; }   
   dialog.ask p { font-size: .98rem; }
   .dlg-actions button { font-size: .95rem; }
 }
+
+/* Boletines: botón de editar del panel y 📰 delante del nombre de la emisora mientras hay boletín (del alto de las mayúsculas del nombre) */
+.panel.news .info { flex: 1 1 auto; }   /* el botón de editar va junto al interruptor */
+.panel.news .nedit { color: #cbd5e1; cursor: pointer; }
+.panel.news .nedit:hover { color: var(--accent); }
+#psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .14em; }

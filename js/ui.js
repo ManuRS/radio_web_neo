@@ -286,6 +286,7 @@ export function toast(msg, ms = 3500) {
   if (!toastEl) return;
   toastEl.textContent = msg;
   toastEl.hidden = false;
+  if (toastEl.showPopover) { try { toastEl.hidePopover(); } catch (_) {} try { toastEl.showPopover(); } catch (_) {} }   // capa superior: por encima de la última ventana abierta
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { toastEl.hidden = true; }, ms);
+  toastTimer = setTimeout(() => { toastEl.hidden = true; if (toastEl.hidePopover) { try { toastEl.hidePopover(); } catch (_) {} } }, ms);
 }

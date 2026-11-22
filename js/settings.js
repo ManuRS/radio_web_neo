@@ -234,7 +234,7 @@ function showCfgMsg(lines, isError) {
 
 // Pestañas de la ventana: General (reloj y audio), Ecualizador y Boletines (eqtab.js y newstab.js), Configuración (exportar e importar) y Registro (oculta salvo con "Mostrar", en Configuración).
 // Al mostrarse, cada pestaña recibe el evento "show" para pintarse con los ajustes de ese momento
-const tabPanels = { general: tabGeneral, eq: document.getElementById('tabEq'), news: document.getElementById('tabNews'), config: tabConfig, log: tabLog };
+const tabPanels = { general: tabGeneral, eq: document.getElementById('tabEq'), config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
   settingsTabs.forEach(x => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', String(on)); });
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });

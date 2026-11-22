@@ -1,5 +1,5 @@
 // ========================
-// == PESTAÑA BOLETINES ==
+// == VENTANA DE LOS BOLETINES ==
 // ========================
 // [NEO>
 // Elige quién da los boletines ("newsStation", solo generalistas con "newsSource": true) y sus franjas ("news").
@@ -14,6 +14,7 @@ import { S } from './state.js';
 import { editSettings } from './settings.js';
 import { parseJsonc } from './jsonc.js';
 import { soundKey } from './utils.js';
+import { closeDialog, openDialog } from './ui.js';
 
 const panel = document.getElementById('tabNews');
 const sel = document.getElementById('newsSel');
@@ -21,6 +22,12 @@ const list = document.getElementById('newsList');
 const addBtn = document.getElementById('newsAdd');
 const resetBtn = document.getElementById('newsReset');
 const msg = document.getElementById('newsMsg');
+
+// Ventana: se abre con el botón de editar del panel "Modo boletines" (antes era una pestaña de los ajustes)
+const dlg = document.getElementById('newsDlg');
+document.getElementById('newsEdit').addEventListener('click', () => { openDialog(dlg); panel.dispatchEvent(new Event('show')); });
+document.getElementById('newsClose').addEventListener('click', () => closeDialog(dlg));
+dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(dlg); });
 
 // Horario de la SER: [nombre, [opción, inicio, fin], ...]; con dos opciones se elige una (la corta, "Portada", o la larga)
 const S2 = (h, a, b) => ['Las noticias de las ' + h + 'h', ['', a, b]];
@@ -44,9 +51,9 @@ const SER_ROWS = [
   S2(18, '17:59:38', '18:05:20'),
   S2(19, '18:59:38', '19:05:00'),
   ['Hora 20', ['Portada', '19:59:38', '20:06:00'], ['Tramo completo', '19:59:38', '20:25:10']],
-  S2(21, '20:59:38', '21:04:00'),
-  S2(22, '21:59:55', '22:04:00'),
-  S2(23, '22:59:55', '23:04:00'),
+  ['Hora 25 a las 9', ['', '20:59:38', '21:04:00']],
+  ['Hora 25 a las 10', ['', '21:59:55', '22:04:00']],
+  ['Hora 25 a las 11', ['', '22:59:55', '23:04:00']],
 ].map(([label, ...opts]) => ({ label, opts: opts.map(([name, start, end]) => ({ name, start, end })) }));
 // Selección de siempre (la de stations.json): la de partida y la de "Restablecer"
 const SER_DEFAULT = [['07:59:55', '08:20:10'], ['08:59:55', '09:04:00'], ['09:59:55', '10:05:50'], ['10:59:38', '11:05:50'], ['11:59:38', '12:05:50'],
@@ -127,16 +134,14 @@ function renderSer() {
   list.textContent = '';
   list.className = 'nlist ser';
   SER_ROWS.forEach((row, i) => {
-    const on = pick[i] >= 0, o = row.opts[on ? pick[i] : last[i]];
+    const on = pick[i] >= 0;
     const el = document.createElement('div');
     el.className = 'nrow' + (on ? '' : ' off');
     const text = document.createElement('div');
     text.className = 'ntext';
     const b = document.createElement('b');
-    b.textContent = row.label;
-    const t = document.createElement('span');
-    t.textContent = o.start + ' – ' + o.end;
-    text.append(b, t);
+    b.textContent = row.label;   // sin las horas: el horario ya está hecho
+    text.append(b);
     el.append(text, switchEl(on, row.label, v => { pick[i] = v ? last[i] : -1; saveSer(); renderSer(); }));
     if (row.opts.length > 1) {
       const seg = document.createElement('div');
@@ -181,8 +186,15 @@ function renderOwn() {
       inp.value = r[k];
       inp.setAttribute('aria-label', label + ' de la franja ' + (i + 1));
       inp.addEventListener('input', () => {
+        // el cursor se queda donde estaba (tras el mismo número de cifras), no salta al final al borrar o escribir en medio
+        const pos = inp.selectionStart ?? inp.value.length, before = inp.value.slice(0, pos).replace(/\D/g, '').length;
         const d = inp.value.replace(/\D/g, '').slice(0, 6);
-        inp.value = d.replace(/^(\d{2})(\d{1,2})?(\d{1,2})?$/, (m, a, b, c) => a + (b ? ':' + b : '') + (c ? ':' + c : ''));
+        const v = d.replace(/^(\d{2})(\d{1,2})?(\d{1,2})?$/, (m, a, b, c) => a + (b ? ':' + b : '') + (c ? ':' + c : ''));
+        if (v === inp.value) return;
+        inp.value = v;
+        let at = 0;
+        for (let n = 0; at < v.length && n < before; at++) if (/\d/.test(v[at])) n++;
+        inp.setSelectionRange(at, at);
       });
       const mine = opt;   // al cambiar de opción se repinta y el campo, al perder el foco, puede avisar tarde: entonces ya no cuenta
       inp.addEventListener('change', () => { if (opt !== mine || !inp.isConnected) return; r[k] = inp.value; saveOwn(); });

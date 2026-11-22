@@ -588,6 +588,7 @@ export function refreshNow() {
   psValue.classList.toggle('idle', !S.current && !S.pending);
   psValue.classList.toggle('pending', S.pending);
   setText(psText, shown ? emisoraName(shown, shownV) : '—');   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
+  psValue.classList.toggle('newsmark', !!S.newsOn && !!shown && shown === S.newsStation);   // boletín: 📰 delante del nombre (styles.css)
   fitNow();
 }
 

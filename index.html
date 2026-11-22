@@ -157,8 +157,8 @@
   </section>
 
   <section class="panel news" id="news">
-    <div class="badge" aria-hidden="true">📰</div>
     <div class="info"><b>Modo boletines</b></div>
+    <button id="newsEdit" class="badge nedit" type="button" aria-label="Editar boletines" title="Editar boletines"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.21a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
     <label class="switch" title="Activar modo boletines">
       <input type="checkbox" id="newsToggle" aria-label="Activar modo boletines">
       <span class="track"></span>
@@ -266,7 +266,6 @@
       <div class="tabs" role="tablist">
         <button type="button" role="tab" data-tab="general" class="active" aria-selected="true">Preferencias</button>
         <button type="button" role="tab" data-tab="eq" aria-selected="false">Ecualizador</button>
-        <button type="button" role="tab" data-tab="news" aria-selected="false">Boletines</button>
         <button type="button" role="tab" data-tab="config" aria-selected="false">Datos</button>
         <button type="button" role="tab" data-tab="log" aria-selected="false" hidden>Registro</button>
       </div>
@@ -366,16 +365,6 @@
         <div id="eqMsg" class="cfgmsg" role="status"></div>
       </div>
       <!-- Boletines: quién da las noticias y sus franjas ("newsStation", "news", "newsGuided" y "newsSaved" de los ajustes). La SER guiada, con su horario ya hecho -->
-      <div class="tab" id="tabNews" hidden>
-        <div class="clockrow">
-          <label for="newsSel">Cadena de los boletines</label>
-          <select id="newsSel"></select>
-        </div>
-        <div class="nlist" id="newsList"></div>
-        <button id="newsAdd" class="nadd" type="button">+ Añadir franja</button>
-        <button id="newsReset" class="nadd" type="button" hidden>Restablecer</button>
-        <div id="newsMsg" class="cfgmsg" role="status"></div>
-      </div>
       <div class="tab" id="tabConfig" hidden>
         <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->
         <div class="group">
@@ -518,6 +507,28 @@
   <!-- ===================================================== -->
   <!-- == PREGUNTA (GRABACIÓN EN CURSO, GRABACIÓN SIN TERMINAR) == -->
   <!-- ===================================================== -->
+  <!-- ========================================================== -->
+  <!-- == VENTANA DE LOS BOLETINES (BOTÓN DE EDITAR DEL PANEL) == -->
+  <!-- ========================================================== -->
+  <dialog id="newsDlg" class="settings sheet" aria-labelledby="newsDlgTitle">
+    <div class="dlg">
+      <div class="dlg-head">
+        <b id="newsDlgTitle">Boletines</b>
+        <button id="newsClose" class="x" type="button" aria-label="Cerrar">✕</button>
+      </div>
+        <div class="tab" id="tabNews">
+          <div class="clockrow">
+            <label for="newsSel">Cadena de los boletines</label>
+            <select id="newsSel"></select>
+          </div>
+          <div class="nlist" id="newsList"></div>
+          <button id="newsAdd" class="nadd" type="button">+ Añadir franja</button>
+          <button id="newsReset" class="nadd" type="button" hidden>Restablecer</button>
+          <div id="newsMsg" class="cfgmsg" role="status"></div>
+        </div>
+    </div>
+  </dialog>
+
   <dialog id="askDlg" class="ask">
     <b id="askTitle"></b>
     <p id="askText"></p>
@@ -527,7 +538,7 @@
     </div>
   </dialog>
 
-<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" popover="manual" hidden></div>
 
 <script>
 // Pinta enseguida el color de énfasis guardado (evita ver el verde un instante antes de que cargue la aplicación)
