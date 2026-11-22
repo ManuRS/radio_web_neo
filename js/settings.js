@@ -232,9 +232,9 @@ function showCfgMsg(lines, isError) {
   if (!settingsDlg.open && !document.getElementById('tdtDlg').open && !silent) toast(lines[0]);   // sin la ventana abierta (arrastrar o editar desde la rejilla), el resultado se ve como aviso
 }
 
-// Pestañas de la ventana: General (reloj y audio), Ecualizador y Boletines (eqtab.js y newstab.js), Configuración (exportar e importar) y Registro (oculta salvo con "Mostrar", en Configuración).
+// Pestañas de la ventana: Preferencias (reloj y audio), Datos (exportar e importar) y Registro (oculta salvo con "Mostrar", en Datos). El ecualizador y los boletines tienen su propia ventana.
 // Al mostrarse, cada pestaña recibe el evento "show" para pintarse con los ajustes de ese momento
-const tabPanels = { general: tabGeneral, eq: document.getElementById('tabEq'), config: tabConfig, log: tabLog };
+const tabPanels = { general: tabGeneral, config: tabConfig, log: tabLog };
 settingsTabs.forEach(b => b.addEventListener('click', () => {
   settingsTabs.forEach(x => { const on = x === b; x.classList.toggle('active', on); x.setAttribute('aria-selected', String(on)); });
   Object.keys(tabPanels).forEach(k => { tabPanels[k].hidden = k !== b.dataset.tab; });

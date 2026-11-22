@@ -160,9 +160,8 @@ input[type="range"]:disabled { opacity: .4; }
 .viz canvas { display: block; width: 100%; height: 100%; }
 .viz.eq-on { cursor: pointer; }
 .viz.off canvas, .viz.off .eq-label { opacity: .45; filter: grayscale(1); }
-.viz.noeq .eq-label { color: #8c98a8; }   /* emisora en modo degradado: sin ecualizador (barras sintéticas) */
 .viz:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.eq-label { position: absolute; top: 10px; right: 18px; max-width: calc(100% - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: #fff; pointer-events: none; }
+.eq-label { position: absolute; top: 10px; right: 18px; max-width: calc(100% - 100px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .68rem; line-height: 14px; font-weight: 700; letter-spacing: .05em; color: #aeb9c8; pointer-events: none; }   /* solo el formato: gris, sin destacar (el modo va en su panel) */
 .now .ps.idle { color: #8c98a8; }
 .now .ps { flex: 1 1 0; width: 0; min-width: 0; margin: 0 -8px 0 -12px; padding: 0 22px 0 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 2.5rem; font-weight: 700; letter-spacing: .02em; color: #edf2f7; }
 /* Cambio de emisora pedido y aún sin confirmar: el nombre actual parpadea suave hasta que suena la nueva */
@@ -195,6 +194,19 @@ input[type="range"]:disabled { opacity: .4; }
 .pres-open::after { content: ''; position: absolute; inset: -9px -8px; }
 .pres-open svg { display: block; }
 .viz.off .pres-open { display: none; }
+
+/* ==============================
+   == PANEL DEL ECUALIZADOR ==
+   ============================== */
+/* Como los otros paneles negros: ‹ modo › | botón de la ventana de los modos */
+.panel.eqsel { gap: 0; padding: 15px; box-shadow: var(--lift); }
+.eqarr { flex: none; display: grid; place-items: center; width: 38px; height: 38px; padding: 0; border-radius: 10px; background: none; color: #cbd5e1; }
+.eqarr:where(:enabled):hover, .panel.eqsel .eqopen:hover { color: var(--accent); }   /* con Material no cambian, como el lápiz de boletines */
+.eqarr svg, .eqopen svg { display: block; }
+.eqnow { flex: 1 1 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center; font-size: .86rem; font-weight: 700; color: #edf2f7; }
+.panel.eqsel.off .eqnow { color: #8c98a8; }
+.eqsep { flex: 0 0 1px; align-self: stretch; margin: 6px 12px; background: var(--line); }   /* el "|" de la barra de controles */
+.panel.eqsel .eqopen { width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; }
 
 /* ===============================
    == PANEL DEL MODO BOLETINES ==
@@ -649,6 +661,7 @@ html.material body, html.material dialog.settings { color: var(--tx2, #edf2f7); 
 html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
 html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: var(--tx1, #fff); }
 html.material .now .ps, html.material .eq-label, html.material .pres-open, html.material .vols label, html.material .vols span,
+html.material .eqarr, html.material .eqnow, html.material .panel.eqsel .eqopen,
 html.material .panel.search input, html.material .panel.search .badge, html.material .panel.news .nedit { color: var(--t-pan, var(--accent)); }
 html.material .ptitle, html.material .panel .info b, html.material .panel.search input::placeholder, html.material .mbar,
 html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }

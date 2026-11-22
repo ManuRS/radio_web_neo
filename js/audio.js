@@ -11,7 +11,7 @@
 import { createVisualizer } from './viz.js';
 import { S, NORM_MAX_BOOST_DB, NORM_MAX_CUT_DB, NORM_SILENCE_DB, NORM_TARGET_DB, NORM_TAU_S } from './state.js';
 import { eqLabel, newsVolume, newsVolValue, vizBox, vizCanvas, volume, volValue } from './dom.js';
-import { log } from './ui.js';
+import { closeDialog, log, openDialog } from './ui.js';
 import { loadSounds } from './sounds.js';
 import { wakeAnchor } from './anchor.js';
 
@@ -243,13 +243,26 @@ export function setFade(d, v) {
 }
 
 // ======================================================
-// == ECUALIZADOR (SE CAMBIA PULSANDO EL VISUALIZADOR) ==
+// == ECUALIZADOR (PANEL DEBAJO DEL VISUALIZADOR) ==
 // ======================================================
-// normal -> modos de los ajustes (EQ Graves, EQ Dinámico...) -> normal... Arriba a la derecha del visualizador se ve el formato de la emisora y el modo ("MP3 • EQ Graves"); con "normal", solo el formato.
+// normal -> modos de los ajustes (EQ Graves, EQ Dinámico...) -> normal... Se cambia con ‹ y › del panel (o pulsando el visualizador); el panel enseña el modo
+// y su botón abre la ventana de los modos (eqtab.js). Arriba a la derecha del visualizador queda solo el formato de la emisora.
 // El modo elegido se guarda en el navegador; se olvida si los ajustes del ecualizador cambian o se borran (ver resetEq).
 // Con una emisora en modo degradado (sin Web Audio) no hay ecualizador: el visualizador lo avisa
 
 // El primer modo es siempre "normal" (plano y sin texto); detrás van los de los ajustes
+const eqPanel = document.getElementById('eqPanel');
+const eqNow = document.getElementById('eqNow');
+const eqPrev = document.getElementById('eqPrev');
+const eqNext = document.getElementById('eqNext');
+const eqDlg = document.getElementById('eqDlg');
+eqPrev.addEventListener('click', () => cycleEq(-1));
+eqNext.addEventListener('click', () => cycleEq(1));
+// La ventana de los modos (antes, pestaña de los ajustes): al abrirse, la pestaña recibe "show" para pintarse
+document.getElementById('eqOpen').addEventListener('click', () => { openDialog(eqDlg); document.getElementById('tabEq').dispatchEvent(new Event('show')); });
+document.getElementById('eqClose').addEventListener('click', () => closeDialog(eqDlg));
+eqDlg.addEventListener('click', e => { if (e.target === eqDlg) closeDialog(eqDlg); });
+
 const eqModes = () => [{ label: '', low: 0, mid: 0, high: 0, pre: 0, active: true }, ...S.eq.modes];
 const eqActive = (modes, i) => i === 0 || (!!modes[i] && modes[i].active !== false);   // los desactivados no salen al pulsar el visualizador
 let audition = false;   // la pestaña Ecualizador está haciendo sonar un modo desactivado para editarlo
@@ -281,9 +294,12 @@ export function refreshEq(immediate = false) {
   const m = modes[eqShown] || modes[0];
   const native = outMode === 'nativa';   // salida nativa: sin barras ni ecualizador, el área queda apagada
   const noEq = !native && S.degraded;   // emisora sin Web Audio: se muestran barras sintéticas y sin ecualizador
-  // formato (o calidad) de la emisora que suena y modo de ecualizador: "MP3 • EQ Graves" (sin emisora, solo el modo)
-  eqLabel.textContent = native ? '' : [S.current ? S.quality : '', noEq ? 'sin EQ' : m.label].filter(Boolean).join(' • ');
+  // formato (o calidad) de la emisora que suena, en el visualizador; el modo, en el panel
+  eqLabel.textContent = native || !S.current ? '' : S.quality;
   const interactive = !native && modes.some((x, i) => i > 0 && eqActive(modes, i));   // sin modos activos, el visualizador no hace nada al pulsarlo
+  eqNow.textContent = native || noEq ? 'Sin EQ' : (m.label || 'Normal');
+  eqPrev.disabled = eqNext.disabled = !interactive || noEq;
+  eqPanel.classList.toggle('off', native || noEq);
   vizBox.classList.toggle('eq-on', interactive);
   vizBox.classList.toggle('off', native);
   vizBox.classList.toggle('noeq', noEq);
@@ -318,17 +334,18 @@ export function setEqMode(n) {
   refreshEq();
 }
 
-function cycleEq() {
+// dir: 1 = siguiente, -1 = anterior
+function cycleEq(dir = 1) {
   if (outMode === 'nativa') return;
   const modes = eqModes();
   let n = eqShown;
-  do n = (n + 1) % modes.length; while (n !== 0 && !eqActive(modes, n));   // salta los desactivados
+  do n = (n + dir + modes.length) % modes.length; while (n !== 0 && !eqActive(modes, n));   // salta los desactivados
   eqMode = n;
   audition = false;
   saveEqMode();
   refreshEq();
 }
-vizBox.addEventListener('click', cycleEq);
+vizBox.addEventListener('click', () => cycleEq(1));
 vizBox.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cycleEq(); } });
 refreshEq();   // pinta el nombre del modo guardado (los filtros se ajustan al crear el grafo de audio)
 
