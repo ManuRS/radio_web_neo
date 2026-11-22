@@ -46,6 +46,8 @@ body {
 /* Sin altura mínima en body: el fondo de toda la pantalla lo pone html, y una altura mínima en vh/dvh dejaba scroll vacío en el móvil
    cuando la barra del navegador cambiaba de tamaño */
 html { background: #1a2029; }
+html, body { overscroll-behavior-y: none; }   /* es una aplicación: arrastrar hacia abajo no recarga la página */
+
 body { margin: 0; display: grid; place-items: start center; background: #1a2029; color: #edf2f7; }
 main { width: min(520px, 100%); box-sizing: border-box; padding: var(--hf) 20px 28px; }
 /* Con altura suficiente la página no hace scroll: lo hace por dentro la parte de abajo (boletines y emisoras), sin barra visible.
@@ -701,9 +703,12 @@ html.material .preset:not(.recoff):not(.active) .pf, html.material .eqqual { col
 html.material .preset.active { background: var(--t-act, color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr))); color: var(--tx1, #fff); }
 html.material .preset.active .pn { color: var(--tx1, #fff); }
 html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80%, transparent); }
-/* Interruptores en dos tonos del color: apagado, pista apagada y bola en el tono de los paneles (no blanca); encendido, el énfasis, más marcado */
-html.material .switch input:not(:checked):not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 24%, #1a2029); }
-html.material .switch input:not(:checked):not(:disabled) + .track::after { background: var(--t-pan, var(--accent)); }
+/* Interruptores en dos tonos del color: apagado, pista apagada y bola gris oscura (no blanca ni negra del todo); encendido, bola en el tono de los
+   paneles sobre una pista del mismo tono más suave */
+html.material .switch input:not(:checked):not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 16%, #1a2029); }
+html.material .switch input:not(:checked):not(:disabled) + .track::after { background: color-mix(in srgb, var(--t-pan, var(--accent)) 14%, #3a424e); }
+html.material .switch input:checked:not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 42%, #1a2029); }
+html.material .switch input:checked:not(:disabled) + .track::after { background: var(--t-pan, var(--accent)); }
 
 
 /* Texto sobre un fondo de énfasis (botón principal de las ventanas, modos activos del EQ y de boletines): claro si el énfasis es oscuro, oscuro si es claro */

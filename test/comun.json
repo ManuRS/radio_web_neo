@@ -10,7 +10,7 @@
     "js/jsonc.js": "59633a5473e181af",
     "js/rec-worker.js": "6f7aac98bfe3ff11",
     "js/rec-worklet.js": "a4a04446e8bcb7bf",
-    "js/utils.js": "a960494ee6ad239e",
+    "js/utils.js": "5a5c5f8a792f95ce",
     "test/comun.mjs": "b0054e488e756b06",
     "test/comun.test.mjs": "c1ce6a1f2e75f077",
     "test/jsonc.test.mjs": "3c3ee73991338b77",

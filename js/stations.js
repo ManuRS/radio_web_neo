@@ -5,7 +5,7 @@
 // Cada botón es una cadena; la elegida, si tiene varias emisoras, lleva debajo en gris cuántas son. El formato se ve encima del visualizador.
 
 import { S, endNewsState } from './state.js';
-import { emisoraName, emisoraSub } from './utils.js';
+import { animateFold, emisoraName, emisoraSub } from './utils.js';
 import { desk, presetsBox, psText, psValue } from './dom.js';
 import { applyAccent, paletteColor, setText } from './ui.js';
 import { switchStation } from './transitions.js';
@@ -108,7 +108,7 @@ export function buildStations() {
     bar.innerHTML = '<span></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
     const grp = { id: g.id, list, grid, buttons, labels: buttons.map(b => b.querySelector('.pf')), more, bar };
     more.addEventListener('click', () => { if (editHooks.newChain) editHooks.newChain(g.id); });   // "+": "Crear nueva presintonía" con el tipo del grupo
-    bar.addEventListener('click', () => { if (expandedGroups.has(g.id)) expandedGroups.delete(g.id); else expandedGroups.add(g.id); applyVisibility(); });
+    bar.addEventListener('click', () => animateFold(grid, () => { if (expandedGroups.has(g.id)) expandedGroups.delete(g.id); else expandedGroups.add(g.id); applyVisibility(); }));   // con animación (utils.js)
     grid.appendChild(more);
     wrap.append(title, grid, bar);
     presetsBox.appendChild(wrap);

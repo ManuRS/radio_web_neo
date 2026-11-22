@@ -142,3 +142,40 @@ export function emisoraName(st, vi, short = false) {
 }
 // Texto ligero bajo el nombre de la cadena en su botón: solo en la elegida y si tiene varias emisoras ("10 emisoras"); en las demás, nada
 export const emisoraSub = (st, active) => (active && st && st.urls.length > 1 ? st.urls.length + ' emisoras' : '');
+
+// ======================================================
+// == DESPLEGAR Y PLEGAR UNA REJILLA ("MOSTRAR MÁS / MENOS") ==
+// ======================================================
+// toggle() cambia el estado y aplica qué se ve (dos llamadas seguidas lo dejan como estaba). Al abrir, la rejilla crece y las que aparecen entran
+// con un fundido; al cerrar, encoge con las que se van todavía a la vista, que se apagan, y el cambio se aplica al terminar (así, si algo vuelve
+// a aplicar la visibilidad durante la animación, no las oculta antes de tiempo). Sin animaciones (o con "reducir movimiento"), directo.
+const FOLD_MS = 300;
+let folding = null;
+export function animateFold(grid, toggle) {
+  if (folding) { folding.finish(); folding = null; }
+  const still = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (still || typeof grid.animate !== 'function') { toggle(); return; }
+  const shown = () => [...grid.children].filter(c => !c.hidden);
+  const h0 = grid.getBoundingClientRect().height, before = new Set(shown());
+  toggle();
+  const h1 = grid.getBoundingClientRect().height, after = shown();
+  if (Math.abs(h1 - h0) < 1) return;
+  const opening = h1 > h0;
+  if (!opening) toggle();   // al cerrar, se vuelve a lo de antes hasta que acabe la animación
+  const moving = opening ? after.filter(c => !before.has(c)) : [...before].filter(c => !after.includes(c));
+  grid.style.overflow = 'hidden';
+  const a = grid.animate([{ height: h0 + 'px' }, { height: h1 + 'px' }], { duration: FOLD_MS, easing: 'cubic-bezier(.2, 0, 0, 1)' });
+  moving.forEach(c => c.animate(
+    opening ? [{ opacity: 0, transform: 'translateY(-6px)' }, { opacity: 1, transform: 'none' }] : [{ opacity: 1 }, { opacity: 0 }],
+    { duration: opening ? FOLD_MS : FOLD_MS * 0.6, easing: 'ease-out', fill: opening ? 'backwards' : 'forwards' }));
+  const done = () => {
+    if (folding !== a) return;
+    folding = null;
+    grid.style.overflow = '';
+    if (!opening) toggle();
+    moving.forEach(c => c.getAnimations().forEach(x => x.cancel()));
+  };
+  a.onfinish = done;
+  a.oncancel = done;
+  folding = a;
+}
