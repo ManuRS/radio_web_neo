@@ -89,7 +89,8 @@ export function paletteColor(key) {
 // TINT y hdrBase son los de styles.css (--tint y --hdr): el tono de la cabecera coloreada es el énfasis mezclado al 32 % con el color de la cabecera (--hfull)
 const TINT = .32, ACCENT_DEF = '#566db9';
 const hdrBase = () => desk.matches ? [0x26, 0x2d, 0x37] : [0x32, 0x3c, 0x4a];   // el --hdr de styles.css: el de PC es más oscuro
-const matOn = () => document.documentElement.classList.contains('material');
+// Modo de Material Design según las clases del <html> (glow.js): 'off', 'std' (Estándar) o 'ext' (Extremo)
+const matMode = () => { const c = document.documentElement.classList; return c.contains('material') ? (c.contains('mat-std') ? 'std' : 'ext') : 'off'; };
 function tinted(hex) {
   const h = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : ACCENT_DEF;
   return '#' + hdrBase().map((b, i) => Math.round(b + TINT * (parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16) - b)).toString(16).padStart(2, '0')).join('');
@@ -117,16 +118,16 @@ const panelTone = hex => { const [C, h] = okCH(tinted(hex)); return okHex(.68, C
 let accentHex;
 export function applyAccent(hex) {
   accentHex = hex;
-  const root = document.documentElement, m = matOn();
+  const root = document.documentElement, m = matMode();
   if (hex) root.style.setProperty('--accent', hex); else root.style.removeProperty('--accent');
-  viz.setAccent(m ? panelTone(hex) : hex, m);   // con Material, barras lisas de un solo tono
+  viz.setAccent(m !== 'off' ? panelTone(hex) : hex, m === 'ext');   // con Material, barras en el tono de los paneles: lisas en Extremo, con su degradado en Estándar
   if (!viz.looping) viz.draw();
 }
 // Al empezar o parar (o cambiar el ajuste o el tamaño de pantalla), las barras pasan al tono nuevo con su transición
-let matShown = false;
-const matCheck = () => { if (matOn() !== matShown) { matShown = matOn(); applyAccent(accentHex); } };
+let matShown = 'off';
+const matCheck = () => { if (matMode() !== matShown) { matShown = matMode(); applyAccent(accentHex); } };
 new MutationObserver(matCheck).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-desk.addEventListener('change', () => { matShown = matOn(); applyAccent(accentHex); });
+desk.addEventListener('change', () => { matShown = matMode(); applyAccent(accentHex); });
 
 // ===============================================
 // == VENTANAS (DIALOG) ==

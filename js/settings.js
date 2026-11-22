@@ -8,9 +8,9 @@
 
 import { pad, parseNumber } from './utils.js';
 import { APP_ID, S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js';
-import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
+import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSelect, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
-import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
+import { glowOn, matMode, setGlow, setMaterial } from './glow.js';
 import { groupOn, setGroup } from './grupo.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
@@ -430,11 +430,11 @@ groupSwitch.addEventListener('change', () => {
   setGroup(groupSwitch.checked);
   log('Agrupar opciones de sonido: ' + (groupSwitch.checked ? 'activado' : 'desactivado'));
 });
-// Material Design (PC y móvil; desactivado por defecto): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
-matSwitch.checked = matOn();
-matSwitch.addEventListener('change', () => {
-  setMaterial(matSwitch.checked);
-  log('Material Design: ' + (matSwitch.checked ? 'activado' : 'desactivado'));
+// Material Design (PC y móvil; Desactivado, Estándar o Extremo; desactivado por defecto): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
+matSelect.value = matMode();
+matSelect.addEventListener('change', () => {
+  setMaterial(matSelect.value);
+  log('Material Design: ' + matSelect.options[matSelect.selectedIndex].text);
 });
 
 // Color por defecto (Ajustes > General): Índigo (el de serie), Verde, Azul, Rojo o uno personalizado con el selector. Solo cuenta con

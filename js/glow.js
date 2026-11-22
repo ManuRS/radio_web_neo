@@ -30,16 +30,17 @@ export function setGlow(v) {
 
 const active = () => on && desk.matches && !document.hidden;
 
-// "Material Design" (ajuste propio, en PC y en móvil): la clase "material" del <html> hace que el CSS coloree la cabecera y los textos con el énfasis mientras suena (ver --tint en styles.css).
-// Por defecto, desactivado en PC y en móvil (solo se enciende si se activa en General)
-const MKEY = APP_ID + '_material';   // '1' = encendido; '0' o nada = apagado
-export function matOn() {
-  try { return localStorage.getItem(MKEY) === '1'; } catch (_) { return false; }
+// "Material Design" (ajuste propio, en PC y en móvil): Desactivado, Estándar o Extremo. La clase "material" del <html> hace que el CSS coloree la cabecera
+// y los textos con el énfasis mientras suena (ver --tint en styles.css); con Estándar, además "mat-std": solo la cabecera, lo principal de cada panel negro
+// y la presintonía activa; el resto, como sin Material. Por defecto, desactivado (solo se enciende si se elige en Preferencias)
+const MKEY = APP_ID + '_material';   // '1' = Extremo (el Material de siempre), '2' = Estándar; '0' o nada = Desactivado
+export function matMode() {
+  try { const v = localStorage.getItem(MKEY); return v === '1' ? 'ext' : v === '2' ? 'std' : 'off'; } catch (_) { return 'off'; }
 }
-const applyMat = () => document.documentElement.classList.toggle('material', matOn());
+const applyMat = () => { const m = matMode(), c = document.documentElement.classList; c.toggle('material', m !== 'off'); c.toggle('mat-std', m === 'std'); };
 applyMat();
-export function setMaterial(v) {
-  try { localStorage.setItem(MKEY, v ? '1' : '0'); } catch (_) {}
+export function setMaterial(mode) {
+  try { localStorage.setItem(MKEY, mode === 'ext' ? '1' : mode === 'std' ? '2' : '0'); } catch (_) {}
   applyMat();
 }
 

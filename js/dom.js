@@ -64,7 +64,7 @@ export const customInput = document.getElementById('customInput');
 export const colorSwitch = document.getElementById('colorSwitch');
 // [NEO>
 export const bgSwitch = document.getElementById('bgSwitch');
-export const matSwitch = document.getElementById('matSwitch');
+export const matSelect = document.getElementById('matSelect');
 // <NEO]
 export const accentRow = document.getElementById('accentRow');
 export const accentSelect = document.getElementById('accentSelect');

@@ -676,7 +676,11 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* ===== MATERIAL DESIGN (ajuste "Material Design"; la clase html.material, en PC y en móvil) =====
    Sonando, la cabecera toma el color de énfasis (--tint) y lo de abajo se tiñe de su familia: los tonos salen del propio color de la cabecera (--hfull)
    con colores relativos de OKLCH, definidos una vez aquí y usados por las reglas de más abajo (sin esa función, los de reserva son blanco y el énfasis tal cual).
-   ui.js calcula con el mismo L y croma (panelTone) el tono de las barras del EQ */
+   ui.js calcula con el mismo L y croma (panelTone) el tono de las barras del EQ.
+   Dos modos (glow.js): Extremo (solo la clase "material": todo lo de abajo) y Estándar ("material" y "mat-std"): la cabecera, lo principal de cada
+   panel negro (nombre del RDS, modo del EQ, relleno de los deslizadores; en Proxy, la frecuencia) y la presintonía activa; lo marcado con
+   html.material:not(.mat-std) es solo de Extremo */
+
 .subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
 @media not all and (min-width: 1024px) and (min-height: 600px) { .pc-only { display: none; } }   /* "Color de fondo" (la luz de abajo) es solo de PC */
 @media (min-width: 1024px) and (min-height: 600px) { .mob-only { display: none; } }   /* "Agrupar opciones de sonido" es solo del móvil */
@@ -691,24 +695,25 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
   }
   html.material .vols input[type="range"] { --rng: var(--t-pan); }
 }
-html.material body, html.material dialog.settings { color: var(--tx2, #edf2f7); }
+html.material:not(.mat-std) body, html.material:not(.mat-std) dialog.settings { color: var(--tx2, #edf2f7); }
 html.material header h1, html.material.playing .subtitle, html.material.playing .ibtn, html.material.playing .bar .sbtn,
-html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state] { color: var(--tx1, #fff); }
-html.material .now .ps, html.material .pres-open, html.material .vols label, html.material .vols span,
-html.material .panel.eqsel .eqarr, html.material .eqnow, html.material .panel.eqsel .eqopen,
-html.material .panel.search input, html.material .panel.search .badge, html.material .panel.news .nedit { color: var(--t-pan, var(--accent)); }
-html.material .ptitle, html.material .panel .info b, html.material .panel.search input::placeholder, html.material .mbar,
-html.material .preset:not(.recoff):not(.active), html.material .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }
-html.material .preset:not(.recoff):not(.active) .pf, html.material .eqqual { color: var(--t-frq, var(--accent)); }
+html.material.playing #playBtn[data-state], html.material.playing .mini, html.material.playing .mini[data-state], html.material.playing #clock { color: var(--tx1, #fff); }
+
+html.material .now .ps, html.material:not(.mat-std) .pres-open, html.material:not(.mat-std) .vols label, html.material:not(.mat-std) .vols span,
+html.material:not(.mat-std) .panel.eqsel .eqarr, html.material .eqnow, html.material:not(.mat-std) .panel.eqsel .eqopen,
+html.material:not(.mat-std) .panel.search input, html.material:not(.mat-std) .panel.search .badge, html.material:not(.mat-std) .panel.news .nedit { color: var(--t-pan, var(--accent)); }
+html.material:not(.mat-std) .ptitle, html.material:not(.mat-std) .panel .info b, html.material:not(.mat-std) .panel.search input::placeholder, html.material:not(.mat-std) .mbar,
+html.material:not(.mat-std) .preset:not(.recoff):not(.active), html.material:not(.mat-std) .preset:not(.recoff):not(.active) .pn { color: var(--t-sub, var(--accent)); }
+html.material:not(.mat-std) .preset:not(.recoff):not(.active) .pf, html.material:not(.mat-std) .eqqual { color: var(--t-frq, var(--accent)); }
 html.material .preset.active { background: var(--t-act, color-mix(in srgb, var(--acc-raw) var(--tint), var(--hdr))); color: var(--tx1, #fff); }
 html.material .preset.active .pn { color: var(--tx1, #fff); }
 html.material .preset.active .pf { color: color-mix(in srgb, var(--tx1, #fff) 80%, transparent); }
 /* Interruptores en dos tonos del color: apagado, pista apagada y bola gris oscura (no blanca ni negra del todo); encendido, bola en el tono de los
    paneles sobre una pista del mismo tono más suave */
-html.material .switch input:not(:checked):not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 16%, #1a2029); }
-html.material .switch input:not(:checked):not(:disabled) + .track::after { background: color-mix(in srgb, var(--t-pan, var(--accent)) 14%, #3a424e); }
-html.material .switch input:checked:not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 42%, #1a2029); }
-html.material .switch input:checked:not(:disabled) + .track::after { background: var(--t-pan, var(--accent)); }
+html.material:not(.mat-std) .switch input:not(:checked):not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 16%, #1a2029); }
+html.material:not(.mat-std) .switch input:not(:checked):not(:disabled) + .track::after { background: color-mix(in srgb, var(--t-pan, var(--accent)) 14%, #3a424e); }
+html.material:not(.mat-std) .switch input:checked:not(:disabled) + .track { background: color-mix(in srgb, var(--t-pan, var(--accent)) 42%, #1a2029); }
+html.material:not(.mat-std) .switch input:checked:not(:disabled) + .track::after { background: var(--t-pan, var(--accent)); }
 
 
 /* Texto sobre un fondo de énfasis (botón principal de las ventanas, modos activos del EQ y de boletines): claro si el énfasis es oscuro, oscuro si es claro */
@@ -807,10 +812,10 @@ html { -webkit-tap-highlight-color: transparent; }
 #tabNews { padding-bottom: 14px; }
 #tabNews .nadd { margin-top: 6px; }
 /* Material: el pie también en los tonos del color (los emojis, como silueta del mismo tono: color transparente y sombra sin desenfoque) */
-html.material .foot { color: var(--t-frq, #7d899a); }
-html.material .foot .love { color: var(--t-sub, #aeb9c8); }
-html.material .fp .fe { color: transparent; text-shadow: 0 0 0 var(--t-sub, #aeb9c8); }
-html.material .fp-text.play { background-image: linear-gradient(100deg, var(--t-sub, #aeb9c8) 0 38%, var(--accent) 50%, var(--t-sub, #aeb9c8) 62% 100%); }
+html.material:not(.mat-std) .foot { color: var(--t-frq, #7d899a); }
+html.material:not(.mat-std) .foot .love { color: var(--t-sub, #aeb9c8); }
+html.material:not(.mat-std) .fp .fe { color: transparent; text-shadow: 0 0 0 var(--t-sub, #aeb9c8); }
+html.material:not(.mat-std) .fp-text.play { background-image: linear-gradient(100deg, var(--t-sub, #aeb9c8) 0 38%, var(--accent) 50%, var(--t-sub, #aeb9c8) 62% 100%); }
 /* Preferencias: el campo de segundos empieza donde los desplegables (132 px de campo + hueco + "segundos" en total) */
 #settings .clockrow input[type="text"] + span { width: 4.3em; }
 #settings .clockrow input[type="text"]:has(+ span) { width: calc(132px - 8px - 4.3em); }
