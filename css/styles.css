@@ -216,6 +216,7 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.search input::placeholder { color: #e2e8f0; font-weight: 700; }   /* el mismo blanco que "Modo boletines" */
 .panel.search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
 .panel.search:focus-within { background-image: linear-gradient(#ffffff0d, #ffffff0d); }   /* foco: el buscador se aclara un poco, sin contorno */
+.panel.search, .panel.search input { cursor: pointer; }   /* solo abre la ventana de búsqueda */
 .panel.search .badge { flex: none; width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; order: 2; }   /* min-width 38 y alto 38 vienen de .panel .badge */
 .panel.search .badge:hover { color: var(--accent); }
 body.no-config .panel > * { visibility: hidden; }
@@ -223,13 +224,11 @@ body.no-config .panel.vols > * { visibility: visible; }
 /* Modo activado con una emisora no musical: las noticias no saltarían (naranja, el color de los avisos) */
 .panel.news.wont .switch input:checked + .track { background: #f2b84b; }
 .panel.news.wont .switch input:checked + .track::after { background: #2b2108; }
-.panel.news .badge { transition: background .4s; }
-.panel.news.live .badge { background: var(--accent-soft); }
 .switch input:disabled { cursor: not-allowed; }
 .switch input:disabled + .track { background: #2a3039; }
 .switch { position: relative; flex: 0 0 auto; width: 46px; height: 26px; cursor: pointer; }
 .switch input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; z-index: 1; }
-.switch .track { position: absolute; inset: 0; border-radius: 999px; background: #394454; transition: background .2s; }
+.switch .track { position: absolute; inset: 0; border-radius: 999px; background: #394454; }   /* sin transición propia: sigue al color de énfasis a la vez que el resto (con la suya se quedaba atrás) */
 .switch .track::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #e8edf5; transition: transform .2s; }
 .switch input:checked + .track { background: var(--accent); }
 .switch input:checked + .track::after { transform: translateX(20px); background: var(--on-accent); }
@@ -744,4 +743,6 @@ dialog button:focus-visible, .ctxmenu button:focus-visible { outline: none; }   
 .panel.news .info { flex: 1 1 auto; }   /* el botón de editar va junto al interruptor */
 .panel.news .nedit { color: #cbd5e1; cursor: pointer; }
 .panel.news .nedit:hover { color: var(--accent); }
-#psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .14em; }
+#psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .14em; animation: news-blink 1.2s ease-in-out infinite; }
+@keyframes news-blink { 50% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { #psValue.newsmark #psText::before { animation: none; } }

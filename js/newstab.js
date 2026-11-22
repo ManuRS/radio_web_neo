@@ -29,32 +29,23 @@ document.getElementById('newsEdit').addEventListener('click', () => { openDialog
 document.getElementById('newsClose').addEventListener('click', () => closeDialog(dlg));
 dlg.addEventListener('click', e => { if (e.target === dlg) closeDialog(dlg); });
 
-// Horario de la SER: [nombre, [opción, inicio, fin], ...]; con dos opciones se elige una (la corta, "Portada", o la larga)
-const S2 = (h, a, b) => ['Las noticias de las ' + h + 'h', ['', a, b]];
+// Horario de la SER: [nombre, [opción, franjas], ...]; con dos opciones se elige una (la corta, "Portada", o la larga). Una tarjeta puede
+// encender varias franjas a la vez (los boletines de la noche, de la mañana...): se guardan las mismas franjas de siempre, una por boletín
+const F = (start, end) => ({ start, end });
 const SER_ROWS = [
-  S2(2, '01:59:38', '02:05:00'),
-  S2(3, '02:59:38', '03:05:00'),
-  S2(4, '03:59:38', '04:05:00'),
-  S2(5, '04:59:38', '05:05:00'),
-  ['Las 6 de HxH', ['Portada', '05:59:38', '06:05:00'], ['Tramo completo', '05:59:38', '06:30:00']],
-  ['Las 7 de HxH', ['Portada', '06:59:38', '07:05:00'], ['Tramo completo', '06:59:38', '07:30:00']],
-  ['Las 8 de HxH', ['Portada', '07:59:55', '08:06:00'], ['Tramo completo', '07:59:55', '08:20:10']],
-  S2(9, '08:59:55', '09:04:00'),
-  S2(10, '09:59:55', '10:05:50'),
-  S2(11, '10:59:38', '11:05:50'),
-  S2(12, '11:59:38', '12:05:50'),
-  S2(13, '12:59:38', '13:06:40'),
-  ['Portada H14', ['Portada', '13:59:38', '14:06:10'], ['Portada y desconexión', '13:59:38', '14:30:00']],
-  ['Hora 14', ['', '14:30:00', '15:00:00']],
-  S2(16, '15:59:38', '16:05:20'),
-  ['Todo Por La Radio', ['Solo boletín', '16:59:38', '17:05:20'], ['Todo Por La Radio', '16:59:38', '18:00:00']],
-  S2(18, '17:59:38', '18:05:20'),
-  S2(19, '18:59:38', '19:05:00'),
-  ['Hora 20', ['Portada', '19:59:38', '20:06:00'], ['Tramo completo', '19:59:38', '20:25:10']],
-  ['Hora 25 a las 9', ['', '20:59:38', '21:04:00']],
-  ['Hora 25 a las 10', ['', '21:59:55', '22:04:00']],
-  ['Hora 25 a las 11', ['', '22:59:55', '23:04:00']],
-].map(([label, ...opts]) => ({ label, opts: opts.map(([name, start, end]) => ({ name, start, end })) }));
+  ['Boletines noche', ['', [F('01:59:38', '02:05:00'), F('02:59:38', '03:05:00'), F('03:59:38', '04:05:00'), F('04:59:38', '05:05:00')]]],
+  ['Las 6 de HxH', ['Portada', [F('05:59:38', '06:05:00')]], ['Tramo completo', [F('05:59:38', '06:30:00')]]],
+  ['Las 7 de HxH', ['Portada', [F('06:59:38', '07:05:00')]], ['Tramo completo', [F('06:59:38', '07:20:00')]]],
+  ['Las 8 de HxH', ['Portada', [F('07:59:55', '08:06:00')]], ['Tramo completo', [F('07:59:55', '08:20:10')]]],
+  ['Boletines mañana', ['', [F('08:59:55', '09:04:00'), F('09:59:55', '10:05:50'), F('10:59:38', '11:05:50'), F('11:59:38', '12:05:50'), F('12:59:38', '13:06:40')]]],
+  ['Portada H14', ['Portada', [F('13:59:38', '14:06:10')]], ['Portada y desconexión', [F('13:59:38', '14:30:00')]]],
+  ['Hora 14', ['', [F('14:30:00', '15:00:00')]]],
+  ['Boletines tarde', ['', [F('15:59:38', '16:05:20'), F('16:59:38', '17:05:20'), F('17:59:38', '18:05:20'), F('18:59:38', '19:05:00')]]],
+  ['Todo Por La Radio', ['', [F('16:59:38', '18:00:00')]]],
+  ['Hora 20', ['Portada', [F('19:59:38', '20:06:00')]], ['Tramo completo', [F('19:59:38', '20:25:10')]]],
+  ['Portadas de Hora 25', ['', [F('20:59:38', '21:04:00'), F('21:59:55', '22:04:00'), F('22:59:55', '23:04:00')]]],
+].map(([label, ...opts]) => ({ label, opts: opts.map(([name, slots]) => ({ name, slots })) }));
+const RENAMED = [[F('06:59:38', '07:30:00'), F('06:59:38', '07:20:00')]];   // franjas guardadas de antes que han cambiado: el tramo de las 7 acaba a las 7:20
 // Selección de siempre (la de stations.json): la de partida y la de "Restablecer"
 const SER_DEFAULT = [['07:59:55', '08:20:10'], ['08:59:55', '09:04:00'], ['09:59:55', '10:05:50'], ['10:59:38', '11:05:50'], ['11:59:38', '12:05:50'],
   ['12:59:38', '13:06:40'], ['13:59:38', '14:06:10'], ['15:59:38', '16:05:20'], ['16:59:38', '17:05:20'], ['17:59:38', '18:05:20'], ['18:59:38', '19:05:00'],
@@ -78,15 +69,14 @@ function report(lines, isError) {
 }
 const clearMsg = () => { msg.className = 'cfgmsg'; msg.textContent = ''; };
 
-// Lo que hay en los ajustes, pasado a filas de la SER (null si alguna franja no es de su horario)
+// Lo que hay en los ajustes, pasado a filas de la SER: una opción está puesta si están todas sus franjas (null si sobra alguna franja que no
+// encaja en el horario, o si de una tarjeta con varias solo hay algunas: entonces se ve como lista manual)
 function serPick(news) {
-  const out = SER_ROWS.map(() => -1);
-  for (const n of news) {
-    const r = SER_ROWS.findIndex(row => row.opts.some(o => same(o, n)));
-    if (r < 0) return null;
-    out[r] = SER_ROWS[r].opts.findIndex(o => same(o, n));
-  }
-  return out;
+  news = news.map(n => (RENAMED.find(([o]) => same(o, n)) || [, n])[1]);
+  const has = x => news.some(n => same(n, x));
+  const out = SER_ROWS.map(row => row.opts.findIndex(o => o.slots.every(has)));
+  const used = SER_ROWS.flatMap((row, i) => (out[i] >= 0 ? row.opts[out[i]].slots : []));
+  return news.every(n => used.some(x => same(x, n))) ? out : null;
 }
 
 function save(news) {
@@ -98,7 +88,7 @@ function save(news) {
   if (ok) clearMsg();
   return ok;
 }
-const saveSer = () => save(SER_ROWS.flatMap((row, i) => (pick[i] >= 0 ? [row.opts[pick[i]]] : [])));
+const saveSer = () => save(SER_ROWS.flatMap((row, i) => (pick[i] >= 0 ? row.opts[pick[i]].slots : [])));
 // Con otra cadena se guardan las filas completas (las vacías o a medias se quedan en pantalla hasta terminarlas)
 const hms = v => {
   const m = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(v || '');

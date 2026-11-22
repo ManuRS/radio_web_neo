@@ -262,11 +262,11 @@ async function openSearch() {
   setCtx(null);
   q2.value = text;
   openDialog(dlg);
+  q2.focus();   // en el mismo toque, para que el teclado del móvil salga ya en la ventana
   clearPick();
   listEl.textContent = '';
   try { await ensureLists(); } catch (err) { log('TDTChannels: ' + ((err && err.message) || err)); }
   renderResults();
-  if (!text) q2.focus();
 }
 
 // =========================================================
@@ -339,9 +339,9 @@ stAdd.addEventListener('click', addFromUrl);
 stForm.addEventListener('submit', e => { e.preventDefault(); addFromUrl(); });
 varForm.addEventListener('submit', e => { e.preventDefault(); addFromUrl(); });
 
-go.addEventListener('click', openSearch);
-query.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); openSearch(); } });
-panel.addEventListener('click', e => { if (e.target === panel) query.focus(); });
+// El buscador de la página solo abre la ventana (se escribe allí y los resultados salen en vivo)
+panel.addEventListener('click', openSearch);
+query.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openSearch(); } });
 q2.addEventListener('input', () => { clearTimeout(debounce); debounce = setTimeout(renderResults, 120); });
 q2.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); renderResults(); } });
 $('tdtClose').addEventListener('click', () => closeDialog(dlg));
