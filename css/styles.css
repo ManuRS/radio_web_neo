@@ -757,3 +757,8 @@ html.material .foot { color: var(--t-frq, #7d899a); }
 html.material .foot .love { color: var(--t-sub, #aeb9c8); }
 html.material .fp .fe { color: transparent; text-shadow: 0 0 0 var(--t-sub, #aeb9c8); }
 html.material .fp-text.play { background-image: linear-gradient(100deg, var(--t-sub, #aeb9c8) 0 38%, var(--accent) 50%, var(--t-sub, #aeb9c8) 62% 100%); }
+/* Preferencias: el campo de segundos empieza donde los desplegables (132 px de campo + hueco + "segundos" en total) */
+#settings .clockrow input[type="text"] + span { width: 4.3em; }
+#settings .clockrow input[type="text"]:has(+ span) { width: calc(132px - 8px - 4.3em); }
+/* Datos: todos los botones tan anchos como "Eliminar todo" */
+#tabConfig .clockrow button { min-width: 104px; }
