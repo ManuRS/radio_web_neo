@@ -128,6 +128,8 @@
     <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
   </div>
 
+  <!-- Visualizador, ecualizador y volúmenes. En el móvil, con "Agrupar opciones de sonido", se ve uno y se pasa a los otros deslizando (grupo.js); si no, no cuenta para la maqueta -->
+  <div class="sgrp" id="sndGrp">
   <div class="viz" id="viz"><canvas id="vizCanvas" aria-hidden="true"></canvas>
     <button id="presOpen" class="pres-open" type="button" aria-label="Pantalla completa" title="Pantalla completa"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="square"/></svg></button>
     <button id="presExpand" class="pres-open pres-expand" type="button" aria-label="Ampliar" title="Ampliar"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="1" fill="none" stroke="currentColor" stroke-width="3.2"/></svg></button>
@@ -155,6 +157,8 @@
       <span id="newsVolValue">100%</span>
     </div>
   </div>
+  </div>
+  <div class="sdots" id="sndDots" aria-hidden="true"><i></i><i></i><i></i></div>
 
   <!-- ===================================================== -->
   <!-- == BUSCADOR DE EMISORAS (LISTAS DE TDTCHANNELS) == -->
@@ -336,6 +340,13 @@
             <label for="bgSwitch">Color de fondo</label>
             <label class="switch">
               <input type="checkbox" id="bgSwitch">
+              <span class="track"></span>
+            </label>
+          </div>
+          <div class="clockrow mob-only">
+            <label for="groupSwitch">Agrupar opciones de sonido</label>
+            <label class="switch">
+              <input type="checkbox" id="groupSwitch">
               <span class="track"></span>
             </label>
           </div>

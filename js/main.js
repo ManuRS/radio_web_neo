@@ -22,6 +22,7 @@ import './intro.js';
 import './eqtab.js';
 import './newstab.js';
 import './glow.js';
+import './grupo.js';
 import './backguard.js';
 import { setFootPhrases } from './foot.js';
 

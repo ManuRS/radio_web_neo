@@ -11,6 +11,7 @@ import { APP_ID, S, APP_VERSION, DEFAULT_DELAY_S, SOUND_CACHE } from './state.js
 import { autoDelay, cfgClear, cfgClearSounds, cfgFile, cfgFileInput, cfgExport, cfgMsg, accentPick, accentSelect, bgSwitch, matSwitch, colorSwitch, logShow, customBtn, customInput, delayInput, normSwitch, outSelect, settingsBtn, settingsClose, settingsDlg, settingsTabs, tabConfig, tabGeneral, tabLog, logBox, stForm, stMsg, stAdd } from './dom.js';
 import { closeDialog, log, openDialog, toast } from './ui.js';
 import { glowOn, matOn, setGlow, setMaterial } from './glow.js';
+import { groupOn, setGroup } from './grupo.js';
 import { prefetchSounds } from './sounds.js';
 import { getNormOn, getOutMode, setNormOn, setOutMode } from './audio.js';
 import { restartAudio } from './player.js';
@@ -421,6 +422,13 @@ bgSwitch.checked = glowOn();
 bgSwitch.addEventListener('change', () => {
   setGlow(bgSwitch.checked);
   log('Color de fondo: ' + (bgSwitch.checked ? 'activado' : 'desactivado'));
+});
+// Agrupar opciones de sonido (solo móvil; activado por defecto): visualizador, ecualizador y volúmenes, uno a la vista y se desliza (grupo.js)
+const groupSwitch = document.getElementById('groupSwitch');
+groupSwitch.checked = groupOn();
+groupSwitch.addEventListener('change', () => {
+  setGroup(groupSwitch.checked);
+  log('Agrupar opciones de sonido: ' + (groupSwitch.checked ? 'activado' : 'desactivado'));
 });
 // Material Design (PC y móvil; desactivado por defecto): sonando, la cabecera toma el color de énfasis y los textos se tiñen (styles.css)
 matSwitch.checked = matOn();

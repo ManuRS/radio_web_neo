@@ -209,6 +209,23 @@ input[type="range"]:disabled { opacity: .4; }
 .eqsep { flex: 0 0 1px; height: 28px; margin: 0 4px; background: var(--line); }   /* el "|" de la barra de controles */
 .panel.eqsel .eqopen { width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; }
 
+/* ===================================================
+   == AGRUPAR OPCIONES DE SONIDO (MÓVIL, grupo.js) ==
+   =================================================== */
+/* Sin agrupar (o en PC) el contenedor no cuenta para la maqueta y no hay puntos */
+.sgrp { display: contents; }
+.sdots { display: none; }
+@media not all and (min-width: 1024px) and (min-height: 600px) {
+  /* Uno a la vista; deslizando, los otros (con imán, sin saltarse ninguno). El relleno de abajo deja ver la sombra de los paneles; contain: inline-size, para que su ancho no ensanche la página */
+  html.group .sgrp { display: flex; contain: inline-size; min-width: 0; gap: 12px; margin: 10px 0 -6px; padding-bottom: 6px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; }
+  html.group .sgrp::-webkit-scrollbar { display: none; }
+  html.group .sgrp > * { flex: 0 0 100%; margin-top: 0; scroll-snap-align: start; scroll-snap-stop: always; }
+  html.group .sdots { display: flex; justify-content: center; gap: 8px; margin-top: 12px; }
+  .sdots i { width: 6px; height: 6px; border-radius: 3px; background: #3a4554; transition: width .2s, background-color .2s; }
+  .sdots i.on { width: 16px; background: #8c98a8; }   /* el panel que se ve: más largo y más claro */
+  html.material .sdots i.on { background: var(--t-sub, var(--accent)); }
+}
+
 /* ===============================
    == PANEL DEL MODO BOLETINES ==
    =============================== */
@@ -589,7 +606,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
 /* Con cinco pestañas puede que no quepan en el móvil: se desplazan de lado (sin barra) y la elegida se pone a la vista */
 #settings .tabs { overflow-x: auto; border-bottom: 0; box-shadow: inset 0 -1px #303a47; scrollbar-width: none; }
 #settings .tabs::-webkit-scrollbar { display: none; }
-#settings .tabs button { flex: 1 0 auto; margin-bottom: 0; padding-inline: 10px; white-space: nowrap; }
+#settings .tabs button { flex: 1 1 0; margin-bottom: 0; padding-inline: 10px; white-space: nowrap; }   /* todas del mismo ancho */
 @media (max-width: 600px) { #settings .tabs button { padding-inline: 6px; font-size: .84rem; } }
 @media (max-width: 380px) { #settings .tabs button { padding-inline: 4px; font-size: .8rem; } }
 #tabEq .cfgmsg, #tabNews .cfgmsg { min-height: 0; }
@@ -647,6 +664,7 @@ dialog.ask p { margin: 10px 0 18px; line-height: 1.4; color: #b8c2cf; }
    ui.js calcula con el mismo L y croma (panelTone) el tono de las barras del EQ */
 .subtitle, .ibtn, .bar .sbtn { transition: color .6s ease; }
 @media not all and (min-width: 1024px) and (min-height: 600px) { .pc-only { display: none; } }   /* "Color de fondo" (la luz de abajo) es solo de PC */
+@media (min-width: 1024px) and (min-height: 600px) { .mob-only { display: none; } }   /* "Agrupar opciones de sonido" es solo del móvil */
 @supports (color: oklch(from red l c h)) {
   html.material body {
     --tx1: oklch(from var(--accent) .95 calc(c * .4) h);   /* blanco suave: la cabecera y la presintonía activa, que tienen fondo de color */
