@@ -56,4 +56,46 @@ let raf = 0;
 box.addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); }); }, { passive: true });
 // al girar el móvil o cambiar el ancho, se queda en el mismo panel
 if (window.ResizeObserver) new ResizeObserver(() => { box.scrollLeft = shown * step(); paint(); }).observe(box);
+// Deslizadores (volúmenes): agrupados, solo se mueven arrastrando la bola; si el dedo empieza en otro sitio del panel, barra incluida, se cambia
+// de panel. El CSS les quita los toques (pointer-events) y aquí se arrastra a mano lo que empieza cerca de la bola (18 px de bola; 24 px de margen)
+const HIT = 24, THUMB = 18;
+const ranges = [...box.querySelectorAll('input[type="range"]')];
+const span = el => { const r = el.getBoundingClientRect(); return { r, min: Number(el.min) || 0, max: Number(el.max) || 1 }; };
+function thumbAt(x, y) {
+  if (step() <= 0) return null;   // sin agrupar, los deslizadores van como siempre
+  return ranges.find(el => {
+    if (el.disabled) return false;
+    const { r, min, max } = span(el);
+    const tx = r.left + THUMB / 2 + (r.width - THUMB) * ((Number(el.value) - min) / (max - min || 1));
+    return Math.abs(x - tx) <= HIT && Math.abs(y - (r.top + r.height / 2)) <= HIT;
+  }) || null;
+}
+let drag = null, grabDx = 0;
+function moveTo(x) {
+  const { r, min, max } = span(drag);
+  const f = Math.min(1, Math.max(0, (x - grabDx - r.left - THUMB / 2) / (r.width - THUMB)));
+  drag.value = String(min + f * (max - min));
+  drag.dispatchEvent(new Event('input', { bubbles: true }));
+}
+function start(x, y) {
+  drag = thumbAt(x, y);
+  if (!drag) return false;
+  const { r, min, max } = span(drag);
+  grabDx = x - (r.left + THUMB / 2 + (r.width - THUMB) * ((Number(drag.value) - min) / (max - min || 1)));   // sin salto: se arrastra desde donde se cogió
+  return true;
+}
+function end() { if (drag) { drag.dispatchEvent(new Event('change', { bubbles: true })); drag = null; } }
+box.addEventListener('touchstart', e => { if (e.touches.length === 1) start(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+box.addEventListener('touchmove', e => { if (drag) { e.preventDefault(); moveTo(e.touches[0].clientX); } }, { passive: false });   // cogida la bola, no se desplaza
+box.addEventListener('touchend', end);
+box.addEventListener('touchcancel', end);
+box.addEventListener('mousedown', e => {
+  if (!start(e.clientX, e.clientY)) return;
+  e.preventDefault();
+  const mm = ev => moveTo(ev.clientX);
+  const mu = () => { removeEventListener('mousemove', mm); removeEventListener('mouseup', mu); end(); };
+  addEventListener('mousemove', mm);
+  addEventListener('mouseup', mu);
+});
+
 apply();
