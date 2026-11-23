@@ -112,7 +112,9 @@ function ensurePlans(nowMs) {
 // ==========================================
 
 // La emisora que suena sin contar las noticias (la que se oye ahora o, si ya suenan noticias, la de antes). null = no suena ninguna
-const musicStation = () => (S.session === 'music' && !S.held ? (S.newsOn ? S.prevStation : S.current) : null);
+// Con la cortinilla de vuelta (S.ahead), ya la que entra: si no, al acabar el boletín el interruptor se quedaba naranja por la emisora de noticias
+// hasta que sonaba la música, mientras el resto ya tenía el color de la que entra
+const musicStation = () => (S.session === 'music' && !S.held ? (S.newsOn ? S.prevStation : S.ahead ? S.ahead.station : S.current) : null);
 
 // El interruptor lo decide solo el usuario y no se toca solo. Si la emisora actual no es musical las noticias no saltarían:
 // entonces el interruptor se pone naranja (en vez del color de énfasis)
