@@ -185,6 +185,10 @@ input[type="range"]:disabled { opacity: .4; }
 @keyframes rec-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 @media (prefers-reduced-motion: reduce) { .rec.on .rec-dot { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .ps.pending, .pres-ps.pending { animation: none; opacity: .6; } }
+/* Cortina del cambio de emisora (stations.js): el color de la que entra barre el panel con su nombre, de izquierda a derecha */
+.now .ps-wipe { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; padding: 5px 18px 0; text-overflow: ellipsis; border-radius: inherit; overflow: hidden; white-space: nowrap; font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 2.5rem; font-weight: 700; letter-spacing: .02em; color: #fff; text-shadow: 0 1px 3px #0006; background: var(--wc); clip-path: inset(0 100% 0 0); pointer-events: none; }
+.now .ps-wipe.go { animation: ps-wipe 1.15s cubic-bezier(.7, 0, .3, 1) forwards; }
+@keyframes ps-wipe { 0% { clip-path: inset(0 100% 0 0); } 40%, 60% { clip-path: inset(0 0 0 0); } 100% { clip-path: inset(0 0 0 100%); } }
 
 /* Botón del modo presentación, en la esquina de las barras */
 /* Alineado con el margen de las barras, en la franja de arriba; el área de toque se extiende con ::after */
@@ -490,6 +494,9 @@ dialog.settings.sheet { min-height: 0; }
 .ctxrow { display: flex; align-items: center; gap: 4px; }
 .ctxmenu .ctxrow .ctxgo { flex: 1 1 auto; min-width: 0; width: auto; }
 .ctxmenu .ctxrow .ctxgo.on { color: var(--accent); font-weight: 600; }
+.ctxmenu .ctxrow .ctxgo { display: flex; align-items: center; gap: 10px; }   /* cada emisora con su punto: hueco; el de la que suena, relleno del color de énfasis */
+.ctxmenu .ctxrow .ctxgo::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #56617399; }
+.ctxmenu .ctxrow .ctxgo.on::before { background: var(--accent); border-color: var(--accent); }
 .ctxmenu button.recoff { color: #7d6b72; cursor: not-allowed; }   /* grabando: emisora que no se puede grabar */
 .ctxmenu .ctxsolo .ctxname { flex: 1 1 auto; min-width: 0; max-width: 260px; padding: 8px 12px; font-size: .88rem; font-weight: 650; color: #e8edf5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* cadena con una sola emisora: su nombre, con el color normal, y "Eliminar" a su lado */
 .ctxmenu .ctxrow .ctxdel { flex: none; width: auto; padding: 8px 10px; font-size: .8rem; color: #ff7a85; }

@@ -582,12 +582,35 @@ function fitNow() {
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitNow).observe(psValue);
 if (document.fonts) document.fonts.addEventListener('loadingdone', () => { fitKey = ''; fitNow(); });   // con la fuente propia ya cargada, el nombre mide otra cosa
 
+// Cambio de emisora confirmado (o cortinilla de los boletines) con la radio sonando: una cortina del color de la que entra, con su nombre, barre el panel;
+// el nombre de debajo cambia cuando la cortina lo tapa (WIPE_SWAP ms). Mientras no se confirma, el nombre de antes sigue parpadeando (.pending)
+const WIPE_SWAP = 470;
+let nameShown = null, holdUntil = 0, holdTimer = 0, wipeEl = null;
+const noMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)');
+function wipe(st, name) {
+  if (!wipeEl) { wipeEl = document.createElement('div'); wipeEl.className = 'ps-wipe'; wipeEl.setAttribute('aria-hidden', 'true'); psValue.parentNode.appendChild(wipeEl); }
+  wipeEl.textContent = name;
+  wipeEl.style.setProperty('--wc', S.stationColors ? st.color || paletteColor(st.name) : S.accent || 'var(--accent)');   // el mismo color que tomará el énfasis (refreshAccent)
+  wipeEl.classList.remove('go'); void wipeEl.offsetWidth; wipeEl.classList.add('go');
+}
+
 export function refreshNow() {
   if (S.ahead) { shown = S.ahead.station; shownV = S.ahead.variant; }   // cortinilla de los boletines: ya es la que entra
   else if (!S.pending) { shown = S.current || S.lastStation; shownV = S.current ? S.variant : S.lastVariant; }
-  psValue.classList.toggle('idle', !S.current && !S.pending);
   psValue.classList.toggle('pending', S.pending);
-  setText(psText, shown ? emisoraName(shown, shownV) : '—');   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
+  const name = shown ? emisoraName(shown, shownV) : '—';   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
+  const now = performance.now();
+  if (now < holdUntil) { clearTimeout(holdTimer); holdTimer = setTimeout(refreshNow, holdUntil - now + 5); return; }   // la cortina aún no tapa el nombre
+  if (nameShown && nameShown !== '—' && name !== nameShown && name !== '—' && !S.pending && (S.current || S.ahead) && !(noMotion && noMotion.matches)) {
+    nameShown = name;
+    wipe(shown, name);
+    holdUntil = now + WIPE_SWAP;
+    holdTimer = setTimeout(refreshNow, WIPE_SWAP + 5);
+    return;
+  }
+  nameShown = name;
+  psValue.classList.toggle('idle', !S.current && !S.pending);
+  setText(psText, name);
   psValue.classList.toggle('newsmark', !!S.newsOn && !!shown && shown === S.newsStation);   // boletín: 📰 delante del nombre (styles.css)
   fitNow();
 }
