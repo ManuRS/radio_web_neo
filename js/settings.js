@@ -262,9 +262,6 @@ logShow.addEventListener('click', () => {
 // Versión de la aplicación, al final de Configuración (la misma numeración en Neo y Proxy; se sube con cada cambio, como la caché de sw.js)
 document.getElementById('appVer').textContent = 'Versión ' + APP_VERSION;
 
-// Acerca de: la página /about, en otra pestaña para que la radio siga sonando
-document.getElementById('aboutBtn').addEventListener('click', () => window.open(new URL('about/', document.baseURI), '_blank', 'noopener'));
-
 function openSettings() {
   refreshDelayUi();
   outSelect.value = getOutMode();
