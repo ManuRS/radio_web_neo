@@ -582,10 +582,10 @@ function fitNow() {
 if (typeof ResizeObserver !== 'undefined') new ResizeObserver(fitNow).observe(psValue);
 if (document.fonts) document.fonts.addEventListener('loadingdone', () => { fitKey = ''; fitNow(); });   // con la fuente propia ya cargada, el nombre mide otra cosa
 
-// Cambio de emisora confirmado (o cortinilla de los boletines) con la radio sonando: una cortina del color de la que entra, con su nombre, barre el panel;
+// Al empezar a sonar y con cada cambio de emisora confirmado (o cortinilla de los boletines): una cortina del color de la que entra, con su nombre, barre el panel;
 // el nombre de debajo cambia cuando la cortina lo tapa (WIPE_SWAP ms). Mientras no se confirma, el nombre de antes sigue parpadeando (.pending)
 const WIPE_SWAP = 470;
-let nameShown = null, holdUntil = 0, holdTimer = 0, wipeEl = null;
+let nameShown = null, liveShown = false, holdUntil = 0, holdTimer = 0, wipeEl = null;
 const noMotion = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)');
 function wipe(st, name) {
   if (!wipeEl) { wipeEl = document.createElement('div'); wipeEl.className = 'ps-wipe'; wipeEl.setAttribute('aria-hidden', 'true'); psValue.parentNode.appendChild(wipeEl); }
@@ -601,7 +601,10 @@ export function refreshNow() {
   const name = shown ? emisoraName(shown, shownV) : '—';   // el nombre de la emisora (Radio Madrid), no el de la cadena (Cadena SER)
   const now = performance.now();
   if (now < holdUntil) { clearTimeout(holdTimer); holdTimer = setTimeout(refreshNow, holdUntil - now + 5); return; }   // la cortina aún no tapa el nombre
-  if (nameShown && nameShown !== '—' && name !== nameShown && name !== '—' && !S.pending && (S.current || S.ahead) && !(noMotion && noMotion.matches)) {
+  const live = !S.pending && !!(S.current || S.ahead);   // sonando (confirmado)
+  const start = live && !liveShown, change = live && nameShown && nameShown !== '—' && name !== nameShown;
+  liveShown = live;
+  if ((start || change) && name !== '—' && !(noMotion && noMotion.matches)) {
     nameShown = name;
     wipe(shown, name);
     holdUntil = now + WIPE_SWAP;
