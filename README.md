@@ -8,7 +8,8 @@ Es una versión renovada de [Radio Web Fast](https://github.com/ManuRS/radio_web
 - Ecualizador con modos propios y visualizador a pantalla completa con 7 efectos
 - Modo boletines: música y, a su hora, las noticias de una generalista
 - Grabación en MP3 e imagen en imagen
-- Se instala como una app más desde el navegador; sin cookies ni ningún otro tipo de rastreo
+- Se instala como una app más desde el navegador
+- No usamos cookies, no rastreamos al usuario y no perfilamos su actividad. Solo contamos cuántos dispositivos se conectan (sin recopilar ningún dato sobre sus características, ubicación, etc.)
 
 ![Interfaz](img/cap1-wide.webp)
 
