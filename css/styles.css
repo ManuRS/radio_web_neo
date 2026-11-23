@@ -358,8 +358,6 @@ dialog.settings::backdrop { background: rgba(0, 0, 0, .65); }
 #tabConfig .cfgmsg { min-height: 0; }   /* el aviso sale debajo de la lista solo cuando hay algo que decir */
 #tabConfig .cfgmsg:empty { display: none; }
 .appver { margin-top: auto; padding-top: 8px; text-align: center; font-size: .78rem; color: #6f7b8b; }   /* versión, al final de Configuración */
-.appver a { color: inherit; text-decoration: none; }   /* App Showcase: la página /about, en otra pestaña para que la radio siga sonando */
-@media (hover: hover) { .appver a:hover { text-decoration: underline; text-underline-offset: 2px; } }
 .cfgacts button { flex: 1 1 0; padding: 10px 8px; font-size: .86rem; color: #e8edf5; background: #2a3441; }
 .cfgacts button.danger { color: #ff8a8a; background: #3a2227; }
 /* Color por defecto (General): selector y muestra del color personalizado */
