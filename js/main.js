@@ -4,7 +4,7 @@
 // Punto de entrada: aplica los ajustes y arranca la aplicación.
 
 import { configTextWith, emptyConfigFn, initSettingsDialog, loadDefaults, validateConfig } from './settings.js';
-import { S } from './state.js';
+import { S, APP_ID } from './state.js';
 import { stop, toggle } from './dom.js';
 import { layoutCheck, log } from './ui.js';
 import { runCustom } from './custom.js';
@@ -25,6 +25,7 @@ import './glow.js';
 import './grupo.js';
 import './backguard.js';
 import { setFootPhrases } from './foot.js';
+import { initStats } from './stats.js';
 
 // ===============================
 // == APLICACIÓN DE LOS AJUSTES ==
@@ -121,4 +122,5 @@ loadSettings().then(() => {
   setInterval(tick, 1000);
   runCustom();   // personalizar.js (si el usuario lo ha subido): lo último de todo
   checkUnfinished();   // si quedó una grabación a medias (se cerró la página grabando), se ofrece descargarla
+  initStats(APP_ID);   // estadística anónima (usuarios por día y tiempo de escucha, ver js/stats.js)
 });
