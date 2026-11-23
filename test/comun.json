@@ -2,8 +2,8 @@
   "iguales": {
     "db/consultas.sql": "1d3dcaf071876e45",
     "db/stats.sql": "76e69a647900dee4",
-    "functions/_stat.js": "9cf3876ecd2aa800",
-    "functions/api/stat.js": "47105f8e9c7663c6",
+    "functions/_stat.js": "cd7316e4405fdf51",
+    "functions/api/stat.js": "e13ff3af6569cf97",
     "js/anchor.js": "c50021d284fd23ba",
     "js/backguard.js": "21b8608e40123bc8",
     "js/custom.js": "fcc2e1d963a28a07",
@@ -22,7 +22,7 @@
     "test/datos.test.mjs": "3662f2839dec4de6",
     "test/jsonc.test.mjs": "3c3ee73991338b77",
     "test/shell.test.mjs": "69ffa9fc79a58b54",
-    "test/stats.test.mjs": "76ccc978e381282a",
+    "test/stats.test.mjs": "6df935bae2a091ca",
     "test/utils.test.mjs": "cad13c3633ebb35b"
   },
   "paralelos": {

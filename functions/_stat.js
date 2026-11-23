@@ -8,6 +8,10 @@ const MAX_SEG_DIA = 86400;   // nadie escucha más de 24 h en un día: tope por 
 // Un usuario y un día: una fila; los segundos se suman
 export const SQL = 'INSERT INTO uso (dia, app, id, seg) VALUES (?1, ?2, ?3, ?4) ON CONFLICT (dia, app, id) DO UPDATE SET seg = MIN(seg + excluded.seg, ' + MAX_SEG_DIA + ')';
 
+// Quien escribe tiene que ser la propia web: el navegador manda Origin en los POST y no deja que otra página lo falsee.
+// No frena a quien use curl (ahí Origin lo pone él), solo a páginas ajenas que usen nuestro contador. Sin Origin se acepta.
+export const mismoOrigen = (origin, url) => !origin || origin === new URL(url).origin;
+
 export const diaEs = (d = new Date()) => d.toLocaleDateString('en-CA', { timeZone: 'Europe/Madrid' });   // AAAA-MM-DD
 
 // Valida el cuerpo { a: app, id: 32 hex, s: segundos }; null si no vale

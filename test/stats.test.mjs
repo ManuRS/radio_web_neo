@@ -1,7 +1,7 @@
 // Estadística anónima: el servidor (functions/_stat.js) y el núcleo del cliente (js/stats.js)
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { apuntar, diaEs, leer, SQL } from '../functions/_stat.js';
+import { apuntar, diaEs, leer, mismoOrigen, SQL } from '../functions/_stat.js';
 import { createStats } from '../js/stats.js';
 
 const ID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
@@ -19,6 +19,16 @@ test('leer: rechaza lo que no cuadra', () => {
     JSON.stringify({ a: 'rn', id: ID.toUpperCase(), s: 1 }), JSON.stringify({ a: 'rn', id: ID, s: -1 }), JSON.stringify({ a: 'rn', id: ID, s: '5' }),
     JSON.stringify({ a: 'rn', id: ID, s: 1, x: 'x'.repeat(400) })]) assert.equal(leer(mal), null, mal.slice(0, 40));
   assert.equal(leer(undefined), null);
+});
+
+test('mismoOrigen: solo la propia web (o sin Origin)', () => {
+  const url = 'https://radioneo.pages.dev/api/stat';
+  assert.equal(mismoOrigen('https://radioneo.pages.dev', url), true);
+  assert.equal(mismoOrigen(null, url), true);
+  assert.equal(mismoOrigen('https://otra.web', url), false);
+  assert.equal(mismoOrigen('https://radioneo.pages.dev.otra.web', url), false);
+  assert.equal(mismoOrigen('http://radioneo.pages.dev', url), false);
+  assert.equal(mismoOrigen('null', url), false);
 });
 
 test('diaEs: AAAA-MM-DD con la hora de España', () => {
