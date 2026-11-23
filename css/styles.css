@@ -809,7 +809,7 @@ dialog button:focus-visible, .ctxmenu button:focus-visible { outline: none; }   
 .panel.news .info { flex: 1 1 auto; }   /* el botón de editar va junto al interruptor */
 .panel.news .nedit { color: #cbd5e1; cursor: pointer; }
 .panel.news .nedit:hover { color: var(--accent); }
-#psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .14em; animation: news-blink 1.2s ease-in-out infinite; }
+#psValue.newsmark #psText::before { content: '📰'; display: inline-block; margin-right: .16em; font-size: .62em; line-height: 1; vertical-align: .21em; animation: news-blink 1.2s ease-in-out infinite; }
 @keyframes news-blink { 50% { opacity: .2; } }
 @media (prefers-reduced-motion: reduce) { #psValue.newsmark #psText::before { animation: none; } }
 
