@@ -51,16 +51,9 @@
   .grain { position: fixed; inset: 0; z-index: -1; pointer-events: none; background: radial-gradient(120% 80% at 50% 0%, transparent 40%, rgba(5,7,11,.55) 100%); }
 
   /* == CABECERA: logo, RDS y botón == */
-  .top { position: fixed; inset: 0 0 auto; z-index: 20; height: var(--top); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; padding: 0 clamp(14px, 3vw, 28px); background: linear-gradient(#0c1015ee, #0c101500); }
+  .top { position: fixed; inset: 0 0 auto; z-index: 20; height: var(--top); display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 clamp(14px, 3vw, 28px); background: linear-gradient(#0c1015ee, #0c101500); }
   .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 700; font-size: 1.05rem; letter-spacing: .01em; }
   .brand img { width: 30px; height: 30px; border-radius: 8px; }
-  .rds { display: flex; align-items: baseline; gap: 10px; min-width: 214px; justify-content: center; padding: 7px 16px 6px; border-radius: 12px; background: #0a0d12cc; border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); position: relative; overflow: hidden; }
-  .rds .f { font-weight: 600; font-size: .82rem; color: var(--mut); font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-  .rds .f small { font-size: .7rem; margin-left: 2px; color: var(--dim); }
-  .rds .ps { font-family: 'Barlow Condensed', Barlow, sans-serif; font-weight: 700; font-size: 1.42rem; line-height: 1; letter-spacing: .06em; min-width: 8.2ch; text-transform: uppercase; }
-  .rds::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; background: repeating-linear-gradient(90deg, #fff1 0 1px, transparent 1px 3px), linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 35%, transparent), transparent); background-size: auto, 50% 100%; background-repeat: repeat, no-repeat; }
-  .rds.tune::after { animation: tune .55s ease-out; }
-  @keyframes tune { 0% { opacity: 1; background-position: 0 0, -60% 0; } 100% { opacity: 0; background-position: 6px 0, 160% 0; } }
   .open { justify-self: end; white-space: nowrap; text-decoration: none; font-weight: 600; font-size: .95rem; padding: 9px 16px; border-radius: 10px; border: 1px solid var(--line); background: #0a0d12aa; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
   .shine { background: linear-gradient(100deg, currentColor 0 38%, var(--acc-hi) 50%, currentColor 62% 100%) 100% 0 / 260% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: shine 4s ease-in-out infinite; }
   @keyframes shine { 0% { background-position: 100% 0; } 48%, 100% { background-position: 0 0; } }
@@ -83,8 +76,6 @@
   .pg { position: relative; height: 100vh; height: 100svh; scroll-snap-align: start; scroll-snap-stop: always; display: grid; place-items: center; padding: calc(var(--top) + 16px) clamp(18px, 5vw, 64px) calc(var(--dial) + 14px); overflow: clip; }   /* clip y no hidden: hidden la haría contenedor de scroll y la línea de tiempo view() se quedaría quieta */
   .in { width: min(1120px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 6vw, 80px); align-items: center; }
   .in.rev > :first-child { order: 2; }
-  .k { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 14px; font-size: .78rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--acc-hi); }
-  .k::before { content: attr(data-f); padding: 3px 7px; border-radius: 6px; font-variant-numeric: tabular-nums; letter-spacing: .04em; color: var(--tx); background: color-mix(in srgb, var(--accent) 30%, #10151c); }
   h1, h2 { margin: 0; font-weight: 700; letter-spacing: -.015em; line-height: .95; text-wrap: balance; }
   h1 { font-size: clamp(3.1rem, 9.5vw, 7.6rem); }
   h2 { font-size: clamp(2.4rem, 6vw, 4.8rem); }
@@ -212,7 +203,6 @@
   .modes { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 18px; margin-top: 18px; font-weight: 600; font-size: .98rem; color: #7f8a9b; }
   .modes span { transition: color .4s, text-shadow .4s; }
   .modes span.on { color: #fff; text-shadow: 0 0 14px var(--acc-hi); }
-  #efectos .k::before { background: #0b0f15a8; }
 
   /* -- boletines -- */
   .news { display: grid; gap: 14px; max-width: 480px; width: 100%; justify-self: center; }
@@ -265,16 +255,14 @@
 
   /* == MÓVIL Y PANTALLAS BAJAS == */
   @media (max-width: 860px) {
-    :root { --top: 56px; --dial: 58px; }
+    :root { --top: 56px; --dial: 0px; }
+    .dial { display: none; }
     .in, .in.rev { grid-template-columns: 1fr; gap: 22px; align-content: center; }
     .in.rev > :first-child { order: 0; }
     .lead { margin-top: 10px; font-size: 1.05rem; }
     .pts { margin-top: 12px; gap: 6px; }
     .pts li { font-size: .95rem; }
-    .k { margin-bottom: 10px; }
     .brand span { display: none; }
-    .rds { min-width: 0; padding: 6px 12px 5px; }
-    .rds .ps { font-size: 1.25rem; }
     .open { padding: 8px 12px; font-size: .9rem; }
     .player { transform: none; }
     .tk b { font-size: .6rem; }
@@ -327,7 +315,6 @@ try {
 
 <header class="top">
   <a class="brand" href="../"><img src="../icon.svg" alt=""><span>Radio Web Neo</span></a>
-  <div class="rds" id="rds" aria-hidden="true"><span class="f" id="rdsF">88.0<small>MHz</small></span><span class="ps" id="rdsPs">NEO</span></div>
   <a class="open" href="../"><span class="shine">Abrir la app</span></a>
 </header>
 
@@ -336,7 +323,6 @@ try {
   <section class="pg" id="inicio" data-f="88.0" data-ps="NEO" data-hue="232" data-bgo=".95">
     <div class="in">
       <div>
-        <p class="k" data-f="88.0" data-r>Reproductor de radio</p>
         <h1 data-r style="--d:1">Radio Web Neo</h1>
         <p class="lead" data-r style="--d:2"><em>Vibecodeado</em>, ligero, rápido y sin rastreos</p>
         <div class="btns" data-r style="--d:3">
@@ -361,7 +347,6 @@ try {
   <section class="pg" id="cadenas" data-f="91.2" data-ps="CADENAS" data-hue="262" data-bgo=".45">
     <div class="in">
       <div>
-        <p class="k" data-f="91.2" data-r>Presintonías</p>
         <h2 data-r style="--d:1">Cada botón, una cadena</h2>
         <p class="lead" data-r style="--d:2">Con una emisora o con muchas: la SER con todas sus locales, LOS40, o lo que tú quieras juntar</p>
         <ul class="pts" data-r style="--d:3">
@@ -386,7 +371,6 @@ try {
   <section class="pg" id="buscar" data-f="94.6" data-ps="BUSCAR" data-hue="200" data-bgo=".45">
     <div class="in rev">
       <div>
-        <p class="k" data-f="94.6" data-r>Buscador</p>
         <h2 data-r style="--d:1">Encuentra tu radio</h2>
         <p class="lead" data-r style="--d:2">Escribe parte del nombre: catálogo propio y el de TDTChannels</p>
         <ul class="pts" data-r style="--d:3">
@@ -414,7 +398,6 @@ try {
   <section class="pg" id="sonido" data-f="97.8" data-ps="SONIDO" data-hue="188" data-bgo=".5">
     <div class="in">
       <div>
-        <p class="k" data-f="97.8" data-r>Sonido</p>
         <h2 data-r style="--d:1">Tu sonido</h2>
         <p class="lead" data-r style="--d:2">Seis modos de ecualizador con graves, medios, agudos y volumen. Se cambia con ‹ y › sin salir de la radio</p>
       </div>
@@ -431,7 +414,6 @@ try {
   <!-- 5. Pantalla completa -->
   <section class="pg" id="efectos" data-f="100.4" data-ps="EFECTOS" data-hue="fx" data-bgo="1">
     <div class="cin">
-      <p class="k" data-f="100.4" data-r>Pantalla completa</p>
       <div class="fsname" data-r style="--d:1">MegaStar</div>
       <div class="fsclock" id="fsClock" data-r style="--d:2">00:00:00</div>
       <div class="pill" data-r style="--d:3">Con <em>7</em> visualizadores al ritmo de la música</div>
@@ -443,7 +425,6 @@ try {
   <section class="pg" id="boletines" data-f="102.9" data-ps="NOTICIAS" data-hue="36" data-bgo=".5">
     <div class="in rev">
       <div>
-        <p class="k" data-f="102.9" data-r>Modo boletines</p>
         <h2 data-r style="--d:1">Música y noticias</h2>
         <p class="lead" data-r style="--d:2">Suena tu emisora y, a la hora de las noticias, conecta sola con una generalista. De serie, la SER de 8 a 20 h</p>
       </div>
@@ -459,7 +440,6 @@ try {
   <section class="pg" id="grabar" data-f="105.1" data-ps="GRABAR" data-hue="352" data-bgo=".42">
     <div class="in">
       <div>
-        <p class="k" data-f="105.1" data-r>Grabación</p>
         <h2 data-r style="--d:1">Graba en MP3</h2>
         <p class="lead" data-r style="--d:2">Con el botón rojo junto al nombre de la emisora</p>
         <ul class="pts" data-r style="--d:3">
@@ -669,25 +649,9 @@ function onScroll() {
   const x = Math.max(0, Math.min(pages.length - 1, scrollY / innerHeight)), i = Math.floor(x), fr = x - i;
   const f = i >= pages.length - 1 ? freqs[i] : freqs[i] + (freqs[i + 1] - freqs[i]) * fr;
   needle.style.left = pct(f) + '%';
-  $('#rdsF').firstChild.nodeValue = f.toFixed(1);
 }
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
-
-// el PS se "sintoniza": letras al azar que se van fijando
-const psEl = $('#rdsPs'), rdsBox = $('#rds'), CH = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-let psTimer = 0;
-function tunePs(text) {
-  clearInterval(psTimer);
-  rdsBox.classList.remove('tune'); void rdsBox.offsetWidth; rdsBox.classList.add('tune');
-  if (reduce) { psEl.textContent = text; return; }
-  let k = 0;
-  psTimer = setInterval(() => {
-    k++;
-    psEl.textContent = [...text].map((c, i) => (i < k / 2 || c === ' ' ? c : CH[Math.random() * CH.length | 0])).join('');
-    if (k / 2 >= text.length) { clearInterval(psTimer); psEl.textContent = text; }
-  }, 34);
-}
 
 // == PÁGINA ACTIVA ==
 const demos = {};
@@ -698,7 +662,6 @@ function activate(i) {
   const p = pages[i];
   p.classList.add('on');
   stBtns.forEach((b, k) => b.classList.toggle('on', k === i));
-  tunePs(p.dataset.ps);
   fx = p.dataset.hue === 'fx';
   if (!fx) hueTo = +p.dataset.hue; else fxAt = 0;
   cv.style.setProperty('--bgo', p.dataset.bgo);
