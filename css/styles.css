@@ -494,9 +494,9 @@ dialog.settings.sheet { min-height: 0; }
 .ctxrow { display: flex; align-items: center; gap: 4px; }
 .ctxmenu .ctxrow .ctxgo { flex: 1 1 auto; min-width: 0; width: auto; }
 .ctxmenu .ctxrow .ctxgo.on { color: var(--accent); font-weight: 600; }
-.ctxmenu .ctxrow .ctxgo { display: flex; align-items: center; gap: 10px; }   /* cada emisora con su punto: hueco; el de la que suena, relleno del color de énfasis */
+.ctxmenu .ctxrow .ctxgo { display: flex; align-items: center; gap: 10px; }   /* cada emisora con su punto: hueco; el de la que sonará al pulsar la cadena (la que suena, si es esta), relleno del color de énfasis */
 .ctxmenu .ctxrow .ctxgo::before { content: ''; flex: none; width: 7px; height: 7px; border-radius: 50%; border: 2px solid #56617399; }
-.ctxmenu .ctxrow .ctxgo.on::before { background: var(--accent); border-color: var(--accent); }
+.ctxmenu .ctxrow .ctxgo.sel::before { background: var(--accent); border-color: var(--accent); }
 .ctxmenu button.recoff { color: #7d6b72; cursor: not-allowed; }   /* grabando: emisora que no se puede grabar */
 .ctxmenu .ctxsolo .ctxname { flex: 1 1 auto; min-width: 0; max-width: 260px; padding: 8px 12px; font-size: .88rem; font-weight: 650; color: #e8edf5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }   /* cadena con una sola emisora: su nombre, con el color normal, y "Eliminar" a su lado */
 .ctxmenu .ctxrow .ctxdel { flex: none; width: auto; padding: 8px 10px; font-size: .8rem; color: #ff7a85; }

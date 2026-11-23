@@ -415,6 +415,7 @@ function openMenu(x, y, st) {
       go.setAttribute('role', 'menuitem');
       go.textContent = variantLabel(st, i);
       if (S.current === st && S.variant === i) go.classList.add('on');   // la que suena
+      if (i === (S.current === st ? S.variant : posOf(st))) go.classList.add('sel');   // la que sonará al pulsar la cadena (punto relleno)
       if (recBlocked(st, i)) { go.disabled = true; go.classList.add('recoff'); go.title = REC_BLOCK_MSG; }
       go.addEventListener('click', () => { closeMenu(); pickVariant(st, i); });
       row.append(go, deleteButton(i, 'Eliminar ' + variantLabel(st, i)));
