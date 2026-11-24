@@ -6,7 +6,7 @@
 // ========================
 // == TEXTOS POR DEFECTO ==
 // ========================
-export const APP_VERSION = 400;   // versión de la aplicación (Ajustes > Configuración), con la misma numeración que Proxy: se sube con cada cambio, igual que la caché de sw.js (rn-shell-N)
+export const APP_VERSION = 410;   // versión de la aplicación (Ajustes > Configuración), con la misma numeración que Proxy: se sube con cada cambio, igual que la caché de sw.js (rn-shell-N)
 export const APP_ID = 'rn';   // prefijo de lo que esta app guarda en el navegador (claves, cachés, base de datos): 'rn' en Neo y 'rp' en Proxy
 export const APP_TITLE = 'Radio Web Neo';   // nombre de la aplicación (cabecera, pestaña y notificación): fijo, no va en los ajustes
 
