@@ -11,12 +11,13 @@
 //   - #introIns: la imagen del último paso de la bienvenida (clase "can" cuando se puede pulsar); .ins-now / .ins-ios / .ins-menu, el texto de cada caso
 // Igual en Neo y en Proxy.
 
-let deferred = null;
+// En Proxy la aplicación llega tarde (boot.js la pide al Worker) y el aviso puede haber llegado antes: boot.js lo guarda en window.__bip
+let deferred = window.__bip || null;
 const subs = new Set();
 const emit = () => subs.forEach(f => f());
 
 addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; emit(); });
-addEventListener('appinstalled', () => { deferred = null; emit(); });
+addEventListener('appinstalled', () => { deferred = window.__bip = null; emit(); });
 
 const installed = () => matchMedia('(display-mode: standalone), (display-mode: minimal-ui)').matches || navigator.standalone === true;
 const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPad se presenta como Mac
@@ -31,7 +32,7 @@ export const iosManual = () => ios && !installed();
 export async function install() {
   if (!deferred) return false;
   const e = deferred;
-  deferred = null;
+  deferred = window.__bip = null;
   emit();   // el aviso solo sirve una vez: fuera botones hasta que el navegador avise de nuevo
   try { e.prompt(); } catch { return false; }
   const { outcome } = await e.userChoice.catch(() => ({ outcome: 'dismissed' }));

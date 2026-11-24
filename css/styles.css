@@ -261,10 +261,12 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.search .badge { flex: none; width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; order: 2; }   /* min-width 38 y alto 38 vienen de .panel .badge */
 .panel.search .badge:hover { color: var(--accent); }
 /* Aviso de instalar (install.js): en el sitio de la emisora, que baja; con el color de énfasis para que destaque */
-#insHint { margin: 22px 2px 0; padding: 12px 12px 12px 14px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 78%, #0b0f16), color-mix(in srgb, var(--accent) 38%, #11161d)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, #ffffff33), var(--lift); }
-.panel.inshint .insico { flex: none; width: 40px; height: 40px; border-radius: 10px; box-shadow: 0 2px 8px #0005; }
+#insHint { position: relative; overflow: hidden; margin: 16px 2px 0; padding: 12px 12px 12px 16px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 78%, #0b0f16), color-mix(in srgb, var(--accent) 38%, #11161d)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, #ffffff33), var(--lift); }
+#insHint::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 35%, #ffffff2e 50%, transparent 65%); transform: translateX(-100%); animation: ins-shine 4.5s ease-in-out 1s infinite; pointer-events: none; }   /* un destello cruza el aviso cada pocos segundos */
+@keyframes ins-shine { 0% { transform: translateX(-100%); } 30%, 100% { transform: translateX(100%); } }
+@media (prefers-reduced-motion: reduce) { #insHint::after { animation: none; display: none; } }
 .panel.inshint[hidden], #insBtn[hidden], .group[hidden] { display: none; }
-.panel.inshint:not([hidden]) + .now { margin-top: 10px; }
+.panel.inshint:not([hidden]) + .now { margin-top: 16px; }   /* el mismo hueco arriba y abajo del aviso */
 .panel.inshint .info { flex: 1 1 auto; }
 #insHint .info b { font-size: .92rem; font-weight: 700; color: #fff; text-wrap: balance; }   /* si no cabe en una línea, dos líneas parejas (sin una palabra sola abajo) */
 .panel.inshint .badge { cursor: pointer; font-size: .88rem; font-weight: 700; }
@@ -279,22 +281,18 @@ input[type="range"]:disabled { opacity: .4; }
 #insHint .ishare, #insRow .ishare { flex: none; width: 15px; height: 15px; }
 #insRow.ios .insios { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: .82rem; color: #9fabb9; }
 .group[hidden] + .group { padding-top: 0; border-top: 0; }
-/* Bienvenida: un efecto ligero sobre cada imagen (posiciones en % de la imagen). Paso 1: las barras del móvil laten; 2: el cursor del buscador
-   parpadea tras "Salamanca"; 3: las ondas respiran; 4: un destello recorre las horas de los boletines de 8:00 a 20:00 */
-.intro-pic { position: relative; overflow: hidden; border-radius: 12px; }
+/* Bienvenida: un efecto ligero sobre algunas imágenes (posiciones en % de la imagen). Paso 1: las barras del móvil laten;
+   paso 4: un destello recorre las horas de los boletines de 8:00 a 20:00 */
+.intro-pic { position: relative; overflow: hidden; margin-bottom: 4px; border-radius: 12px; }
+.intro-pic .intro-img { margin-bottom: 0; }   /* el hueco va en el marco: así los % del efecto son los de la imagen */
 .intro-pic .fx { position: absolute; pointer-events: none; }
 .intro-step[hidden] .fx, .intro-step[hidden] .tap-glow, .intro-step[hidden] .tap-hand { animation-play-state: paused; }
-.fx-glow { left: 64%; top: 49%; width: 26%; height: 11%; border-radius: 50%; background: radial-gradient(closest-side, #2fd3e0aa, #2fd3e000); mix-blend-mode: screen; animation: fx-beat .9s ease-in-out infinite; }
+.fx-glow { left: 64.4%; top: 50.7%; width: 26%; height: 8%; border-radius: 50%; background: radial-gradient(closest-side, #2fd3e0aa, #2fd3e000); mix-blend-mode: screen; animation: fx-beat .9s ease-in-out infinite; }
 @keyframes fx-beat { 0%, 100% { opacity: .25; transform: scaleY(.8); } 35% { opacity: .9; transform: scaleY(1.15); } }
-.fx-caret { left: 15.6%; top: 16.6%; width: 1.5px; height: 2.6%; background: #e2e8f0; animation: fx-caret 1.1s steps(1) infinite; }
-@keyframes fx-caret { 50% { opacity: 0; } }
-.fx-breath { left: 18%; top: 50%; width: 40%; height: 48%; background: radial-gradient(closest-side, #f0b44c55, #5fd3a033 55%, #0000); mix-blend-mode: screen; animation: fx-breath 4s ease-in-out infinite; }
-@keyframes fx-breath { 0%, 100% { opacity: .2; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.08); } }
-.fx-run { left: 3.75%; top: 56.9%; width: 6%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, #fff8 0, #ffb84dcc 35%, #ffb84d00); mix-blend-mode: screen; animation: fx-run 4.5s cubic-bezier(.45, 0, .55, 1) infinite; }
+.fx-run { left: 3.75%; top: 56.85%; width: 6%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, #fff8 0, #ffb84dcc 35%, #ffb84d00); mix-blend-mode: screen; animation: fx-run 4.5s cubic-bezier(.45, 0, .55, 1) infinite; }
 @keyframes fx-run { 0% { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(697%); opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .intro-pic .fx { animation: none; opacity: 0; } }
  con instalación posible la imagen se pulsa; una mano da toques en el icono (28 %, 55 % de la imagen) y el icono brilla con cada toque */
-.intro-tap { position: relative; }
 .intro-tap.can { cursor: pointer; }
 .intro-tap .tap-glow, .intro-tap .tap-hand { display: none; position: absolute; pointer-events: none; }
 .intro-tap.can .tap-glow, .intro-tap.can .tap-hand { display: block; }
@@ -805,6 +803,7 @@ html.material:not(.mat-std) .switch input:checked:not(:disabled) + .track::after
   .pane1 { min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .pane1::-webkit-scrollbar { display: none; }
   .pane1 > .now, .pane1 > #insHint { margin-top: 0; }
+  .pane1 > #insHint:not([hidden]) + .now { margin-top: 20px; }   /* el mismo hueco que el borde del panel encima del aviso */
   .pane2 { height: 0; min-height: 100%; padding: 0; overflow: hidden; }
   .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }   /* barra propia de 6 px (con la fina del sistema, más ancha, cabían 4 columnas en vez de 5); scrollbar-color o scrollbar-width la anularían en Chrome */
   @supports not selector(::-webkit-scrollbar) { .pane2 .presets { scrollbar-width: thin; scrollbar-color: #3a4554 transparent; } }
