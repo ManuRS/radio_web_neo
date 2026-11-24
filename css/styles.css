@@ -273,7 +273,21 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.inshint .insgo:hover { background: #e8ecf5; }
 .panel.inshint .insx:hover { color: #fff; }
 .group[hidden] + .group { padding-top: 0; border-top: 0; }
-/* Bienvenida, último paso: con instalación posible la imagen se pulsa; una mano da toques en el icono (28 %, 55 % de la imagen) y el icono brilla con cada toque */
+/* Bienvenida: un efecto ligero sobre cada imagen (posiciones en % de la imagen). Paso 1: las barras del móvil laten; 2: el cursor del buscador
+   parpadea tras "Salamanca"; 3: las ondas respiran; 4: un destello recorre las horas de los boletines de 8:00 a 20:00 */
+.intro-pic { position: relative; overflow: hidden; border-radius: 12px; }
+.intro-pic .fx { position: absolute; pointer-events: none; }
+.intro-step[hidden] .fx, .intro-step[hidden] .tap-glow, .intro-step[hidden] .tap-hand { animation-play-state: paused; }
+.fx-glow { left: 64%; top: 49%; width: 26%; height: 11%; border-radius: 50%; background: radial-gradient(closest-side, #2fd3e0aa, #2fd3e000); mix-blend-mode: screen; animation: fx-beat .9s ease-in-out infinite; }
+@keyframes fx-beat { 0%, 100% { opacity: .25; transform: scaleY(.8); } 35% { opacity: .9; transform: scaleY(1.15); } }
+.fx-caret { left: 15.6%; top: 16.6%; width: 1.5px; height: 2.6%; background: #e2e8f0; animation: fx-caret 1.1s steps(1) infinite; }
+@keyframes fx-caret { 50% { opacity: 0; } }
+.fx-breath { left: 18%; top: 50%; width: 40%; height: 48%; background: radial-gradient(closest-side, #f0b44c55, #5fd3a033 55%, #0000); mix-blend-mode: screen; animation: fx-breath 4s ease-in-out infinite; }
+@keyframes fx-breath { 0%, 100% { opacity: .2; transform: scale(.9); } 50% { opacity: 1; transform: scale(1.08); } }
+.fx-run { left: 3.75%; top: 56.9%; width: 6%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(closest-side, #fff8 0, #ffb84dcc 35%, #ffb84d00); mix-blend-mode: screen; animation: fx-run 4.5s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes fx-run { 0% { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 85% { opacity: 1; } 100% { transform: translateX(697%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .intro-pic .fx { animation: none; opacity: 0; } }
+ con instalación posible la imagen se pulsa; una mano da toques en el icono (28 %, 55 % de la imagen) y el icono brilla con cada toque */
 .intro-tap { position: relative; }
 .intro-tap.can { cursor: pointer; }
 .intro-tap .tap-glow, .intro-tap .tap-hand { display: none; position: absolute; pointer-events: none; }
