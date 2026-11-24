@@ -1,8 +1,8 @@
 {
   "iguales": {
     "db/consultas.sql": "1d3dcaf071876e45",
-    "db/stats.sql": "76e69a647900dee4",
-    "functions/_stat.js": "cd7316e4405fdf51",
+    "db/stats.sql": "f26d4ee82585a407",
+    "functions/_stat.js": "0bdf86b3b8953150",
     "functions/api/stat.js": "e13ff3af6569cf97",
     "js/anchor.js": "c50021d284fd23ba",
     "js/backguard.js": "21b8608e40123bc8",
@@ -15,14 +15,14 @@
     "js/jsonc.js": "59633a5473e181af",
     "js/rec-worker.js": "6f7aac98bfe3ff11",
     "js/rec-worklet.js": "a4a04446e8bcb7bf",
-    "js/stats.js": "ffc969e5cdbc2ca3",
+    "js/stats.js": "3833e250079fdcd1",
     "js/utils.js": "5a5c5f8a792f95ce",
     "test/comun.mjs": "b0054e488e756b06",
     "test/comun.test.mjs": "c1ce6a1f2e75f077",
     "test/datos.test.mjs": "3662f2839dec4de6",
     "test/jsonc.test.mjs": "3c3ee73991338b77",
     "test/shell.test.mjs": "69ffa9fc79a58b54",
-    "test/stats.test.mjs": "6df935bae2a091ca",
+    "test/stats.test.mjs": "5b08ce5db478e2c0",
     "test/utils.test.mjs": "cad13c3633ebb35b"
   },
   "paralelos": {
