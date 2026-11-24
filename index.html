@@ -125,10 +125,10 @@
        En el móvil estos contenedores no cuentan para la maqueta (display: contents) y todo queda en una columna, como siempre -->
   <div class="panes">
   <div class="pane pane1">
-  <!-- Aviso de instalar (install.js): solo si el navegador lo permite; con ✕ no vuelve y queda el icono de la cabecera -->
+  <!-- Aviso de instalar (install.js): solo si el navegador lo permite (en iPhone, clase "ios": cómo hacerlo en vez del botón); con ✕ no vuelve y queda el icono de la cabecera -->
   <section class="panel inshint" id="insHint" hidden>
     <img class="insico" src="icon-192.png" alt="" width="40" height="40">
-    <div class="info"><b>Añade Neo a tu lista de apps</b></div>
+    <div class="info"><b>Añade Neo a tu lista de apps</b><span class="insios"><svg class="ishare" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8 7.5l4-4 4 4M8.5 10.5H6v10h12v-10h-2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>› Añadir a pantalla de inicio</span></div>
     <button id="insHintGo" class="badge insgo" type="button">Instalar</button>
     <button id="insHintX" class="badge insx" type="button" aria-label="Cerrar" title="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
   </section>
@@ -278,6 +278,7 @@
           </div>
           <h2>Instala la app</h2>
           <p class="ins-menu">Desde el menú de tu navegador, puedes instalar esta web como una aplicación más de tu móvil. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
+          <p class="ins-ios" hidden>Desde Compartir › Añadir a pantalla de inicio, puedes instalar esta web como una aplicación más de tu móvil. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
           <p class="ins-now" hidden>Pulsa ahora la imagen para instalar la app, o pruébala desde el navegador. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
         </section>
       </div>
@@ -414,6 +415,7 @@
           <div class="clockrow">
             <span>Instalar aplicación</span>
             <button id="insGo" type="button">Instalar</button>
+            <span class="insios"><svg class="ishare" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v11M8 7.5l4-4 4 4M8.5 10.5H6v10h12v-10h-2.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>› Añadir a pantalla de inicio</span>
           </div>
         </div>
         <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->

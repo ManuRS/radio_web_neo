@@ -272,6 +272,12 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.inshint .insx { width: 32px; min-width: 32px; padding: 0; background: none; color: #ffffffb3; }
 .panel.inshint .insgo:hover { background: #e8ecf5; }
 .panel.inshint .insx:hover { color: #fff; }
+/* iPhone (clase "ios"): sin botón de instalar; debajo del texto, cómo hacerlo */
+#insHint .insios { display: none; align-items: center; gap: 4px; margin-top: 2px; font-size: .8rem; color: #ffffffd9; }
+#insHint.ios .insios { display: flex; }
+#insHint.ios .insgo, #insRow.ios #insGo, #insRow:not(.ios) .insios { display: none; }
+#insHint .ishare, #insRow .ishare { flex: none; width: 15px; height: 15px; }
+#insRow.ios .insios { display: flex; align-items: center; gap: 4px; margin-left: auto; font-size: .82rem; color: #9fabb9; }
 .group[hidden] + .group { padding-top: 0; border-top: 0; }
 /* Bienvenida: un efecto ligero sobre cada imagen (posiciones en % de la imagen). Paso 1: las barras del móvil laten; 2: el cursor del buscador
    parpadea tras "Salamanca"; 3: las ondas respiran; 4: un destello recorre las horas de los boletines de 8:00 a 20:00 */
