@@ -26,6 +26,7 @@ import './grupo.js';
 import './backguard.js';
 import { setFootPhrases } from './foot.js';
 import { initStats } from './stats.js';
+import { initInstall } from './install.js';
 
 // ===============================
 // == APLICACIÓN DE LOS AJUSTES ==
@@ -109,6 +110,8 @@ async function loadSettings() {
   S.configText = text;
   log('Ajustes: ' + r.cfg.stations.length + ' cadenas, ' + r.cfg.news.length + ' franjas');
 }
+
+initInstall(APP_ID);   // botón de instalar: aviso, icono de la cabecera, fila de Datos y bienvenida (ver js/install.js)
 
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
   navigator.serviceWorker.register('sw.js').catch(() => {});   // permite instalarla como app (PWA)

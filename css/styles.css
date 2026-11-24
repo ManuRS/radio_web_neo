@@ -260,6 +260,30 @@ input[type="range"]:disabled { opacity: .4; }
 .panel.search, .panel.search input { cursor: pointer; }   /* solo abre la ventana de búsqueda */
 .panel.search .badge { flex: none; width: 38px; padding: 0; color: #cbd5e1; cursor: pointer; order: 2; }   /* min-width 38 y alto 38 vienen de .panel .badge */
 .panel.search .badge:hover { color: var(--accent); }
+/* Aviso de instalar (install.js): en el sitio de la emisora, que baja; con el color de énfasis para que destaque */
+#insHint { margin: 22px 2px 0; padding: 12px 12px 12px 14px; background: linear-gradient(120deg, color-mix(in srgb, var(--accent) 78%, #0b0f16), color-mix(in srgb, var(--accent) 38%, #11161d)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 55%, #ffffff33), var(--lift); }
+.panel.inshint .insico { flex: none; width: 40px; height: 40px; border-radius: 10px; box-shadow: 0 2px 8px #0005; }
+.panel.inshint[hidden], #insBtn[hidden], .group[hidden] { display: none; }
+.panel.inshint:not([hidden]) + .now { margin-top: 10px; }
+.panel.inshint .info { flex: 1 1 auto; }
+#insHint .info b { font-size: .92rem; font-weight: 700; color: #fff; text-wrap: balance; }   /* si no cabe en una línea, dos líneas parejas (sin una palabra sola abajo) */
+.panel.inshint .badge { cursor: pointer; font-size: .88rem; font-weight: 700; }
+.panel.inshint .insgo { padding: 0 16px; border-radius: 19px; background: #fff; color: color-mix(in srgb, var(--accent) 70%, #0b0f16); }
+.panel.inshint .insx { width: 32px; min-width: 32px; padding: 0; background: none; color: #ffffffb3; }
+.panel.inshint .insgo:hover { background: #e8ecf5; }
+.panel.inshint .insx:hover { color: #fff; }
+.group[hidden] + .group { padding-top: 0; border-top: 0; }
+/* Bienvenida, último paso: con instalación posible la imagen se pulsa; una mano da toques en el icono (28 %, 55 % de la imagen) y el icono brilla con cada toque */
+.intro-tap { position: relative; }
+.intro-tap.can { cursor: pointer; }
+.intro-tap .tap-glow, .intro-tap .tap-hand { display: none; position: absolute; pointer-events: none; }
+.intro-tap.can .tap-glow, .intro-tap.can .tap-hand { display: block; }
+.intro-tap .tap-glow { left: 23.25%; top: 46.1%; width: 9.75%; aspect-ratio: 1; border-radius: 24%; animation: tap-glow 1.6s ease-out infinite; }
+.intro-tap .tap-hand { left: 21.9%; top: 50%; width: 13%; fill: #fff; filter: drop-shadow(0 2px 4px #0008); transform-origin: 48% 25%; animation: tap-hand 1.6s ease-in-out infinite; }
+@keyframes tap-hand { 0%, 100% { transform: translate(6%, 10%) rotate(-8deg); } 30% { transform: translate(0, 0) rotate(-8deg) scale(.92); } 40% { transform: translate(0, 0) rotate(-8deg) scale(.92); } 70% { transform: translate(6%, 10%) rotate(-8deg); } }
+@keyframes tap-glow { 0%, 25% { box-shadow: 0 0 0 0 #ffffff00, 0 0 0 0 #b9a6ff00; } 32% { box-shadow: 0 0 0 2px #ffffffd0, 0 0 24px 8px #b9a6ffb0; } 100% { box-shadow: 0 0 0 10px #ffffff00, 0 0 36px 16px #b9a6ff00; } }
+@media (prefers-reduced-motion: reduce) { .intro-tap .tap-glow, .intro-tap .tap-hand { animation: none; } }
+.intro p[hidden] { display: none; }
 body.no-config .panel > * { visibility: hidden; }
 body.no-config .panel.vols > * { visibility: visible; }
 /* Modo activado con una emisora no musical: las noticias no saltarían (naranja, el color de los avisos) */
@@ -760,7 +784,7 @@ html.material:not(.mat-std) .switch input:checked:not(:disabled) + .track::after
   .pane { position: relative; display: block; box-sizing: border-box; padding: 20px; border: 1px solid transparent; border-radius: 18px; background: #1a2029; box-shadow: 0 10px 28px rgba(0, 0, 0, .4); }
   .pane1 { min-height: 0; overflow-y: auto; scrollbar-width: none; }
   .pane1::-webkit-scrollbar { display: none; }
-  .pane1 > .now { margin-top: 0; }
+  .pane1 > .now, .pane1 > #insHint { margin-top: 0; }
   .pane2 { height: 0; min-height: 100%; padding: 0; overflow: hidden; }
   .pane2 .presets { height: 100%; box-sizing: border-box; margin: 0; padding: 20px; overflow-y: auto; overscroll-behavior: contain; }   /* barra propia de 6 px (con la fina del sistema, más ancha, cabían 4 columnas en vez de 5); scrollbar-color o scrollbar-width la anularían en Chrome */
   @supports not selector(::-webkit-scrollbar) { .pane2 .presets { scrollbar-width: thin; scrollbar-color: #3a4554 transparent; } }

@@ -106,6 +106,8 @@
       <span class="sep" aria-hidden="true"></span>
       <!-- Tamaño del panel de presintonías (solo en pantallas grandes): grande o igual que el panel 1 -->
       <button id="paneSize" class="ibtn psize" type="button" aria-label="Reducir panel de presintonías" title="Reducir panel"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path class="pz-in" d="M2.5 12H10M5.5 7l5 5-5 5M21.5 12H14M18.5 7l-5 5 5 5"/><path class="pz-out" d="M10 12H2.5M7.5 7l-5 5 5 5M14 12h7.5M16.5 7l5 5-5 5"/></svg></button>
+      <!-- Instalar (install.js): solo si el navegador lo permite y ya se cerró el aviso de la portada -->
+      <button id="insBtn" class="ibtn" type="button" aria-label="Instalar" title="Instalar" hidden><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5M4.5 15.5v3a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-3"/></svg></button>
       <button id="infoBtn" class="ibtn" type="button" aria-label="Información" title="Información"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg></button>
       <button id="settingsBtn" class="ibtn" type="button" aria-label="Ajustes" title="Ajustes"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></button>
     </div>
@@ -123,6 +125,13 @@
        En el móvil estos contenedores no cuentan para la maqueta (display: contents) y todo queda en una columna, como siempre -->
   <div class="panes">
   <div class="pane pane1">
+  <!-- Aviso de instalar (install.js): solo si el navegador lo permite; con ✕ no vuelve y queda el icono de la cabecera -->
+  <section class="panel inshint" id="insHint" hidden>
+    <img class="insico" src="icon-192.png" alt="" width="40" height="40">
+    <div class="info"><b>Añade Neo a tu lista de apps</b></div>
+    <button id="insHintGo" class="badge insgo" type="button">Instalar</button>
+    <button id="insHintX" class="badge insx" type="button" aria-label="Cerrar" title="Cerrar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></button>
+  </section>
   <div class="now">
     <div class="ps idle" id="psValue"><span id="psText">—</span></div>
     <button id="recBtn" class="rec" type="button" aria-label="Grabar" title="Grabar" disabled hidden><span class="rec-dot" aria-hidden="true"></span><span class="rec-time" id="recTime"></span></button>
@@ -249,9 +258,15 @@
           <p>Puedes escuchar música y conectar automáticamente con una emisora generalista cuando quieras. El modo conecta por defecto con las noticias de la SER de 8 a 20 horas, pero se puede personalizar.</p>
         </section>
         <section class="intro-step" data-step="4" hidden>
-          <img class="intro-img" src="img/cap5-wide.webp?v=320" alt="El icono de la app instalada y las presintonías por defecto" width="1600" height="900" loading="lazy">
+          <!-- Con instalación posible (install.js, clase "can"): la imagen se pulsa para instalar, con una mano que da toques en el icono y el icono brillando -->
+          <div class="intro-tap" id="introIns">
+            <img class="intro-img" src="img/cap5-wide.webp?v=320" alt="El icono de la app instalada y las presintonías por defecto" width="1600" height="900" loading="lazy">
+            <span class="tap-glow" aria-hidden="true"></span>
+            <svg class="tap-hand" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.24V7.5C9 6.12 10.12 5 11.5 5S14 6.12 14 7.5v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63l-4.54-2.26c-.17-.07-.35-.11-.54-.11H13v-6c0-.83-.67-1.5-1.5-1.5S10 6.67 10 7.5v10.74l-3.43-.72c-.08-.01-.15-.03-.24-.03-.31 0-.59.13-.79.33l-.79.8 4.94 4.94c.27.27.65.44 1.06.44h6.79c.75 0 1.33-.55 1.44-1.28l.75-5.27c.01-.07.02-.14.02-.2 0-.62-.38-1.16-.91-1.38z"/></svg>
+          </div>
           <h2>Instala la app</h2>
-          <p>Desde el menú de tu navegador, puedes instalar esta web como una aplicación más de tu móvil. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
+          <p class="ins-menu">Desde el menú de tu navegador, puedes instalar esta web como una aplicación más de tu móvil. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
+          <p class="ins-now" hidden>Pulsa ahora la imagen para instalar la app, o pruébala desde el navegador. Además, puedes exportar e importar tus preferencias entre dispositivos.</p>
         </section>
       </div>
       <div class="intro-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></div>
@@ -382,6 +397,13 @@
       </div>
       <!-- Boletines: quién da las noticias y sus franjas ("newsStation", "news", "newsGuided" y "newsSaved" de los ajustes). La SER guiada, con su horario ya hecho -->
       <div class="tab" id="tabConfig" hidden>
+        <!-- Instalar (install.js): solo si el navegador lo permite -->
+        <div class="group" id="insRow" hidden>
+          <div class="clockrow">
+            <span>Instalar aplicación</span>
+            <button id="insGo" type="button">Instalar</button>
+          </div>
+        </div>
         <!-- La configuración (JSON legible) no se ve ni se edita aquí: se exporta a un archivo y se importa de otro -->
         <div class="group">
           <div class="clockrow">
